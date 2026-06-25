@@ -1,17 +1,254 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Smartphone, Laptop, ShieldCheck, Sparkles, BookOpen, 
-  ArrowRight, Landmark, ArrowUpRight, CheckCircle2, ChevronRight 
+  ArrowRight, Landmark, CheckCircle2, Lock, Mail, ArrowLeft, Building2, User
 } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { 
+  INITIAL_EMPLOYEES, 
+  INITIAL_CONNECTED_APPS, 
+  INITIAL_SUBSCRIPTIONS, 
+  INITIAL_TRANSACTIONS, 
+  INITIAL_CASH_BALANCE 
+} from '../utils/mockData';
 
 interface LoginPageProps {
   onSelectRole: (role: 'staff' | 'finance') => void;
+  onAuthSuccess?: (session: any, profile: any) => void;
 }
 
-export default function LoginPage({ onSelectRole }: LoginPageProps) {
+export default function LoginPage({ onSelectRole, onAuthSuccess }: LoginPageProps) {
   const [hoveredCard, setHoveredCard] = useState<'staff' | 'finance' | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [authRole, setAuthRole] = useState<'staff' | 'finance'>('staff');
+  const [isSignUp, setIsSignUp] = useState<boolean>(false);
+  
+  // Form states
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [companyIdInput, setCompanyIdInput] = useState('');
+  const [joinExisting, setJoinExisting] = useState(false);
+  
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Pre-filled credentials description for high authenticity
+  const isSupabase = isSupabaseConfigured();
+
+  const handleCardClick = (role: 'staff' | 'finance') => {
+    if (!isSupabase) {
+      // Offline fallback: Direct portal selection without credentials
+      onSelectRole(role);
+    } else {
+      setAuthRole(role);
+      setShowAuthModal(true);
+      setIsSignUp(false);
+      setErrorMsg('');
+      setSuccessMsg('');
+    }
+  };
+
+  const seedCompanyData = async (companyId: string) => {
+    try {
+      console.log(`Seeding database for company ${companyId}...`);
+      
+      // 1. Update company balance to INITIAL_CASH_BALANCE
+      await supabase
+        .from('companies')
+        .update({ current_balance: INITIAL_CASH_BALANCE })
+        .eq('id', companyId);
+
+      // 2. Seed employees
+      const dbEmps = INITIAL_EMPLOYEES.map(emp => ({
+        company_id: companyId,
+        name: emp.name,
+        email: emp.email,
+        role: emp.role,
+        division: emp.division,
+        salary: emp.salary,
+        bank_account: emp.bankAccount,
+        bank_name: emp.bankName
+      }));
+      await supabase.from('employees').insert(dbEmps);
+
+      // 3. Seed connected apps
+      const dbApps = INITIAL_CONNECTED_APPS.map(app => ({
+        company_id: companyId,
+        name: app.name,
+        description: app.description,
+        status: app.status,
+        api_key: app.apiKey,
+        webhook_url: app.webhookUrl,
+        monthly_revenue: app.monthlyRevenue,
+        payment_gateway: app.paymentGateway
+      }));
+      await supabase.from('connected_apps').insert(dbApps);
+
+      // 4. Seed subscriptions
+      const dbSubs = INITIAL_SUBSCRIPTIONS.map(sub => ({
+        company_id: companyId,
+        name: sub.name,
+        cost: sub.cost,
+        cycle: sub.cycle,
+        next_billing: sub.nextBilling,
+        category: sub.category,
+        status: sub.status === 'on_hold' ? 'inactive' : sub.status
+      }));
+      await supabase.from('subscriptions').insert(dbSubs);
+
+      // 5. Seed transactions
+      const dbTxs = INITIAL_TRANSACTIONS.map(tx => ({
+        company_id: companyId,
+        merchant: tx.merchant,
+        category: tx.category,
+        amount: tx.amount,
+        notes: tx.notes,
+        status: tx.status === 'Approved' ? 'approved' : tx.status === 'Rejected' ? 'rejected' : 'pending',
+        receipt_url: tx.receiptUrl,
+        type: tx.type,
+        staff_name: tx.staffName,
+        staff_email: tx.staffEmail,
+        reject_reason: tx.rejectReason,
+        timeline: tx.timeline,
+        recipient_name: tx.recipientName,
+        bank_name: tx.bankName,
+        bank_account: tx.bankAccount,
+        transfer_receipt_url: tx.transferReceiptUrl
+      }));
+      await supabase.from('transactions').insert(dbTxs);
+      
+      console.log('Seeding completed successfully!');
+    } catch (err) {
+      console.error('Error seeding company data:', err);
+    }
+  };
+
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setErrorMsg('Email dan password wajib diisi.');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      if (isSignUp) {
+        // --- SIGN UP ---
+        if (!fullName) {
+          throw new Error('Nama Lengkap wajib diisi.');
+        }
+
+        let companyId = '';
+
+        // If admin/finance, create a company. If staff, they can create one or join existing.
+        if (authRole === 'finance' || !joinExisting) {
+          if (!companyName) {
+            throw new Error('Nama Perusahaan wajib diisi untuk membuat akun.');
+          }
+        } else {
+          if (!companyIdInput) {
+            throw new Error('Company ID wajib diisi untuk bergabung.');
+          }
+          companyId = companyIdInput.trim();
+        }
+
+        // 1. Supabase auth signUp
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+        if (signUpError) throw signUpError;
+        const user = signUpData.user;
+        if (!user) throw new Error('Registrasi gagal. Silakan coba lagi.');
+
+        // 2. Create Company if needed
+        if (authRole === 'finance' || !joinExisting) {
+          const { data: coData, error: coError } = await supabase
+            .from('companies')
+            .insert([{ name: companyName, current_balance: INITIAL_CASH_BALANCE }])
+            .select();
+          
+          if (coError) throw coError;
+          companyId = coData[0].id;
+        }
+
+        // 3. Create User Profile
+        const profileRole = authRole === 'finance' ? 'admin' : 'employee';
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: user.id,
+              company_id: companyId,
+              full_name: fullName,
+              role: profileRole,
+            },
+          ]);
+
+        if (profileError) {
+          console.error("Profile creation error, cleaning up...", profileError);
+          throw profileError;
+        }
+
+        // 4. Seed data into newly created company
+        if (authRole === 'finance' || !joinExisting) {
+          await seedCompanyData(companyId);
+        }
+
+        setSuccessMsg('Registrasi berhasil! Silakan login menggunakan akun baru Anda.');
+        setIsSignUp(false);
+      } else {
+        // --- SIGN IN ---
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) throw signInError;
+        const user = signInData.user;
+        if (!user) throw new Error('Login gagal.');
+
+        // Fetch User Profile to verify role access
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*, companies(*)')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          throw new Error('Profil pengguna tidak ditemukan.');
+        }
+
+        const profileRole = profileData.role; // 'admin' or 'employee'
+        
+        // Validation: Verify they log into the appropriate portal
+        if (authRole === 'finance' && profileRole !== 'admin') {
+          throw new Error('Akses ditolak. Portal ini hanya untuk administrator / tim keuangan.');
+        }
+        if (authRole === 'staff' && profileRole !== 'employee') {
+          throw new Error('Akses ditolak. Portal ini hanya untuk staf biasa.');
+        }
+
+        setSuccessMsg('Login berhasil! Mengalihkan...');
+        if (onAuthSuccess) {
+          onAuthSuccess(signInData.session, profileData);
+        }
+        onSelectRole(authRole);
+        setShowAuthModal(false);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Terjadi kesalahan sistem.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#070814] text-slate-100 flex flex-col justify-between relative overflow-hidden font-sans">
       
@@ -32,9 +269,15 @@ export default function LoginPage({ onSelectRole }: LoginPageProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-            <ShieldCheck className="w-3.5 h-3.5" /> SECURE BETA 2.0
-          </span>
+          {isSupabase ? (
+            <span className="inline-flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+              <ShieldCheck className="w-3.5 h-3.5" /> SUPABASE LIVE CONNECTED
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 shadow-md">
+              ⚠️ SANDBOX OFFLINE MODE
+            </span>
+          )}
         </div>
       </header>
 
@@ -57,9 +300,9 @@ export default function LoginPage({ onSelectRole }: LoginPageProps) {
         {/* Dual Portal Selection Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
           
-          {/* Card 1: Karyawan / Staff Portal */}
+          {/* Card 1: Karyawan / Staf Portal */}
           <div 
-            onClick={() => onSelectRole('staff')}
+            onClick={() => handleCardClick('staff')}
             onMouseEnter={() => setHoveredCard('staff')}
             onMouseLeave={() => setHoveredCard(null)}
             className={`group bg-slate-900/40 border transition-all duration-300 p-8 rounded-3xl cursor-pointer relative overflow-hidden backdrop-blur-sm shadow-xl hover:shadow-2xl flex flex-col justify-between min-h-[350px] ${
@@ -115,7 +358,7 @@ export default function LoginPage({ onSelectRole }: LoginPageProps) {
 
           {/* Card 2: Direksi / Finance Team */}
           <div 
-            onClick={() => onSelectRole('finance')}
+            onClick={() => handleCardClick('finance')}
             onMouseEnter={() => setHoveredCard('finance')}
             onMouseLeave={() => setHoveredCard(null)}
             className={`group bg-slate-900/40 border transition-all duration-300 p-8 rounded-3xl cursor-pointer relative overflow-hidden backdrop-blur-sm shadow-xl hover:shadow-2xl flex flex-col justify-between min-h-[350px] ${
@@ -176,11 +419,196 @@ export default function LoginPage({ onSelectRole }: LoginPageProps) {
           <Landmark className="w-5 h-5 text-indigo-400 shrink-0" />
           <p className="font-medium font-sans">
             <span className="text-white font-bold block">💡 Skenario Pengujian Sinkronisasi Dual-Portal:</span>
-            Gunakan tab browser yang sama! Buka Portal Staff untuk melampirkan berkas pengeluaran, maka pengajuan Anda akan langsung muncul seketika di Portal Finance untuk diperiksa dan didebet saldonya.
+            {isSupabase ? (
+              <span>Gunakan database Supabase yang sama! Login sebagai Karyawan untuk mengupload struk, maka pengajuan Anda akan muncul di Dashboard Admin secara real-time karena database terintegrasi secara live.</span>
+            ) : (
+              <span>Gunakan tab browser yang sama! Buka Portal Staff untuk melampirkan berkas pengeluaran, maka pengajuan Anda akan langsung muncul seketika di Portal Finance untuk diperiksa dan didebet saldonya.</span>
+            )}
           </p>
         </div>
 
       </main>
+
+      {/* Auth Modal (Only active when Supabase is configured) */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-6 overflow-hidden">
+            {/* Top Glow Decor */}
+            <div className={`absolute top-0 left-0 right-0 h-1.5 ${authRole === 'finance' ? 'bg-[#1a1aff]' : 'bg-indigo-600'}`} />
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 hover:bg-slate-800 rounded-xl transition-all"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+
+            <div className="mb-6">
+              <span className={`inline-block text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md mb-2 ${
+                authRole === 'finance' ? 'text-amber-400 bg-amber-500/15' : 'text-indigo-400 bg-indigo-500/15'
+              }`}>
+                {authRole === 'finance' ? 'Pusat Keuangan' : 'Staf Karyawan'}
+              </span>
+              <h3 className="text-xl font-extrabold text-white">
+                {isSignUp ? 'Buat Akun Baru' : 'Masuk ke Akun Anda'}
+              </h3>
+              <p className="text-xs text-slate-450 mt-1">
+                {isSignUp 
+                  ? 'Isi formulir di bawah ini untuk menginisiasi organisasi baru.' 
+                  : 'Silakan masukkan kredensial yang valid untuk melanjutkan.'}
+              </p>
+            </div>
+
+            {errorMsg && (
+              <div className="mb-4 p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl font-medium">
+                {errorMsg}
+              </div>
+            )}
+
+            {successMsg && (
+              <div className="mb-4 p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl font-medium">
+                {successMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleAuthSubmit} className="space-y-4">
+              {isSignUp && (
+                <>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">Nama Lengkap</label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
+                      <input 
+                        type="text" 
+                        placeholder="Masukkan nama lengkap" 
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-sans"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {authRole === 'finance' ? (
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">Nama Perusahaan / Startup</label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
+                        <input 
+                          type="text" 
+                          placeholder="Misal: PT Jago Mandiri AI" 
+                          value={companyName}
+                          onChange={(e) => setCompanyName(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-sans"
+                          required
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">Perusahaan</label>
+                        <button
+                          type="button"
+                          onClick={() => setJoinExisting(!joinExisting)}
+                          className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold"
+                        >
+                          {joinExisting ? 'Buat Perusahaan Baru' : 'Gabung Company ID'}
+                        </button>
+                      </div>
+                      
+                      {joinExisting ? (
+                        <div className="relative">
+                          <Building2 className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
+                          <input 
+                            type="text" 
+                            placeholder="Tempel UUID Company ID di sini" 
+                            value={companyIdInput}
+                            onChange={(e) => setCompanyIdInput(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                            required
+                          />
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <Building2 className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
+                          <input 
+                            type="text" 
+                            placeholder="Buat nama perusahaan baru" 
+                            value={companyName}
+                            onChange={(e) => setCompanyName(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-sans"
+                            required
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">Email Kantor</label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
+                  <input 
+                    type="email" 
+                    placeholder="nama@perusahaan.com" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-sans"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
+                  <input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-sans"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={loading}
+                className={`w-full py-3 mt-2 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] ${
+                  loading 
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
+                    : authRole === 'finance'
+                      ? 'bg-[#1a1aff] hover:bg-[#3333ff] shadow-[#1800ad]/25'
+                      : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/25'
+                }`}
+              >
+                <span>{loading ? 'Memproses...' : isSignUp ? 'Registrasi Akun Baru' : 'Login Sekarang'}</span>
+                {!loading && <ArrowRight className="w-4 h-4" />}
+              </button>
+            </form>
+
+            <div className="mt-6 pt-4 border-t border-slate-800 text-center">
+              <button 
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setErrorMsg('');
+                  setSuccessMsg('');
+                }}
+                className="text-xs text-slate-450 hover:text-white transition-all"
+              >
+                {isSignUp ? 'Sudah memiliki akun? Login di sini' : 'Belum memiliki akun? Registrasi di sini'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer copyright */}
       <footer className="p-6 border-t border-slate-900 text-center text-[10px] text-slate-500 z-10 font-medium">

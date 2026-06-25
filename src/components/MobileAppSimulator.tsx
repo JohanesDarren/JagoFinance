@@ -1,41 +1,60 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Bell, User, CreditCard, ArrowLeft, Camera, CheckCircle, 
   AlertCircle, Loader2, Calendar, DollarSign, X, FileText, 
-  ChevronRight, Image, Search, Lock, Mail, ArrowUpRight, 
+  ChevronRight, Image, Search, Lock, Mail, ArrowUpRight, ArrowRight,
   Check, Download, Maximize2, Sparkles, LogOut, Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Transaction } from '../types';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { scanReceiptAndUpload } from '../lib/hermesApi';
 
 interface MobileAppSimulatorProps {
   transactions: Transaction[];
   cashBalance: number;
   onRefreshData: () => void;
   staffEmail: string;
+  currentUserProfile?: any;
+  onLogout?: () => void;
 }
 
 export default function MobileAppSimulator({ 
   transactions, 
   cashBalance, 
   onRefreshData,
-  staffEmail
+  staffEmail,
+  currentUserProfile,
+  onLogout
 }: MobileAppSimulatorProps) {
   
   // Mobile Router/State
   const [currentScreen, setCurrentScreen] = useState<'auth' | 'forgot' | 'home' | 'scanner' | 'ai-loading' | 'form' | 'success' | 'history' | 'detail' | 'profile'>('auth');
   
   // Authentication credentials
-  const [email, setEmail] = useState(staffEmail || 'afrisyadwiky@gmail.com');
+  const [email, setEmail] = useState(currentUserProfile?.email || staffEmail || 'afrisyadwiky@gmail.com');
   const [password, setPassword] = useState('password123');
-  const [isLogged, setIsLogged] = useState(false);
+  const [isLogged, setIsLogged] = useState(!!currentUserProfile);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [subTier, setSubTier] = useState<'free' | 'pro'>('free');
+
+  useEffect(() => {
+    if (currentUserProfile) {
+      setEmail(currentUserProfile.email || staffEmail);
+      setIsLogged(true);
+      setCurrentScreen('home');
+      if (currentUserProfile.companies?.subscription_tier) {
+        setSubTier(currentUserProfile.companies.subscription_tier);
+      }
+    } else {
+      setIsLogged(false);
+      setCurrentScreen('auth');
+      setSubTier('free');
+    }
+  }, [currentUserProfile, staffEmail]);
 
   // Scanner States
   const [cameraActive, setCameraActive] = useState(false);
@@ -68,13 +87,13 @@ export default function MobileAppSimulator({
   const [notificationOpen, setNotificationOpen] = useState(false);
 
   // Remaining list calculations for specific employee
-  const employeeEmail = email.trim();
-  const staffName = employeeEmail.split('@')[0]
+  const employeeEmail = (currentUserProfile?.email || email).trim();
+  const staffName = currentUserProfile?.full_name || employeeEmail.split('@')[0]
     .split('.')
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
 
-  const staffTransactions = transactions.filter(t => t.staffEmail === employeeEmail);
+  const staffTransactions = transactions.filter(t => t.staffEmail.toLowerCase() === employeeEmail.toLowerCase());
   const limitMax = 15000000; // Rp 15.000.000 Limit Bulanan
   
   // Calculate approved and pending payments
@@ -88,12 +107,50 @@ export default function MobileAppSimulator({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 1. Handle Login
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
-      setIsLogged(true);
-      setCurrentScreen('home');
-      onRefreshData();
+    if (!email || !password) return;
+
+    setLoginError('');
+    setIsSubmitting(true);
+
+    try {
+      if (isSupabaseConfigured()) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        if (error) throw error;
+
+        // Fetch user profile
+        const { data: profileData, error: profileErr } = await supabase
+          .from('profiles')
+          .select('*, companies(*)')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileErr || !profileData) {
+          throw new Error('Karyawan tidak memiliki profil yang terdaftar.');
+        }
+
+        if (profileData.role !== 'employee') {
+          throw new Error('Akses ditolak. Portal ini hanya untuk karyawan lapangan.');
+        }
+
+        setIsLogged(true);
+        setCurrentScreen('home');
+        // Let App.tsx know that a user logged in successfully
+        if (onRefreshData) onRefreshData();
+      } else {
+        // Mock offline bypass login
+        setIsLogged(true);
+        setCurrentScreen('home');
+        onRefreshData();
+      }
+    } catch (err: any) {
+      setLoginError(err.message || 'Login gagal.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -111,6 +168,10 @@ export default function MobileAppSimulator({
 
   // 3. Initiate Scanner
   const handleOpenScanner = (typeOption: 'reimburse' | 'cash_advance') => {
+    if (subTier === 'free') {
+      setShowPaywall(true);
+      return;
+    }
     setFormType(typeOption);
     setScanImage(null);
     setScanImageName('');
@@ -118,46 +179,38 @@ export default function MobileAppSimulator({
     setCurrentScreen('scanner');
   };
 
-  // 4. Load Predefined Sample Receipts for OCR scanner
-  const handleSelectSample = async (sampleName: string, sampleUrl: string) => {
-    setScanImage(sampleUrl);
-    setScanImageName(sampleName);
-    
-    // Convert sample to base64 if possible or just trigger process
+  // 4. Helper to trigger OCR scan and upload to Supabase if active
+  const triggerOcrScan = async (base64Data: string, fileName: string, fileType: string) => {
     setCurrentScreen('ai-loading');
-    
     try {
-      const response = await fetch('/api/scan-receipt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          image: "SIMULATED_MOCK_IMAGE_BASE64", 
-          mimeType: "image/jpeg",
-          fileName: sampleName
-        }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setScannedData(data.extracted);
-        setFormMerchant(data.extracted.merchant);
-        setFormDate(data.extracted.date);
-        setFormCategory(data.extracted.category);
-        setFormAmount(data.extracted.amount);
-        setFormNotes(data.extracted.notes || '');
-        setCurrentScreen('form');
-      } else {
-        throw new Error(data.error || 'Ekstraksi gagal');
-      }
+      const companyId = currentUserProfile?.company_id;
+      const result = await scanReceiptAndUpload(base64Data, fileName, fileType, companyId);
+      
+      setScannedData(result);
+      setScanImage(result.receiptUrl);
+      setFormMerchant(result.merchant);
+      setFormDate(result.date);
+      setFormCategory(result.category);
+      setFormAmount(result.amount);
+      setFormNotes(result.notes || '');
+      setCurrentScreen('form');
     } catch (err: any) {
       console.error(err);
       // Fallback
-      setFormMerchant(sampleName.split('.')[0].toUpperCase());
+      setFormMerchant(fileName.split('.')[0].toUpperCase().replace(/[-_]/g, ' '));
       setFormDate(new Date().toISOString().split('T')[0]);
       setFormCategory('Operasional');
       setFormAmount(120000);
       setFormNotes('Ekstraksi struk cadangan lokal.');
       setCurrentScreen('form');
     }
+  };
+
+  const handleSelectSample = async (sampleName: string, sampleUrl: string) => {
+    setScanImage(sampleUrl);
+    setScanImageName(sampleName);
+    const simulatedBase64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/";
+    await triggerOcrScan(simulatedBase64, sampleName, 'image/jpeg');
   };
 
   // 5. Handle File Upload from Gallery (Convert to Base64 & Send to Server)
@@ -168,41 +221,8 @@ export default function MobileAppSimulator({
     setScanImageName(file.name);
     const reader = new FileReader();
     reader.onloadend = async () => {
-      const base64String = (reader.result as string).split(',')[1];
-      setScanImage(reader.result as string);
-      setCurrentScreen('ai-loading');
-
-      try {
-        const response = await fetch('/api/scan-receipt', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            image: base64String, 
-            mimeType: file.type,
-            fileName: file.name
-          }),
-        });
-        const data = await response.json();
-        if (data.success) {
-          setScannedData(data.extracted);
-          setFormMerchant(data.extracted.merchant);
-          setFormDate(data.extracted.date);
-          setFormCategory(data.extracted.category);
-          setFormAmount(data.extracted.amount);
-          setFormNotes(data.extracted.notes || '');
-          setCurrentScreen('form');
-        } else {
-          throw new Error('OCR API Error');
-        }
-      } catch (err) {
-        // Fallback offline scan
-        setFormMerchant(file.name.split('.')[0].toUpperCase().replace(/[-_]/g, ' '));
-        setFormDate(new Date().toISOString().split('T')[0]);
-        setFormCategory('Operasional');
-        setFormAmount(85000);
-        setFormNotes('Ekstraksi lokal aman (Offline Fallback)');
-        setCurrentScreen('form');
-      }
+      const base64Data = reader.result as string;
+      await triggerOcrScan(base64Data, file.name, file.type);
     };
     reader.readAsDataURL(file);
   };
@@ -219,33 +239,64 @@ export default function MobileAppSimulator({
     setFormError('');
 
     try {
-      const response = await fetch('/api/reimburse/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          merchant: formMerchant,
-          date: formDate,
-          category: formCategory,
-          amount: Number(formAmount),
-          notes: formNotes,
-          receiptUrl: scanImage,
-          staffName,
-          staffEmail: employeeEmail,
-          type: formType
-        })
-      });
-      
-      const data = await response.json();
-      if (data.success) {
+      if (isSupabaseConfigured() && currentUserProfile) {
+        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
+        const { error } = await supabase
+          .from('transactions')
+          .insert([{
+            company_id: currentUserProfile.company_id,
+            user_id: currentUserProfile.id,
+            merchant: formMerchant,
+            category: formCategory,
+            amount: Number(formAmount),
+            notes: formNotes,
+            status: 'pending',
+            receipt_url: scanImage,
+            type: formType,
+            staff_name: staffName,
+            staff_email: employeeEmail,
+            timeline: [
+              { label: 'Diajukan', date: timestamp, done: true, active: true },
+              { label: 'Sedang di-review', date: timestamp, done: true },
+              { label: 'Disetujui/Ditolak', date: '', done: false },
+              { label: 'Dana Cair', date: '', done: false }
+            ]
+          }]);
+
+        if (error) throw error;
+        
         setIsSubmitting(false);
         setCurrentScreen('success');
         onRefreshData();
       } else {
-        setFormError(data.error || 'Gagal mengirim pengajuan.');
-        setIsSubmitting(false);
+        const response = await fetch('/api/reimburse/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            merchant: formMerchant,
+            date: formDate,
+            category: formCategory,
+            amount: Number(formAmount),
+            notes: formNotes,
+            receiptUrl: scanImage,
+            staffName,
+            staffEmail: employeeEmail,
+            type: formType
+          })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          setIsSubmitting(false);
+          setCurrentScreen('success');
+          onRefreshData();
+        } else {
+          setFormError(data.error || 'Gagal mengirim pengajuan.');
+          setIsSubmitting(false);
+        }
       }
-    } catch (err) {
-      setFormError('Hubungan ke server terputus. Coba lagi.');
+    } catch (err: any) {
+      setFormError(err.message || 'Hubungan ke server terputus. Coba lagi.');
       setIsSubmitting(false);
     }
   };
@@ -297,6 +348,11 @@ export default function MobileAppSimulator({
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-4 my-auto">
+                  {loginError && (
+                    <div className="p-2.5 bg-rose-50 border border-rose-100 text-rose-700 text-[10px] rounded-xl font-medium">
+                      {loginError}
+                    </div>
+                  )}
                   <div>
                     <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Email Karyawan</label>
                     <div className="relative">
@@ -443,7 +499,10 @@ export default function MobileAppSimulator({
                     </button>
                     
                     <button 
-                      onClick={() => setIsLogged(false)}
+                      onClick={() => {
+                        if (onLogout) onLogout();
+                        else setIsLogged(false);
+                      }}
                       className="p-2 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all"
                       title="Sign Out"
                     >
@@ -1258,6 +1317,82 @@ export default function MobileAppSimulator({
                 <User className="w-4 h-4" />
                 <span className="text-[8px] font-bold">Profil</span>
               </button>
+            </div>
+          )}
+
+          {/* PAYWALL OVERLAY DI DALAM HP */}
+          {showPaywall && (
+            <div className="absolute inset-0 bg-slate-950 z-50 flex flex-col justify-between p-6 text-white select-none rounded-[38px]">
+              <div className="flex justify-between items-center mt-4">
+                <span className="text-[9px] bg-amber-500/20 text-amber-400 font-extrabold tracking-widest px-2.5 py-1 rounded-md uppercase">PRO FEATURE</span>
+                <button 
+                  onClick={() => setShowPaywall(false)}
+                  className="p-1.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-4 my-auto text-center">
+                <div className="inline-flex p-4 bg-indigo-600/20 text-indigo-400 rounded-3xl animate-pulse">
+                  <Sparkles className="w-9 h-9" />
+                </div>
+                <h3 className="text-base font-black tracking-tight font-display text-white">Upgrade ke Jago Finance Pro</h3>
+                <p className="text-[10px] text-slate-400 leading-relaxed max-w-xs mx-auto">
+                  Klaim pengeluaran instan dengan <strong>Hermes AI OCR Scanner</strong>. Foto struk belanjamu, AI akan mengisi nominal, merchant, dan kategori otomatis.
+                </p>
+
+                <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-2xl space-y-2 text-left text-[10px]">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>1,000 scans AI receipt per bulan</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>Kecepatan OCR &lt; 5 detik</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>Auto-kategori akuntansi pintar</span>
+                  </div>
+                </div>
+
+                <div className="py-1">
+                  <span className="text-xl font-black font-mono">Rp 240.000</span>
+                  <span className="text-[9px] text-slate-400 font-bold"> / bulan</span>
+                </div>
+              </div>
+
+              <div className="space-y-2 mb-4">
+                <button 
+                  onClick={async () => {
+                    try {
+                      if (isSupabaseConfigured() && currentUserProfile) {
+                        const { error } = await supabase
+                          .from('companies')
+                          .update({ subscription_tier: 'pro' })
+                          .eq('id', currentUserProfile.company_id);
+                        if (error) throw error;
+                      }
+                      setSubTier('pro');
+                      setShowPaywall(false);
+                      // Trigger scanner open after successful upgrade
+                      setScanImage(null);
+                      setScanImageName('');
+                      setScannedData(null);
+                      setCurrentScreen('scanner');
+                      if (onRefreshData) onRefreshData();
+                    } catch (err) {
+                      alert("Gagal melakukan upgrade.");
+                    }
+                  }}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
+                >
+                  <span>Upgrade ke Pro (Simulasi)</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                <p className="text-[8px] text-slate-500 text-center font-medium">Batal kapan saja • Uji coba bebas risiko 7 hari</p>
+              </div>
             </div>
           )}
 

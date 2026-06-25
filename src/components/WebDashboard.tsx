@@ -34,6 +34,8 @@ interface WebDashboardProps {
   onPayrollGenerate: (division: string) => Promise<any>;
   isLoading: boolean;
   onLogout?: () => void;
+  companyName?: string;
+  subscriptionTier?: string;
 }
 
 export default function WebDashboard({
@@ -50,7 +52,9 @@ export default function WebDashboard({
   onWebhookSave,
   onPayrollGenerate,
   isLoading,
-  onLogout
+  onLogout,
+  companyName = 'PT JagoAI School',
+  subscriptionTier = 'free'
 }: WebDashboardProps) {
 
   // Active Sub-Menu Route within web dashboard
@@ -356,8 +360,17 @@ export default function WebDashboard({
               <Sparkles className="w-7 h-7" />
             </div>
             <div>
-              <span className="font-black text-[#050630] text-lg lg:text-xl tracking-tight block leading-tight">JagoAiFinance</span>
-              <span className="text-[10px] text-slate-400 font-extrabold tracking-widest block uppercase mt-1">KONSOL EKSEKUTIF FINANCE</span>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-[#050630] text-lg lg:text-xl tracking-tight block leading-none">JagoAiFinance</span>
+                <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border shrink-0 ${
+                  subscriptionTier === 'pro'
+                    ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20'
+                    : 'bg-slate-100 text-slate-400 border-slate-200'
+                }`}>
+                  {subscriptionTier}
+                </span>
+              </div>
+              <span className="text-[9px] text-slate-400 font-extrabold tracking-wider block uppercase mt-1 truncate max-w-[140px]" title={companyName}>{companyName}</span>
             </div>
           </div>
 
