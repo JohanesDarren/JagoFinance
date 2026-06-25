@@ -1,0 +1,10 @@
+{
+  "name": "Remix: Jago Finance",
+  "description": "Aplikasi keuangan adaptif dengan scanner struk AI, manajemen reimburse otomatis, analisis arus kas, buku kas, dan pelacak langganan.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
