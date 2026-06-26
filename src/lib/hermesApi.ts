@@ -14,13 +14,12 @@ export const scanReceiptAndUpload = async (
   fileBase64: string,
   fileName: string,
   mimeType: string,
-  companyId?: string,
   employeeId?: string
 ): Promise<ScanResult> => {
   let receiptUrl = '';
 
   // 1. If Supabase is active, upload to private bucket 'receipts'
-  if (isSupabaseConfigured() && companyId) {
+  if (isSupabaseConfigured()) {
     try {
       const base64Data = fileBase64.includes('base64,') ? fileBase64.split('base64,')[1] : fileBase64;
       const binaryString = window.atob(base64Data);
@@ -31,7 +30,7 @@ export const scanReceiptAndUpload = async (
       }
       
       const fileExt = fileName.split('.').pop() || 'jpg';
-      const storagePath = `${companyId}/${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const storagePath = `single-tenant/${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
 
       const { error: uploadErr } = await supabase.storage
         .from('receipts')
@@ -68,7 +67,6 @@ export const scanReceiptAndUpload = async (
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       receiptUrl,
-      companyId,
       employeeId
     })
   });

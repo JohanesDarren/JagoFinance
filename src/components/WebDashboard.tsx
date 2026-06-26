@@ -34,8 +34,6 @@ interface WebDashboardProps {
   onPayrollGenerate: (division: string) => Promise<any>;
   isLoading: boolean;
   onLogout?: () => void;
-  companyName?: string;
-  subscriptionTier?: string;
 }
 
 export default function WebDashboard({
@@ -52,9 +50,7 @@ export default function WebDashboard({
   onWebhookSave,
   onPayrollGenerate,
   isLoading,
-  onLogout,
-  companyName = 'PT JagoAI School',
-  subscriptionTier = 'free'
+  onLogout
 }: WebDashboardProps) {
 
   // Active Sub-Menu Route within web dashboard
@@ -84,19 +80,19 @@ export default function WebDashboard({
     if (splitViewTx) {
       // Find matching employee by email or name
       const matchedEmp = employees.find(
-        emp => emp.email.toLowerCase() === splitViewTx.staffEmail.toLowerCase() ||
-               emp.name.toLowerCase() === splitViewTx.staffName.toLowerCase()
+        emp => emp.email.toLowerCase() === splitViewTx.employeeId.toLowerCase() ||
+               emp.name.toLowerCase() === (employees.find(e => e.id === splitViewTx.employeeId)?.name || "Unknown").toLowerCase()
       );
 
       if (splitViewTx.status === 'Approved') {
         // If already approved, show approved details
-        setApproveRecipientName(splitViewTx.recipientName || splitViewTx.staffName);
+        setApproveRecipientName((employees.find(e => e.id === splitViewTx.employeeId)?.name || "Unknown"));
         setApproveBankName(splitViewTx.bankName || (matchedEmp ? matchedEmp.bankName : ''));
         setApproveBankAccount(splitViewTx.bankAccount || (matchedEmp ? matchedEmp.bankAccount : ''));
-        setApproveReceiptBase64(splitViewTx.transferReceiptUrl || '');
+        setApproveReceiptBase64('');
       } else {
         // If pending, load matched employee bank credentials as default, or pre-fill with staffName
-        setApproveRecipientName(matchedEmp ? matchedEmp.name : splitViewTx.staffName);
+        setApproveRecipientName(matchedEmp ? matchedEmp.name : (employees.find(e => e.id === splitViewTx.employeeId)?.name || "Unknown"));
         setApproveBankName(matchedEmp ? matchedEmp.bankName : '');
         setApproveBankAccount(matchedEmp ? matchedEmp.bankAccount : '');
         setApproveReceiptBase64('');
@@ -209,7 +205,7 @@ export default function WebDashboard({
     csvContent += 'ID Transaksi,Tanggal,Nama Produk / Sumber,Inbound User,Nominal,Status\n';
 
     inboundTx.forEach(t => {
-      csvContent += `${t.id},${t.date},"${t.merchant}","${t.staffEmail}",${t.amount},${t.status}\n`;
+      csvContent += `${t.id},${t.date},"${t.merchant}","${t.employeeId}",${t.amount},${t.status}\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
@@ -361,16 +357,8 @@ export default function WebDashboard({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-black text-[#050630] text-lg lg:text-xl tracking-tight block leading-none">JagoAiFinance</span>
-                <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border shrink-0 ${
-                  subscriptionTier === 'pro'
-                    ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20'
-                    : 'bg-slate-100 text-slate-400 border-slate-200'
-                }`}>
-                  {subscriptionTier}
-                </span>
+                <span className="font-black text-[#050630] text-lg lg:text-xl tracking-tight block leading-none mt-1">JagoAiFinance</span>
               </div>
-              <span className="text-[9px] text-slate-400 font-extrabold tracking-wider block uppercase mt-1 truncate max-w-[140px]" title={companyName}>{companyName}</span>
             </div>
           </div>
 
@@ -809,8 +797,8 @@ export default function WebDashboard({
                                 <tr key={tx.id} className="hover:bg-slate-50/50 transition-all font-semibold">
                                   <td className="p-4">
                                     <div className="leading-tight">
-                                      <span className="font-extrabold text-slate-900 block text-[13.5px]">{tx.staffName}</span>
-                                      <span className="text-[10px] text-slate-400 font-mono block mt-0.5">{tx.staffEmail}</span>
+                                      <span className="font-extrabold text-slate-900 block text-[13.5px]">{employees.find(e => e.id === tx.employeeId)?.name || "Unknown"}</span>
+                                      <span className="text-[10px] text-slate-400 font-mono block mt-0.5">{tx.employeeId}</span>
                                     </div>
                                   </td>
                                   <td className="p-4 font-bold text-slate-800 truncate max-w-[140px] text-[13px]">{tx.merchant}</td>
@@ -922,7 +910,7 @@ export default function WebDashboard({
                       if (t.type === 'income') return false; // Hide income streams on reclaim area
 
                       const matchSearch = t.merchant.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                          t.staffName.toLowerCase().includes(searchTerm.toLowerCase());
+                                          (employees.find(e => e.id === t.employeeId)?.name || "Unknown").toLowerCase().includes(searchTerm.toLowerCase());
                       const matchStatus = statusFilter === 'Semua' ? true : t.status === statusFilter;
                       const matchCategory = categoryFilter === 'Semua' ? true : t.category === categoryFilter;
 
@@ -958,8 +946,8 @@ export default function WebDashboard({
                                   <td className="p-5 text-slate-500 font-mono text-xs">{t.date}</td>
                                   <td className="p-5">
                                     <div className="leading-tight">
-                                      <span className="font-black text-slate-900 block text-sm sm:text-[14.5px]">{t.staffName}</span>
-                                      <span className="text-xs text-slate-400 font-mono block mt-0.5">{t.staffEmail}</span>
+                                      <span className="font-black text-slate-900 block text-sm sm:text-[14.5px]">{employees.find(e => e.id === t.employeeId)?.name || "Unknown"}</span>
+                                      <span className="text-xs text-slate-400 font-mono block mt-0.5">{t.employeeId}</span>
                                     </div>
                                   </td>
                                   <td className="p-5 font-extrabold text-slate-850 truncate max-w-[165px] text-sm sm:text-[14px]">{t.merchant}</td>
@@ -1048,7 +1036,7 @@ export default function WebDashboard({
                                   <td className="p-5 font-mono text-xs text-slate-450">{t.date}</td>
                                   <td className="p-5 font-mono text-xs text-brand font-extrabold">{t.id}</td>
                                   <td className="p-5 font-black text-slate-900 text-sm sm:text-[14.5px]">{t.merchant}</td>
-                                  <td className="p-5 font-mono text-xs text-slate-500">{t.staffEmail}</td>
+                                  <td className="p-5 font-mono text-xs text-slate-500">{t.employeeId}</td>
                                   <td className="p-5 font-mono font-black text-emerald-600 text-sm sm:text-[15.5px]">Rp {t.amount.toLocaleString('id-ID')}</td>
                                   <td className="p-5">
                                     <span className="bg-emerald-50 text-emerald-700 font-extrabold text-[10px] px-3 py-1 rounded-full border border-emerald-100 uppercase tracking-wide">Otomatis / PG</span>
@@ -1174,7 +1162,7 @@ export default function WebDashboard({
                                 <td className="p-5">
                                   <span className="bg-indigo-50 text-indigo-700 p-1.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider">{t.category}</span>
                                 </td>
-                                <td className="p-5 text-slate-650 text-xs sm:text-sm">{t.staffName}</td>
+                                <td className="p-5 text-slate-650 text-xs sm:text-sm">{employees.find(e => e.id === t.employeeId)?.name || "Unknown"}</td>
                                 <td className="p-5">
                                   <span className="inline-block text-[9.5px] tracking-wider font-black uppercase px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-250">POSTED</span>
                                 </td>
@@ -1185,9 +1173,9 @@ export default function WebDashboard({
                                   {!isIncome ? `-Rp ${t.amount.toLocaleString('id-ID')}` : '-'}
                                 </td>
                                 <td className="p-5">
-                                  {t.receiptUrl || t.transferReceiptUrl ? (
+                                  {t.receiptUrl  ? (
                                     <button 
-                                      onClick={() => setSelectedLedgerReceipt(t.receiptUrl || t.transferReceiptUrl || null)}
+                                      onClick={() => setSelectedLedgerReceipt(t.receiptUrl || null)}
                                       className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-black text-indigo-700 bg-indigo-50 hover:bg-indigo-150 rounded-xl transition-all border border-indigo-150/65 cursor-pointer shadow-3xs"
                                     >
                                       <FileText className="w-3.5 h-3.5 shrink-0 text-indigo-600" /> Lihat Bukti
@@ -1470,7 +1458,7 @@ export default function WebDashboard({
                         <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 grid grid-cols-2 gap-3.5">
                           <div className="col-span-2">
                             <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Nama Penerima</span>
-                            <span className="font-extrabold text-slate-900 text-[13.5px]">{splitViewTx.recipientName || splitViewTx.staffName}</span>
+                            <span className="font-extrabold text-slate-900 text-[13.5px]">{(employees.find(e => e.id === splitViewTx.employeeId)?.name || "Unknown")}</span>
                           </div>
                           <div>
                             <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Bank</span>
@@ -1484,16 +1472,16 @@ export default function WebDashboard({
                         
                         <div>
                           <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider mb-1.5">Bukti Transfer Resmi</span>
-                          {splitViewTx.transferReceiptUrl ? (
+                          {false ? (
                             <div className="border border-slate-150 rounded-2xl overflow-hidden bg-slate-50 relative max-h-48 flex items-center justify-center p-1.5 shadow-3xs">
                               <img 
-                                src={splitViewTx.transferReceiptUrl || approveReceiptBase64} 
+                                src={approveReceiptBase64} 
                                 alt="Transfer Proof" 
                                 className="max-h-40 object-contain rounded-xl hover:scale-[1.02] transition duration-200 cursor-pointer"
                                 onClick={() => {
                                   const w = window.open();
                                   if (w) {
-                                    w.document.write(`<img src="${splitViewTx.transferReceiptUrl || approveReceiptBase64}" style="max-width:100%; height:auto;" />`);
+                                    w.document.write(`<img src="${approveReceiptBase64}" style="max-width:100%; height:auto;" />`);
                                   }
                                 }}
                               />
@@ -1772,7 +1760,7 @@ export default function WebDashboard({
                   <label className="block font-bold text-slate-500 mb-0.5">Total Nominal (Rp)</label>
                   <input 
                     type="number" 
-                    value={manualAmount || ''}
+                    value={manualAmount }
                     onChange={(e) => setManualAmount(Number(e.target.value))}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand outline-none font-mono font-bold"
                     placeholder="0"

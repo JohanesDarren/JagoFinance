@@ -12,20 +12,19 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- =========================================================================
--- 1. TABLE: companies
+-- 1. TABLE: finance_settings
 -- =========================================================================
-CREATE TABLE IF NOT EXISTS companies (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL,
-    subscription_tier VARCHAR(50) DEFAULT 'free' CHECK (subscription_tier IN ('free', 'pro')),
+CREATE TABLE IF NOT EXISTS finance_settings (
+    id INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    current_balance NUMERIC(15, 2) DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE finance_settings ENABLE ROW LEVEL SECURITY;
 
-CREATE TRIGGER update_companies_modtime
-    BEFORE UPDATE ON companies
+CREATE TRIGGER update_finance_settings_modtime
+    BEFORE UPDATE ON finance_settings
     FOR EACH ROW
     EXECUTE FUNCTION update_modified_column();
 
@@ -34,8 +33,9 @@ CREATE TRIGGER update_companies_modtime
 -- =========================================================================
 CREATE TABLE IF NOT EXISTS profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
     full_name VARCHAR(255),
+    surname VARCHAR(255),
+    national_id VARCHAR(100),
     role VARCHAR(50) DEFAULT 'employee' CHECK (role IN ('admin', 'employee')),
     avatar_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -53,8 +53,7 @@ CREATE TRIGGER update_profiles_modtime
 -- 3. TABLE: employees
 -- =========================================================================
 CREATE TABLE IF NOT EXISTS employees (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid() REFERENCES profiles(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255),
     division VARCHAR(255),
@@ -77,7 +76,6 @@ CREATE TRIGGER update_employees_modtime
 -- =========================================================================
 CREATE TABLE IF NOT EXISTS transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
     employee_id UUID REFERENCES employees(id) ON DELETE SET NULL,
     date DATE,
     merchant VARCHAR(255),
@@ -103,7 +101,6 @@ CREATE TRIGGER update_transactions_modtime
 -- =========================================================================
 CREATE TABLE IF NOT EXISTS connected_apps (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
     app_name VARCHAR(255) NOT NULL,
     status VARCHAR(50) DEFAULT 'inactive',
     webhook_url TEXT,
@@ -124,7 +121,6 @@ CREATE TRIGGER update_connected_apps_modtime
 -- =========================================================================
 CREATE TABLE IF NOT EXISTS subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
     plan_name VARCHAR(255) NOT NULL,
     start_date TIMESTAMP WITH TIME ZONE,
     end_date TIMESTAMP WITH TIME ZONE,
@@ -145,56 +141,83 @@ CREATE TRIGGER update_subscriptions_modtime
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- =========================================================================
 
--- Companies RLS
-CREATE POLICY "Allow authenticated users to create a company"
-    ON companies FOR INSERT
-    WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow users to view their own company details"
-    ON companies FOR SELECT
-    USING (id = (SELECT company_id FROM profiles WHERE id = auth.uid()));
-
-CREATE POLICY "Allow admin users to update their company"
-    ON companies FOR UPDATE
-    USING (
-        id = (SELECT company_id FROM profiles WHERE id = auth.uid())
-        AND 'admin' = (SELECT role FROM profiles WHERE id = auth.uid())
+-- Admin check helper function
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'
     );
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- Finance Settings RLS
+CREATE POLICY "Finance settings visible to all authenticated"
+    ON finance_settings FOR SELECT
+    USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Finance settings writable by admins only"
+    ON finance_settings FOR ALL
+    USING (is_admin())
+    WITH CHECK (is_admin());
 
 -- Profiles RLS
-CREATE POLICY "Allow users to insert their own profile"
+CREATE POLICY "Users can read all profiles"
+    ON profiles FOR SELECT
+    USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Users can insert their own profile"
     ON profiles FOR INSERT
     WITH CHECK (auth.uid() = id);
 
-CREATE POLICY "Allow users to view profiles in their company"
-    ON profiles FOR SELECT
-    USING (company_id = (SELECT company_id FROM profiles WHERE id = auth.uid()));
-
-CREATE POLICY "Allow users to update their own profile"
+CREATE POLICY "Users can update their own profile"
     ON profiles FOR UPDATE
     USING (auth.uid() = id)
     WITH CHECK (auth.uid() = id);
 
+CREATE POLICY "Admins can update any profile"
+    ON profiles FOR UPDATE
+    USING (is_admin());
+
 -- Employees RLS policies
-CREATE POLICY "Isolate employees per company for ALL operations"
+CREATE POLICY "Employees visible to all authenticated"
+    ON employees FOR SELECT
+    USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Employees writable by admins only"
     ON employees FOR ALL
-    USING (company_id = (SELECT company_id FROM profiles WHERE id = auth.uid()))
-    WITH CHECK (company_id = (SELECT company_id FROM profiles WHERE id = auth.uid()));
+    USING (is_admin())
+    WITH CHECK (is_admin());
 
 -- Transactions RLS policies
-CREATE POLICY "Isolate transactions per company for ALL operations"
-    ON transactions FOR ALL
-    USING (company_id = (SELECT company_id FROM profiles WHERE id = auth.uid()))
-    WITH CHECK (company_id = (SELECT company_id FROM profiles WHERE id = auth.uid()));
+CREATE POLICY "Users can view all transactions"
+    ON transactions FOR SELECT
+    USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Users can insert transactions"
+    ON transactions FOR INSERT
+    WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Users can update their own transactions"
+    ON transactions FOR UPDATE
+    USING (
+        (SELECT p.role FROM profiles p WHERE p.id = auth.uid()) = 'admin'
+    );
 
 -- Connected Apps RLS policies
-CREATE POLICY "Isolate connected apps per company for ALL operations"
+CREATE POLICY "Apps visible to all authenticated"
+    ON connected_apps FOR SELECT
+    USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Apps writable by admins only"
     ON connected_apps FOR ALL
-    USING (company_id = (SELECT company_id FROM profiles WHERE id = auth.uid()))
-    WITH CHECK (company_id = (SELECT company_id FROM profiles WHERE id = auth.uid()));
+    USING (is_admin())
+    WITH CHECK (is_admin());
 
 -- Subscriptions RLS policies
-CREATE POLICY "Isolate subscriptions per company for ALL operations"
+CREATE POLICY "Subscriptions visible to all authenticated"
+    ON subscriptions FOR SELECT
+    USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Subscriptions writable by admins only"
     ON subscriptions FOR ALL
-    USING (company_id = (SELECT company_id FROM profiles WHERE id = auth.uid()))
-    WITH CHECK (company_id = (SELECT company_id FROM profiles WHERE id = auth.uid()));
+    USING (is_admin())
+    WITH CHECK (is_admin());

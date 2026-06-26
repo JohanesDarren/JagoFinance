@@ -75,14 +75,7 @@ async function startServer() {
         status: 'Pending',
         receiptUrl: receiptUrl || MOCK_RECEIPT_FALLBACK(),
         type: type || 'reimburse',
-        staffName: staffName || 'Afrisya Dwiky',
-        staffEmail: staffEmail || 'afrisyadwiky@gmail.com',
-        timeline: [
-          { label: 'Diajukan', date: timestamp, done: true, active: true },
-          { label: 'Sedang di-review', date: timestamp, done: true },
-          { label: 'Disetujui/Ditolak', date: '', done: false },
-          { label: 'Dana Cair', date: '', done: false }
-        ]
+        employeeId: 'admin'
       };
 
       db.transactions = [newTx, ...db.transactions];
@@ -119,20 +112,10 @@ async function startServer() {
       const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
       db.cashBalance -= tx.amount;
       
-      // Update transaction status & timeline
+      // Update transaction status
       db.transactions[txIndex] = {
         ...tx,
-        status: 'Approved',
-        recipientName: recipientName || tx.staffName,
-        bankName: bankName,
-        bankAccount: bankAccount,
-        transferReceiptUrl: transferReceiptUrl,
-        timeline: [
-          { label: 'Diajukan', date: tx.timeline[0].date, done: true },
-          { label: 'Sedang di-review', date: tx.timeline[1].date || timestamp, done: true },
-          { label: 'Disetujui', date: timestamp, done: true },
-          { label: 'Dana Cair', date: timestamp, done: true }
-        ]
+        status: 'Approved'
       };
 
       res.json({ success: true, balance: db.cashBalance, transaction: db.transactions[txIndex] });
@@ -165,14 +148,7 @@ async function startServer() {
       
       db.transactions[txIndex] = {
         ...tx,
-        status: 'Rejected',
-        rejectReason,
-        timeline: [
-          { label: 'Diajukan', date: tx.timeline[0].date, done: true },
-          { label: 'Sedang di-review', date: tx.timeline[1].date || timestamp, done: true },
-          { label: 'Ditolak', date: timestamp, done: true },
-          { label: 'Dana Cair', date: '--', done: false }
-        ]
+        status: 'Rejected'
       };
 
       res.json({ success: true, transaction: db.transactions[txIndex] });
@@ -215,9 +191,7 @@ async function startServer() {
         status: 'Approved',
         type,
         receiptUrl: receiptUrl || '',
-        staffName: 'CEO Admin',
-        staffEmail: 'ceo@jagoai.id',
-        timeline: [{ label: 'Pencatatan Buku Kas', date: timestamp, done: true }]
+        employeeId: 'admin'
       };
 
       db.transactions = [newTx, ...db.transactions];
@@ -316,9 +290,7 @@ async function startServer() {
           notes: `Pembayaran Payroll via transfer ke Rekening ${e.bankName} ${e.bankAccount}.`,
           status: 'Approved',
           type: 'expense_manual',
-          staffName: 'Finance Lead',
-          staffEmail: 'finance@jagoai.id',
-          timeline: [{ label: 'Payroll Ditransfer', date: timestamp, done: true }]
+          employeeId: 'admin'
         });
       });
 
@@ -434,33 +406,36 @@ async function startServer() {
 
   // 10. AI Transaction Processing Endpoint
   app.post('/api/transactions/process', async (req, res) => {
-    try {
-      const { receiptUrl, employeeId, companyId } = req.body;
+  try {
+    const { receiptUrl, employeeId } = req.body;
 
-      if (!receiptUrl || !companyId) {
-        return res.status(400).json({ error: 'receiptUrl dan companyId diperlukan.' });
-      }
+    if (!receiptUrl) {
+      return res.status(400).json({ error: 'Missing receiptUrl' });
+    }
 
-      // Step A: Call Hermes Mock
-      const extractedData = await extractWithHermesMock(receiptUrl);
+    console.log(`Processing receipt for employee ${employeeId || 'unknown'}: ${receiptUrl}`);
 
-      // Step B: Insert into Supabase transactions table
-      const { data, error } = await supabaseAdmin
-        .from('transactions')
-        .insert({
-          company_id: companyId,
+    // 1. Call Hermes AI Mock Service to extract data
+    const extractedData = await extractWithHermesMock(receiptUrl);
+
+    // 2. Insert into Supabase transactions table using admin client (bypasses RLS)
+    const { data, error } = await supabaseAdmin
+      .from('transactions')
+      .insert([
+        {
           employee_id: employeeId || null,
           date: extractedData.date,
           merchant: extractedData.merchant,
           category: extractedData.category,
           amount: extractedData.amount,
           notes: extractedData.notes,
-          type: 'reimburse', // Default type for receipt scanning
+          type: 'reimburse',
           status: 'pending',
           receipt_url: receiptUrl
-        })
-        .select()
-        .single();
+        }
+      ])
+      .select()
+      .single();
 
       if (error) {
         console.error('Supabase Insert Error:', error);

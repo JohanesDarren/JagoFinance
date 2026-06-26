@@ -6,12 +6,7 @@
 export type TransactionType = 'reimburse' | 'cash_advance' | 'income' | 'expense_manual';
 export type TransactionStatus = 'Pending' | 'Approved' | 'Rejected';
 
-export interface TimelineStep {
-  label: string;
-  date: string;
-  done: boolean;
-  active?: boolean;
-}
+
 
 export interface Transaction {
   id: string;
@@ -23,14 +18,7 @@ export interface Transaction {
   status: TransactionStatus;
   receiptUrl?: string; // Base64 or mock URL
   type: TransactionType;
-  staffName: string;
-  staffEmail: string;
-  rejectReason?: string;
-  timeline: TimelineStep[];
-  recipientName?: string;
-  bankName?: string;
-  bankAccount?: string;
-  transferReceiptUrl?: string;
+  employeeId: string;
 }
 
 export interface Subscription {

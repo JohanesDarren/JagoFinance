@@ -141,15 +141,8 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     notes: "Meeting santai internal tim dev membahas sprint 4.",
     status: "Approved",
     type: "reimburse",
-    staffName: "Afrisya Dwiky",
-    staffEmail: "afrisyadwiky@gmail.com",
-    receiptUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format&fit=crop&q=60",
-    timeline: [
-      { label: "Diajukan", date: "2026-05-18 09:30", done: true },
-      { label: "Sedang di-review", date: "2026-05-18 11:20", done: true },
-      { label: "Disetujui", date: "2026-05-18 14:00", done: true },
-      { label: "Dana Cair", date: "2026-05-18 16:30", done: true }
-    ]
+    employeeId: '123',
+        receiptUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format&fit=crop&q=60"
   },
   {
     id: "TX-102",
@@ -160,15 +153,8 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     notes: "Kunjungan kerja ke kantor klien UniGEO di Tebet.",
     status: "Approved",
     type: "reimburse",
-    staffName: "Afrisya Dwiky",
-    staffEmail: "afrisyadwiky@gmail.com",
-    receiptUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format&fit=crop&q=60",
-    timeline: [
-      { label: "Diajukan", date: "2026-05-19 14:15", done: true },
-      { label: "Sedang di-review", date: "2026-05-19 15:30", done: true },
-      { label: "Disetujui", date: "2026-05-19 16:10", done: true },
-      { label: "Dana Cair", date: "2026-05-19 17:00", done: true }
-    ]
+    employeeId: '123',
+        receiptUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format&fit=crop&q=60"
   },
   {
     id: "TX-103",
@@ -179,15 +165,9 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     notes: "Beli kopi untuk klien korporat dari AquaMate.",
     status: "Pending",
     type: "reimburse",
-    staffName: "Afrisya Dwiky",
-    staffEmail: "afrisyadwiky@gmail.com",
-    receiptUrl: "/receipt-starbucks.jpg", // Preloaded base64 reference or placeholder
-    timeline: [
-      { label: "Diajukan", date: "2026-05-20 10:00", done: true, active: true },
-      { label: "Sedang di-review", date: "2026-05-20 10:15", done: true },
-      { label: "Disetujui/Ditolak", date: "", done: false },
-      { label: "Dana Cair", date: "", done: false }
-    ]
+    employeeId: '123',
+        receiptUrl: "/receipt-starbucks.jpg", // Preloaded base64 reference or placeholder
+    
   },
   {
     id: "TX-104",
@@ -198,15 +178,8 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     notes: "Makan siang dengan tim UI/UX membahas feedback layout.",
     status: "Pending",
     type: "reimburse",
-    staffName: "Fitri Astuti",
-    staffEmail: "fitri@jagoai.id",
-    receiptUrl: "/receipt-soto.jpg",
-    timeline: [
-      { label: "Diajukan", date: "2026-05-21 12:30", done: true, active: true },
-      { label: "Sedang di-review", date: "2026-05-21 13:00", done: true },
-      { label: "Disetujui/Ditolak", date: "", done: false },
-      { label: "Dana Cair", date: "", done: false }
-    ]
+    employeeId: '123',
+        receiptUrl: "/receipt-soto.jpg"
   },
   {
     id: "TX-105",
@@ -217,17 +190,9 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     notes: "Injeksi tinta printer, kertas A4, dan pulpen kantor.",
     status: "Rejected",
     type: "reimburse",
-    staffName: "Ahmad Saepudin",
-    staffEmail: "ahmad@jagoai.id",
-    receiptUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format&fit=crop&q=60",
-    rejectReason: "Struk pembelian buram dan tidak terbaca jelas oleh tim audit keuangan.",
-    timeline: [
-      { label: "Diajukan", date: "2026-05-17 08:30", done: true },
-      { label: "Sedang di-review", date: "2026-05-17 11:30", done: true },
-      { label: "Ditolak", date: "2026-05-17 14:10", done: true },
-      { label: "Dana Cair", date: "--", done: false }
-    ]
-  },
+    employeeId: '123',
+        receiptUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format&fit=crop&q=60",
+      },
   // Inbound Automated Streams (Uang Masuk)
   {
     id: "TX-INC-001",
@@ -238,9 +203,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     notes: "Pembayaran lisensi API dari PT Sentosa Geo Solusindo.",
     status: "Approved",
     type: "income",
-    staffName: "System",
-    staffEmail: "unigeo@jagoai.id",
-    timeline: [{ label: "Otomatisasi Masuk", date: "2026-05-21 15:01", done: true }]
+    employeeId: '123'
   },
   {
     id: "TX-INC-002",
@@ -251,9 +214,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     notes: "Siklus tagihan bulanan SaaS dari PDAM Tirta Kencana.",
     status: "Approved",
     type: "income",
-    staffName: "System",
-    staffEmail: "aquamate@jagoai.id",
-    timeline: [{ label: "Otomatisasi Masuk", date: "2026-05-21 14:48", done: true }]
+    employeeId: '123'
   },
   {
     id: "TX-INC-003",
@@ -264,9 +225,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     notes: "Inbound volume billing oleh Astra Digital Service.",
     status: "Approved",
     type: "income",
-    staffName: "System",
-    staffEmail: "unigeo@jagoai.id",
-    timeline: [{ label: "Otomatisasi Masuk", date: "2026-05-20 23:10", done: true }]
+    employeeId: '123'
   },
   // Manual Entry Form Transaksi buku kas
   {
@@ -278,9 +237,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     notes: "Penerimaan pendanaan jembatan untuk akselerasi R&D AI Server.",
     status: "Approved",
     type: "income",
-    staffName: "CEO Admin",
-    staffEmail: "ceo@jagoai.id",
-    timeline: [{ label: "Pencatatan Buku Kas", date: "2026-05-15 10:00", done: true }]
+    employeeId: '123'
   },
   {
     id: "TX-MAN-002",
@@ -291,9 +248,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     notes: "Sewa hotdesk bulanan di WeWork Kuningan.",
     status: "Approved",
     type: "expense_manual",
-    staffName: "Operations Admin",
-    staffEmail: "ops@jagoai.id",
-    timeline: [{ label: "Pencatatan Buku Kas", date: "2026-05-16 11:30", done: true }]
+    employeeId: '123'
   }
 ];
 

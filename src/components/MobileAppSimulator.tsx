@@ -14,7 +14,6 @@ interface MobileAppSimulatorProps {
   transactions: Transaction[];
   cashBalance: number;
   onRefreshData: () => void;
-  staffEmail: string;
   currentUserProfile?: any;
   onLogout?: () => void;
 }
@@ -23,7 +22,6 @@ export default function MobileAppSimulator({
   transactions, 
   cashBalance, 
   onRefreshData,
-  staffEmail,
   currentUserProfile,
   onLogout
 }: MobileAppSimulatorProps) {
@@ -32,8 +30,8 @@ export default function MobileAppSimulator({
   const [currentScreen, setCurrentScreen] = useState<'auth' | 'forgot' | 'home' | 'scanner' | 'ai-loading' | 'form' | 'success' | 'history' | 'detail' | 'profile'>('auth');
   
   // Authentication credentials
-  const [email, setEmail] = useState(currentUserProfile?.email || staffEmail || 'afrisyadwiky@gmail.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState(currentUserProfile?.email || '');
+  const [password, setPassword] = useState('');
   const [isLogged, setIsLogged] = useState(!!currentUserProfile);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState(false);
@@ -43,18 +41,16 @@ export default function MobileAppSimulator({
 
   useEffect(() => {
     if (currentUserProfile) {
-      setEmail(currentUserProfile.email || staffEmail);
+      setEmail(currentUserProfile.email || '');
       setIsLogged(true);
       setCurrentScreen('home');
-      if (currentUserProfile.companies?.subscription_tier) {
-        setSubTier(currentUserProfile.companies.subscription_tier);
-      }
+      setSubTier('pro'); // default to pro for single tenant
     } else {
       setIsLogged(false);
       setCurrentScreen('auth');
       setSubTier('free');
     }
-  }, [currentUserProfile, staffEmail]);
+  }, [currentUserProfile]);
 
   // Scanner States
   const [cameraActive, setCameraActive] = useState(false);
@@ -93,7 +89,7 @@ export default function MobileAppSimulator({
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
 
-  const staffTransactions = transactions.filter(t => t.staffEmail.toLowerCase() === employeeEmail.toLowerCase());
+  const staffTransactions = transactions.filter(t => t.employeeId === currentUserProfile?.id);
   const limitMax = 15000000; // Rp 15.000.000 Limit Bulanan
   
   // Calculate approved and pending payments
@@ -182,8 +178,7 @@ export default function MobileAppSimulator({
   const triggerOcrScan = async (base64Data: string, fileName: string, fileType: string) => {
     setCurrentScreen('ai-loading');
     try {
-      const companyId = currentUserProfile?.company_id;
-      const result = await scanReceiptAndUpload(base64Data, fileName, fileType, companyId, currentUserProfile?.id);
+      const result = await scanReceiptAndUpload(base64Data, fileName, fileType, currentUserProfile?.id);
       
       // Success! Backend has processed and inserted the transaction.
       setScannedData(result);
@@ -194,13 +189,6 @@ export default function MobileAppSimulator({
       setFormError(err.message || 'Gagal memproses struk.');
       setCurrentScreen('dashboard');
     }
-  };
-
-  const handleSelectSample = async (sampleName: string, sampleUrl: string) => {
-    setScanImage(sampleUrl);
-    setScanImageName(sampleName);
-    const simulatedBase64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/";
-    await triggerOcrScan(simulatedBase64, sampleName, 'image/jpeg');
   };
 
   // 5. Handle File Upload from Gallery (Convert to Base64 & Send to Server)
@@ -234,23 +222,14 @@ export default function MobileAppSimulator({
         const { error } = await supabase
           .from('transactions')
           .insert([{
-            company_id: currentUserProfile.company_id,
-            user_id: currentUserProfile.id,
+            employee_id: currentUserProfile.id,
             merchant: formMerchant,
             category: formCategory,
             amount: Number(formAmount),
             notes: formNotes,
             status: 'pending',
             receipt_url: scanImage,
-            type: formType,
-            staff_name: staffName,
-            staff_email: employeeEmail,
-            timeline: [
-              { label: 'Diajukan', date: timestamp, done: true, active: true },
-              { label: 'Sedang di-review', date: timestamp, done: true },
-              { label: 'Disetujui/Ditolak', date: '', done: false },
-              { label: 'Dana Cair', date: '', done: false }
-            ]
+            type: formType
           }]);
 
         if (error) throw error;
@@ -269,8 +248,7 @@ export default function MobileAppSimulator({
             amount: Number(formAmount),
             notes: formNotes,
             receiptUrl: scanImage,
-            staffName,
-            staffEmail: employeeEmail,
+            employeeId: currentUserProfile?.id,
             type: formType
           })
         });
@@ -686,36 +664,8 @@ export default function MobileAppSimulator({
                   </div>
                 </div>
 
-                {/* Camera Controller buttons / Sample selection */}
+                {/* Camera Controller buttons */}
                 <div className="p-4 bg-slate-950 space-y-3 z-20 text-white border-t border-slate-900">
-                  <div className="space-y-1.5 text-center">
-                    <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500">Atau Pilih Sampel Struk Cepat</span>
-                    <div className="grid grid-cols-3 gap-2">
-                      <button 
-                        onClick={() => handleSelectSample('starbucks_coffee.jpg', 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format&fit=crop&q=60')}
-                        className="bg-slate-900 hover:bg-slate-800 p-1 rounded-lg text-[9px] flex flex-col items-center border border-slate-800"
-                      >
-                        <span className="font-semibold block truncate w-full">Starbucks</span>
-                        <span className="text-[7px] text-indigo-400">Rp 142k</span>
-                      </button>
-
-                      <button 
-                        onClick={() => handleSelectSample('soto_kudus_menara.jpg', 'https://images.unsplash.com/photo-1547592180-85f173990554?w=500&auto=format&fit=crop&q=60')}
-                        className="bg-slate-900 hover:bg-slate-800 p-1 rounded-lg text-[9px] flex flex-col items-center border border-slate-800"
-                      >
-                        <span className="font-semibold block truncate w-full">Soto Kudus</span>
-                        <span className="text-[7px] text-indigo-400">Rp 95k</span>
-                      </button>
-
-                      <button 
-                        onClick={() => handleSelectSample('taxi_operational.jpg', 'https://images.unsplash.com/photo-1518112166137-839070a7df84?w=500&auto=format&fit=crop&q=60')}
-                        className="bg-slate-900 hover:bg-slate-800 p-1 rounded-lg text-[9px] flex flex-col items-center border border-slate-800"
-                      >
-                        <span className="font-semibold block truncate w-full">Grab Taxi</span>
-                        <span className="text-[7px] text-indigo-400">Rp 68k</span>
-                      </button>
-                    </div>
-                  </div>
 
                   {/* Manual file upload & Capture triggers */}
                   <div className="flex gap-3 pt-2">
@@ -1128,50 +1078,35 @@ export default function MobileAppSimulator({
                   )}
                 </AnimatePresence>
 
-                {/* TIMELINE TRACKER VERTICAL */}
+                {/* STATUS TRACKER VERTICAL */}
                 <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-4xs space-y-3">
-                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Progres Pelacakan Dana</span>
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Status Transaksi</span>
                   
                   <div className="space-y-4 relative pl-5 border-l border-indigo-100 ml-1.5 py-1">
-                    
-                    {selectedTx.timeline.map((step, idx) => {
-                      // Adjust status rejection rendering dynamically
-                      let stepName = step.label;
-                      if (step.label === 'Disetujui/Ditolak') {
-                        stepName = selectedTx.status === 'Rejected' ? 'Ditolak' : 'Disetujui';
-                      }
-
-                      const valActive = step.done || step.active;
-
-                      return (
-                        <div key={idx} className="relative text-[10px]">
-                          
-                          {/* Inner timeline point circle */}
-                          <div className={`absolute -left-[25px] top-0.5 w-3 h-3 rounded-full border-2 flex items-center justify-center ${
-                            step.done 
-                              ? 'bg-emerald-500 border-emerald-500' 
-                              : selectedTx.status === 'Rejected' && step.label.includes('Disetujui/Ditolak')
-                                ? 'bg-rose-500 border-rose-500'
-                                : 'bg-white border-indigo-200'
-                          }`}>
-                            {step.done && <Check className="w-2 h-2 text-white stroke-[3]" />}
-                            {selectedTx.status === 'Rejected' && step.label.includes('Disetujui/Ditolak') && <X className="w-2 h-2 text-white stroke-[3]" />}
-                          </div>
-
-                          <div className="leading-snug">
-                            <span className={`font-bold block ${
-                              step.done 
-                                ? 'text-slate-800' 
-                                : selectedTx.status === 'Rejected' && step.label.includes('Disetujui/Ditolak')
-                                  ? 'text-rose-600'
-                                  : 'text-slate-400'
-                            }`}>{stepName}</span>
-                            <span className="text-[8px] text-slate-400">{step.date || 'Menunggu verifikasi'}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-
+                    <div className="relative text-[10px]">
+                      <div className={`absolute -left-[25px] top-0.5 w-3 h-3 rounded-full border-2 flex items-center justify-center ${
+                        selectedTx.status === 'Approved' ? 'bg-emerald-500 border-emerald-500' : 
+                        selectedTx.status === 'Rejected' ? 'bg-rose-500 border-rose-500' : 
+                        'bg-amber-500 border-amber-500'
+                      }`}>
+                        {selectedTx.status === 'Approved' && <Check className="w-2 h-2 text-white stroke-[3]" />}
+                        {selectedTx.status === 'Rejected' && <X className="w-2 h-2 text-white stroke-[3]" />}
+                      </div>
+                      <div className="leading-snug">
+                        <span className={`font-bold block ${
+                          selectedTx.status === 'Approved' ? 'text-emerald-600' :
+                          selectedTx.status === 'Rejected' ? 'text-rose-600' :
+                          'text-amber-600'
+                        }`}>
+                          {selectedTx.status === 'Approved' ? 'Disetujui & Dana Cair' :
+                           selectedTx.status === 'Rejected' ? 'Ditolak' :
+                           'Sedang Direview'}
+                        </span>
+                        <span className="text-[8px] text-slate-400">
+                          {selectedTx.date}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

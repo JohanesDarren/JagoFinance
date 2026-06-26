@@ -22,13 +22,9 @@ export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
-  // Default simulated staff identities for quick demo
-  const [staffEmail, setStaffEmail] = useState('afrisyadwiky@gmail.com');
-
   // Supabase states
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [company, setCompany] = useState<any>(null);
 
   // --- Database Column Mappers (Postgres snake_case <-> Frontend camelCase) ---
   const mapTxFromDb = (dbTx: any): Transaction => ({
@@ -41,14 +37,7 @@ export default function App() {
     status: dbTx.status === 'approved' ? 'Approved' : dbTx.status === 'rejected' ? 'Rejected' : 'Pending',
     receiptUrl: dbTx.receipt_url || '',
     type: dbTx.type,
-    staffName: dbTx.staff_name || '',
-    staffEmail: dbTx.staff_email || '',
-    rejectReason: dbTx.reject_reason || '',
-    timeline: dbTx.timeline || [],
-    recipientName: dbTx.recipient_name || '',
-    bankName: dbTx.bank_name || '',
-    bankAccount: dbTx.bank_account || '',
-    transferReceiptUrl: dbTx.transfer_receipt_url || ''
+    employeeId: dbTx.employee_id || ''
   });
 
   const mapEmployeeFromDb = (dbEmp: any): Employee => ({
@@ -92,48 +81,50 @@ export default function App() {
       if (isSupabaseConfigured()) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          // Fetch user profile and company info
+          // Fetch user profile
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
-            .select('*, companies(*)')
+            .select('*')
             .eq('id', user.id)
             .single();
 
           if (profileError) throw profileError;
 
           setProfile(profileData);
-          setCompany(profileData.companies);
-          setCashBalance(profileData.companies.current_balance);
 
-          const companyId = profileData.company_id;
+          // Fetch global finance settings for balance
+          const { data: financeData } = await supabase
+            .from('finance_settings')
+            .select('current_balance')
+            .eq('id', 1)
+            .single();
+          if (financeData) {
+            setCashBalance(financeData.current_balance);
+          }
           
           // Fetch transactions
           const { data: txs } = await supabase
             .from('transactions')
             .select('*')
-            .eq('company_id', companyId)
             .order('created_at', { ascending: false });
           setTransactions(txs ? txs.map(mapTxFromDb) : []);
 
           // Fetch employees
           const { data: emps } = await supabase
             .from('employees')
-            .select('*')
-            .eq('company_id', companyId);
+            .select('*');
           setEmployees(emps ? emps.map(mapEmployeeFromDb) : []);
 
           // Fetch connected apps
           const { data: apps } = await supabase
             .from('connected_apps')
-            .select('*')
-            .eq('company_id', companyId);
+            .select('*');
           setConnectedApps(apps ? apps.map(mapAppFromDb) : []);
 
           // Fetch subscriptions
           const { data: subs } = await supabase
             .from('subscriptions')
-            .select('*')
-            .eq('company_id', companyId);
+            .select('*');
           setSubscriptions(subs ? subs.map(mapSubFromDb) : []);
 
           setIsLoading(false);
@@ -141,19 +132,6 @@ export default function App() {
           return;
         }
       }
-
-      // Fallback sandbox offline mode
-      const response = await fetch('/api/financial-data');
-      if (!response.ok) {
-        throw new Error('API server unreachable.');
-      }
-      const data = await response.json();
-      
-      setCashBalance(data.cashBalance);
-      setTransactions(data.transactions);
-      setEmployees(data.employees);
-      setConnectedApps(data.connectedApps);
-      setSubscriptions(data.subscriptions);
     } catch (error) {
       console.error('Error fetching backend session data:', error);
     } finally {
@@ -185,7 +163,6 @@ export default function App() {
         fetchFinancialData(true);
       } else {
         setProfile(null);
-        setCompany(null);
         setUserRole(null);
       }
     });
@@ -197,16 +174,15 @@ export default function App() {
 
   // Real-time listener for postgres transaction table changes
   useEffect(() => {
-    if (!isSupabaseConfigured() || !company) return;
+    if (!isSupabaseConfigured()) return;
 
-    const companyId = company.id;
-    console.log(`Subscribing to real-time changes for company ${companyId}`);
+    console.log(`Subscribing to real-time changes`);
 
     const channel = supabase
-      .channel(`realtime-changes-${companyId}`)
+      .channel(`realtime-changes`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'transactions', filter: `company_id=eq.${companyId}` },
+        { event: '*', schema: 'public', table: 'transactions' },
         async (payload) => {
           console.log('Real-time transaction change received:', payload);
           
@@ -214,17 +190,16 @@ export default function App() {
           const { data: txs } = await supabase
             .from('transactions')
             .select('*')
-            .eq('company_id', companyId)
             .order('created_at', { ascending: false });
           if (txs) setTransactions(txs.map(mapTxFromDb));
 
-          // Re-fetch company balance
-          const { data: coData } = await supabase
-            .from('companies')
+          // Re-fetch global balance
+          const { data: fsData } = await supabase
+            .from('finance_settings')
             .select('current_balance')
-            .eq('id', companyId)
+            .eq('id', 1)
             .single();
-          if (coData) setCashBalance(coData.current_balance);
+          if (fsData) setCashBalance(fsData.current_balance);
         }
       )
       .subscribe();
@@ -232,7 +207,7 @@ export default function App() {
     return () => {
       channel.unsubscribe();
     };
-  }, [company]);
+  }, []);
 
   // 2. Action: Approve reimbursement
   const handleApproveReimbursement = async (
@@ -243,7 +218,7 @@ export default function App() {
     transferReceiptUrl?: string
   ): Promise<boolean> => {
     try {
-      if (isSupabaseConfigured() && company) {
+      if (isSupabaseConfigured()) {
         const tx = transactions.find(t => t.id === transactionId);
         if (!tx) throw new Error('Transaksi tidak ditemukan.');
         
@@ -253,27 +228,17 @@ export default function App() {
 
         const newBalance = cashBalance - tx.amount;
 
-        const { error: coErr } = await supabase
-          .from('companies')
+        const { error: fsErr } = await supabase
+          .from('finance_settings')
           .update({ current_balance: newBalance })
-          .eq('id', company.id);
-        if (coErr) throw coErr;
+          .eq('id', 1);
+        if (fsErr) throw fsErr;
 
         const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
         const { error: txErr } = await supabase
           .from('transactions')
           .update({
-            status: 'approved',
-            recipient_name: recipientName || tx.staffName,
-            bank_name: bankName || '',
-            bank_account: bankAccount || '',
-            transfer_receipt_url: transferReceiptUrl || '',
-            timeline: [
-              { label: 'Diajukan', date: tx.timeline?.[0]?.date || timestamp, done: true },
-              { label: 'Sedang di-review', date: tx.timeline?.[1]?.date || timestamp, done: true },
-              { label: 'Disetujui', date: timestamp, done: true },
-              { label: 'Dana Cair', date: timestamp, done: true }
-            ]
+            status: 'approved'
           })
           .eq('id', transactionId);
         if (txErr) throw txErr;
@@ -305,7 +270,7 @@ export default function App() {
   // 3. Action: Reject reimbursement
   const handleRejectReimbursement = async (transactionId: string, rejectReason: string): Promise<boolean> => {
     try {
-      if (isSupabaseConfigured() && company) {
+      if (isSupabaseConfigured()) {
         const tx = transactions.find(t => t.id === transactionId);
         if (!tx) throw new Error('Transaksi tidak ditemukan.');
         const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
@@ -313,14 +278,7 @@ export default function App() {
         const { error: txErr } = await supabase
           .from('transactions')
           .update({
-            status: 'rejected',
-            reject_reason: rejectReason,
-            timeline: [
-              { label: 'Diajukan', date: tx.timeline?.[0]?.date || timestamp, done: true },
-              { label: 'Sedang di-review', date: tx.timeline?.[1]?.date || timestamp, done: true },
-              { label: 'Ditolak', date: timestamp, done: true },
-              { label: 'Dana Cair', date: '--', done: false }
-            ]
+            status: 'rejected'
           })
           .eq('id', transactionId);
         if (txErr) throw txErr;
@@ -349,7 +307,7 @@ export default function App() {
   // 4. Action: Add Manual Book ledger transaction
   const handleManualLedgerEntry = async (formData: any): Promise<any> => {
     try {
-      if (isSupabaseConfigured() && company) {
+      if (isSupabaseConfigured()) {
         const { merchant, category, amount, notes, type, receiptUrl } = formData;
         const amt = Number(amount);
         let newBalance = cashBalance;
@@ -367,19 +325,18 @@ export default function App() {
           newBalance += amt;
         }
 
-        // Update company balance
-        const { error: coErr } = await supabase
-          .from('companies')
+        // Update global balance
+        const { error: fsErr } = await supabase
+          .from('finance_settings')
           .update({ current_balance: newBalance })
-          .eq('id', company.id);
-        if (coErr) throw coErr;
+          .eq('id', 1);
+        if (fsErr) throw fsErr;
 
         // Insert transaction
         const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
         const { error: txErr } = await supabase
           .from('transactions')
           .insert([{
-            company_id: company.id,
             merchant,
             category,
             amount: amt,
@@ -387,9 +344,7 @@ export default function App() {
             status: 'approved',
             type,
             receipt_url: receiptUrl || '',
-            staff_name: 'CEO Admin',
-            staff_email: 'ceo@jagoai.id',
-            timeline: [{ label: 'Pencatatan Buku Kas', date: timestamp, done: true }]
+            employee_id: profile?.id || null
           }]);
         if (txErr) throw txErr;
 
@@ -419,7 +374,7 @@ export default function App() {
   // 5. Action: Toggle connected API status
   const handleToggleConnectedApp = async (appId: string) => {
     try {
-      if (isSupabaseConfigured() && company) {
+      if (isSupabaseConfigured()) {
         const app = connectedApps.find(a => a.id === appId);
         if (!app) throw new Error('Aplikasi tidak ditemukan.');
         const newStatus = app.status === 'active' ? 'inactive' : 'active';
@@ -453,7 +408,7 @@ export default function App() {
   // 6. Action: Configure webhook
   const handleSaveWebhook = async (appId: string, data: any) => {
     try {
-      if (isSupabaseConfigured() && company) {
+      if (isSupabaseConfigured()) {
         const randomApiKey = 'jg_live_' + [...Array(24)].map(() => (Math.random() * 36 | 0).toString(36)).join('');
         const { error } = await supabase
           .from('connected_apps')
@@ -486,7 +441,7 @@ export default function App() {
   // 7. Action: Run payroll generator mass
   const handlePayrollGenerate = async (division: string): Promise<any> => {
     try {
-      if (isSupabaseConfigured() && company) {
+      if (isSupabaseConfigured()) {
         const targetEmployees = division === 'Semua' 
           ? employees 
           : employees.filter(e => e.division === division);
@@ -508,11 +463,11 @@ export default function App() {
 
         const newBalance = cashBalance - totalDeduct;
 
-        // Update company balance
+        // Update global balance
         const { error: coErr } = await supabase
-          .from('companies')
+          .from('finance_settings')
           .update({ current_balance: newBalance })
-          .eq('id', company.id);
+          .eq('id', 1);
         if (coErr) throw coErr;
 
         // Batch insert transactions
@@ -520,7 +475,7 @@ export default function App() {
         const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
         
         const newTxs = targetEmployees.map(e => ({
-          company_id: company.id,
+          employee_id: e.id,
           merchant: `Gaji Bulanan - ${e.name} (${e.division})`,
           category: 'Gaji Karyawan',
           amount: e.salary,
@@ -566,7 +521,6 @@ export default function App() {
     }
     setSession(null);
     setProfile(null);
-    setCompany(null);
     setUserRole(null);
   };
 
@@ -585,8 +539,7 @@ export default function App() {
           onAuthSuccess={(sess, profileData) => {
             setSession(sess);
             setProfile(profileData);
-            setCompany(profileData.companies);
-            setCashBalance(profileData.companies.current_balance);
+            
             if (profileData.role === 'admin') {
               setUserRole('finance');
             } else {
@@ -612,8 +565,6 @@ export default function App() {
             onPayrollGenerate={handlePayrollGenerate}
             isLoading={isLoading}
             onLogout={handleLogout}
-            companyName={company?.name}
-            subscriptionTier={company?.subscription_tier}
           />
         </div>
       ) : (
@@ -633,33 +584,9 @@ export default function App() {
             transactions={transactions}
             cashBalance={cashBalance}
             onRefreshData={forceRefresh}
-            staffEmail={staffEmail}
             currentUserProfile={profile}
             onLogout={handleLogout}
           />
-
-          {/* Simulated identity controls floating helper inside staff view */}
-          <div className="absolute bottom-6 right-6 bg-slate-800/90 text-slate-200 p-4 rounded-2xl border border-slate-700 shadow-xl max-w-xs space-y-2 hidden lg:block backdrop-blur-md">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block flex items-center gap-1">
-              <HelpCircle className="w-3.5 h-3.5 inline-block text-indigo-400" /> Demo Staff Controller
-            </span>
-            
-            <div className="space-y-1 text-xs">
-              <p className="text-[11px] text-slate-400 leading-snug">Ubah identitas email karyawan di bawah ini untuk mensimulasikan login di hp:</p>
-              <select 
-                value={staffEmail} 
-                onChange={(e) => {
-                  setStaffEmail(e.target.value);
-                  alert(`Demo email beralih ke ${e.target.value}. Silakan Sign In ulang di handphone.`);
-                }}
-                className="w-full mt-1.5 p-2 bg-slate-900 border border-slate-705 text-white rounded-xl text-[11px] outline-none"
-              >
-                <option value="afrisyadwiky@gmail.com">Afrisya Dwiky (Operations PM)</option>
-                <option value="fitri@jagoai.id">Fitri Astuti (UI/UX Designer)</option>
-                <option value="rizky@jagoai.id">Rizky Ramadhan (Senior AI Eng)</option>
-              </select>
-            </div>
-          </div>
         </div>
       )}
 
