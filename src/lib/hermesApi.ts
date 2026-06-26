@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 
 export interface ScanResult {
+  id?: string;
   merchant: string;
   date: string;
   category: string;
@@ -13,14 +14,14 @@ export const scanReceiptAndUpload = async (
   fileBase64: string,
   fileName: string,
   mimeType: string,
-  companyId?: string
+  companyId?: string,
+  employeeId?: string
 ): Promise<ScanResult> => {
   let receiptUrl = '';
 
   // 1. If Supabase is active, upload to private bucket 'receipts'
   if (isSupabaseConfigured() && companyId) {
     try {
-      // Convert base64 to binary ArrayBuffer
       const base64Data = fileBase64.includes('base64,') ? fileBase64.split('base64,')[1] : fileBase64;
       const binaryString = window.atob(base64Data);
       const len = binaryString.length;
@@ -32,8 +33,7 @@ export const scanReceiptAndUpload = async (
       const fileExt = fileName.split('.').pop() || 'jpg';
       const storagePath = `${companyId}/${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
 
-      // Upload binary to Supabase private storage
-      const { data: uploadData, error: uploadErr } = await supabase.storage
+      const { error: uploadErr } = await supabase.storage
         .from('receipts')
         .upload(storagePath, bytes.buffer, {
           contentType: mimeType,
@@ -43,10 +43,9 @@ export const scanReceiptAndUpload = async (
       if (uploadErr) {
         console.error("Supabase Storage upload failed:", uploadErr);
       } else {
-        // Create signed URL for 1 year
         const { data: signedData, error: signedErr } = await supabase.storage
           .from('receipts')
-          .createSignedUrl(storagePath, 60 * 60 * 24 * 365); // 365 days
+          .createSignedUrl(storagePath, 60 * 60 * 24 * 365);
 
         if (signedErr) {
           console.error("Signed URL creation failed:", signedErr);
@@ -59,39 +58,39 @@ export const scanReceiptAndUpload = async (
     }
   }
 
-  // Fallback to local base64 if upload fails or sandbox mode
   if (!receiptUrl) {
     receiptUrl = fileBase64.startsWith('data:') ? fileBase64 : `data:${mimeType};base64,${fileBase64}`;
   }
 
-  // 2. Trigger OCR/Gemini Scan on Node Server (which holds the GEMINI_API_KEY securely)
-  const cleanBase64 = fileBase64.includes('base64,') ? fileBase64.split('base64,')[1] : fileBase64;
-
-  const response = await fetch('/api/scan-receipt', {
+  // 2. Call the new Hermes Orchestration Endpoint
+  const response = await fetch('/api/transactions/process', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      image: cleanBase64,
-      mimeType,
-      fileName
+      receiptUrl,
+      companyId,
+      employeeId
     })
   });
 
   if (!response.ok) {
-    throw new Error('Gagal menghubungi API scan server.');
+    throw new Error('Gagal memproses transaksi melalui Hermes AI server.');
   }
 
   const resData = await response.json();
   if (!resData.success) {
-    throw new Error(resData.error || 'Scan OCR gagal.');
+    throw new Error(resData.error || 'Proses transaksi gagal.');
   }
 
+  // Map backend transaction back to expected frontend shape if it still needs it
+  const tx = resData.transaction;
   return {
-    merchant: resData.extracted.merchant,
-    date: resData.extracted.date,
-    category: resData.extracted.category,
-    amount: Number(resData.extracted.amount),
-    notes: resData.extracted.notes || '',
+    id: tx.id,
+    merchant: tx.merchant,
+    date: tx.date,
+    category: tx.category,
+    amount: Number(tx.amount),
+    notes: tx.notes || '',
     receiptUrl
   };
 };

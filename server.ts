@@ -8,7 +8,7 @@ import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
-
+import { createClient } from '@supabase/supabase-js';
 // Load environment variables
 dotenv.config();
 
@@ -21,7 +21,11 @@ import {
   INITIAL_TRANSACTIONS 
 } from './src/utils/mockData.js';
 import { Transaction, ConnectedApp, Subscription, Employee } from './src/types';
+import { extractWithHermesMock } from './src/services/hermesMock.js';
 
+const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 // Stateful Server Database in Memory for the session
 let db = {
   cashBalance: INITIAL_CASH_BALANCE,
@@ -428,6 +432,47 @@ async function startServer() {
 
   // --- End of API Endpoints ---
 
+  // 10. AI Transaction Processing Endpoint
+  app.post('/api/transactions/process', async (req, res) => {
+    try {
+      const { receiptUrl, employeeId, companyId } = req.body;
+
+      if (!receiptUrl || !companyId) {
+        return res.status(400).json({ error: 'receiptUrl dan companyId diperlukan.' });
+      }
+
+      // Step A: Call Hermes Mock
+      const extractedData = await extractWithHermesMock(receiptUrl);
+
+      // Step B: Insert into Supabase transactions table
+      const { data, error } = await supabaseAdmin
+        .from('transactions')
+        .insert({
+          company_id: companyId,
+          employee_id: employeeId || null,
+          date: extractedData.date,
+          merchant: extractedData.merchant,
+          category: extractedData.category,
+          amount: extractedData.amount,
+          notes: extractedData.notes,
+          type: 'reimburse', // Default type for receipt scanning
+          status: 'pending',
+          receipt_url: receiptUrl
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase Insert Error:', error);
+        throw new Error('Gagal menyimpan transaksi ke database.');
+      }
+
+      res.json({ success: true, transaction: data });
+    } catch (error: any) {
+      console.error('Transaction Processing Error:', error);
+      res.status(500).json({ error: error.message || 'Terjadi kesalahan pada server.' });
+    }
+  });
   // Vite middleware or production static folder serve
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({

@@ -179,30 +179,20 @@ export default function MobileAppSimulator({
     setCurrentScreen('scanner');
   };
 
-  // 4. Helper to trigger OCR scan and upload to Supabase if active
   const triggerOcrScan = async (base64Data: string, fileName: string, fileType: string) => {
     setCurrentScreen('ai-loading');
     try {
       const companyId = currentUserProfile?.company_id;
-      const result = await scanReceiptAndUpload(base64Data, fileName, fileType, companyId);
+      const result = await scanReceiptAndUpload(base64Data, fileName, fileType, companyId, currentUserProfile?.id);
       
+      // Success! Backend has processed and inserted the transaction.
       setScannedData(result);
-      setScanImage(result.receiptUrl);
-      setFormMerchant(result.merchant);
-      setFormDate(result.date);
-      setFormCategory(result.category);
-      setFormAmount(result.amount);
-      setFormNotes(result.notes || '');
-      setCurrentScreen('form');
+      onRefreshData();
+      setCurrentScreen('success');
     } catch (err: any) {
       console.error(err);
-      // Fallback
-      setFormMerchant(fileName.split('.')[0].toUpperCase().replace(/[-_]/g, ' '));
-      setFormDate(new Date().toISOString().split('T')[0]);
-      setFormCategory('Operasional');
-      setFormAmount(120000);
-      setFormNotes('Ekstraksi struk cadangan lokal.');
-      setCurrentScreen('form');
+      setFormError(err.message || 'Gagal memproses struk.');
+      setCurrentScreen('dashboard');
     }
   };
 
