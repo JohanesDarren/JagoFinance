@@ -10,12 +10,7 @@ export interface ScanResult {
   receiptUrl: string;
 }
 
-export const scanReceiptAndUpload = async (
-  fileBase64: string,
-  fileName: string,
-  mimeType: string,
-  employeeId?: string
-): Promise<ScanResult> => {
+export const uploadReceipt = async (fileBase64: string, fileName: string, mimeType: string): Promise<string> => {
   let receiptUrl = '';
 
   // 1. If Supabase is active, upload to private bucket 'receipts'
@@ -60,6 +55,16 @@ export const scanReceiptAndUpload = async (
   if (!receiptUrl) {
     receiptUrl = fileBase64.startsWith('data:') ? fileBase64 : `data:${mimeType};base64,${fileBase64}`;
   }
+  return receiptUrl;
+};
+
+export const scanReceiptAndUpload = async (
+  fileBase64: string,
+  fileName: string,
+  mimeType: string,
+  employeeId?: string
+): Promise<ScanResult> => {
+  const receiptUrl = await uploadReceipt(fileBase64, fileName, mimeType);
 
   // 2. Call the new Hermes Orchestration Endpoint
   const response = await fetch('/api/transactions/process', {

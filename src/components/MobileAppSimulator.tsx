@@ -27,7 +27,7 @@ export default function MobileAppSimulator({
 }: MobileAppSimulatorProps) {
   
   // Mobile Router/State
-  const [currentScreen, setCurrentScreen] = useState<'auth' | 'forgot' | 'home' | 'scanner' | 'ai-loading' | 'form' | 'success' | 'history' | 'detail' | 'profile'>('auth');
+  const [currentScreen, setCurrentScreen] = useState<'auth' | 'forgot' | 'home' | 'scanner' | 'ai-loading' | 'form' | 'success' | 'history' | 'detail' | 'profile' | 'edit-profile' | 'avatar-camera' | 'avatar-gallery' | 'notifications'>('auth');
   
   // Authentication credentials
   const [email, setEmail] = useState(currentUserProfile?.email || '');
@@ -70,6 +70,7 @@ export default function MobileAppSimulator({
   const [formCategory, setFormCategory] = useState('Operasional');
   const [formAmount, setFormAmount] = useState<number>(0);
   const [formNotes, setFormNotes] = useState('');
+  const [formItems, setFormItems] = useState<any[]>([]);
   const [formType, setFormType] = useState<'reimburse' | 'cash_advance'>('reimburse');
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,6 +82,16 @@ export default function MobileAppSimulator({
 
   // Profile / Notification banner
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [editProfileData, setEditProfileData] = useState({
+    avatarImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+    fullName: currentUserProfile?.full_name || '',
+    phone: '',
+    email: currentUserProfile?.email || '',
+    bankName: 'Mandiri',
+    bankAccount: '5540982738',
+    accountHolder: currentUserProfile?.full_name || ''
+  });
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   // Remaining list calculations for specific employee
   const employeeEmail = (currentUserProfile?.email || email).trim();
@@ -178,12 +189,26 @@ export default function MobileAppSimulator({
   const triggerOcrScan = async (base64Data: string, fileName: string, fileType: string) => {
     setCurrentScreen('ai-loading');
     try {
-      const result = await scanReceiptAndUpload(base64Data, fileName, fileType, currentUserProfile?.id);
+      setScanImage(base64Data);
+      setScanImageName(fileName);
+
+      const response = await fetch('/api/scan-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64Data, fileName, mimeType: fileType })
+      });
+      const resData = await response.json();
+      if (!resData.success) throw new Error(resData.error || 'Gagal mengekstrak data');
+
+      const extracted = resData.extracted;
+      setFormMerchant(extracted.merchant || '');
+      setFormDate(extracted.date || new Date().toISOString().split('T')[0]);
+      setFormCategory(extracted.category || 'Operasional');
+      setFormAmount(extracted.amount || 0);
+      setFormNotes(extracted.notes || '');
+      setFormItems(extracted.items || []);
       
-      // Success! Backend has processed and inserted the transaction.
-      setScannedData(result);
-      onRefreshData();
-      setCurrentScreen('success');
+      setCurrentScreen('form');
     } catch (err: any) {
       console.error(err);
       setFormError(err.message || 'Gagal memproses struk.');
@@ -205,6 +230,25 @@ export default function MobileAppSimulator({
     reader.readAsDataURL(file);
   };
 
+  const handleItemChange = (index: number, field: string, value: string | number) => {
+    const newItems = [...formItems];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setFormItems(newItems);
+    const total = newItems.reduce((acc, item) => acc + (Number(item.price) * Number(item.quantity)), 0);
+    setFormAmount(total);
+  };
+
+  const addManualItem = () => {
+    setFormItems([...formItems, { id: Math.random().toString(), name: '', price: 0, quantity: 1 }]);
+  };
+  
+  const removeItem = (index: number) => {
+    const newItems = formItems.filter((_, i) => i !== index);
+    setFormItems(newItems);
+    const total = newItems.reduce((acc, item) => acc + (Number(item.price) * Number(item.quantity)), 0);
+    setFormAmount(total);
+  };
+
   // 6. Form Submission back to DB
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,6 +261,12 @@ export default function MobileAppSimulator({
     setFormError('');
 
     try {
+      let finalReceiptUrl = scanImage || '';
+      if (finalReceiptUrl.startsWith('data:') && isSupabaseConfigured()) {
+        const { uploadReceipt } = await import('../lib/hermesApi');
+        finalReceiptUrl = await uploadReceipt(scanImage!, scanImageName, 'image/jpeg');
+      }
+
       if (isSupabaseConfigured() && currentUserProfile) {
         const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
         const { error } = await supabase
@@ -228,7 +278,7 @@ export default function MobileAppSimulator({
             amount: Number(formAmount),
             notes: formNotes,
             status: 'pending',
-            receipt_url: scanImage,
+            receipt_url: finalReceiptUrl,
             type: formType
           }]);
 
@@ -247,7 +297,7 @@ export default function MobileAppSimulator({
             category: formCategory,
             amount: Number(formAmount),
             notes: formNotes,
-            receiptUrl: scanImage,
+            receiptUrl: finalReceiptUrl,
             employeeId: currentUserProfile?.id,
             type: formType
           })
@@ -437,121 +487,98 @@ export default function MobileAppSimulator({
 
             {/* SCREEN 3: HOME DASHBOARD */}
             {currentScreen === 'home' && (
-              <div className="p-4 space-y-4">
+              <div className="p-4 space-y-5 pb-24 h-full overflow-y-auto bg-slate-50 relative">
                 
+                {/* Top subtle gradient blob */}
+                <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-indigo-100/60 to-transparent pointer-events-none"></div>
+
                 {/* Header (Sapaan, notification bell, profile photo) */}
-                <div className="flex justify-between items-center bg-white p-3 rounded-2xl shadow-xs">
-                  <div className="flex items-center gap-2.5">
+                <div className="flex justify-between items-center relative z-10">
+                  <div className="flex items-center gap-3">
                     <div className="relative">
                       <img 
                         src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" 
                         alt="Profile avatar" 
-                        className="w-9 h-9 rounded-full border-2 border-brand object-cover"
+                        className="w-11 h-11 rounded-full border-2 border-white shadow-sm object-cover"
                       />
-                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"></div>
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white"></div>
                     </div>
                     <div>
-                      <p className="text-[10px] text-slate-400 font-medium">Selamat datang,</p>
-                      <h4 className="text-xs font-bold text-slate-800 leading-tight">{staffName}</h4>
+                      <p className="text-[10px] text-slate-500 font-bold">Selamat pagi,</p>
+                      <h4 className="text-sm font-black text-slate-800 tracking-tight">{staffName}</h4>
                     </div>
                   </div>
                   
-                  <div className="flex gap-1.5">
+                  <div className="flex gap-2">
                     {/* Ring alarm notification click */}
                     <button 
-                      onClick={() => setNotificationOpen(!notificationOpen)}
-                      className="relative p-2 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all"
+                      onClick={() => setCurrentScreen('notifications')}
+                      className="relative p-2.5 text-slate-600 bg-white rounded-full shadow-sm hover:shadow transition-all border border-slate-100"
                     >
                       <Bell className="w-4 h-4" />
-                      <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-rose-600 rounded-full"></div>
-                    </button>
-                    
-                    <button 
-                      onClick={() => {
-                        if (onLogout) onLogout();
-                        else setIsLogged(false);
-                      }}
-                      className="p-2 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all"
-                      title="Sign Out"
-                    >
-                      <LogOut className="w-4 h-4 text-rose-600" />
+                      <div className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 border border-white rounded-full"></div>
                     </button>
                   </div>
                 </div>
 
-                {/* Simulated notification dropdown banner */}
-                <AnimatePresence>
-                  {notificationOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="bg-brand text-white p-2.5 rounded-xl text-[10px] space-y-1 relative"
-                    >
-                      <div className="flex justify-between items-center font-semibold">
-                        <span className="flex items-center gap-1"><Sparkles className="w-3 h-3" /> Notifikasi Sistem</span>
-                        <X className="w-3 h-3 cursor-pointer" onClick={() => setNotificationOpen(false)} />
-                      </div>
-                      <p className="text-white/80 text-[9px]">Sistem AI JagoKeuangan mendeteksi struk Anda yang tertunda sudah berhasil masuk antrian audit admin.</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Reimburse Limit Card */}
-                <div className="bg-brand text-white p-4 rounded-2xl shadow-sm relative overflow-hidden">
-                  {/* Absolute subtle background sphere decoration */}
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-6 -mt-6"></div>
+                {/* Reimburse Limit Card (Glassy/Modern) */}
+                <div className="bg-gradient-to-br from-indigo-600 via-brand to-violet-600 text-white p-5 rounded-[24px] shadow-xl shadow-indigo-200 relative overflow-hidden z-10">
+                  {/* Decorative Elements */}
+                  <div className="absolute -top-12 -right-12 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                  <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
                   
-                  <div className="flex justify-between items-start">
+                  <div className="flex justify-between items-start relative z-10">
                     <div>
-                      <span className="text-[10px] uppercase font-bold tracking-widest text-white/70 block">SISA LIMIT REIMBURSE</span>
-                      <h3 className="text-lg font-bold font-mono tracking-tight mt-0.5">Rp {sisaLimit.toLocaleString('id-ID')}</h3>
+                      <span className="text-[9px] uppercase font-bold tracking-widest text-indigo-100 block opacity-90">Sisa Limit Reimburse</span>
+                      <h3 className="text-2xl font-black font-display tracking-tight mt-1">Rp {sisaLimit.toLocaleString('id-ID')}</h3>
                     </div>
-                    <div className="text-[9px] bg-white/10 px-2 py-0.5 rounded-full font-medium">Bulan Ini</div>
+                    <div className="text-[9px] bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full font-bold text-white shadow-sm">Bulan Ini</div>
                   </div>
 
                   {/* Limit Progression bar */}
-                  <div className="mt-4">
-                    <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
+                  <div className="mt-5 relative z-10">
+                    <div className="w-full bg-black/20 h-2 rounded-full overflow-hidden p-0.5">
                       <div 
-                        className="bg-white h-full rounded-full transition-all duration-500" 
+                        className="bg-gradient-to-r from-emerald-400 to-emerald-300 h-full rounded-full transition-all duration-1000 ease-out" 
                         style={{ width: `${limitPercentage}%` }}
                       ></div>
                     </div>
-                    <div className="flex justify-between items-center text-[9px] text-white/80 mt-1.5">
-                      <span>Terpakai: Rp {totalApproved.toLocaleString('id-ID')}</span>
-                      <span>Kuota: Rp {limitMax.toLocaleString('id-ID')}</span>
+                    <div className="flex justify-between items-center text-[10px] text-indigo-100 mt-2 font-medium">
+                      <span>Terpakai: <span className="font-bold text-white">Rp {totalApproved.toLocaleString('id-ID')}</span></span>
+                      <span>Kuota: <span className="font-bold text-white">Rp {limitMax.toLocaleString('id-ID')}</span></span>
                     </div>
                   </div>
                 </div>
 
                 {/* Quick Action Buttons (Reimburse & Cash Advance) */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 relative z-10">
                   <button 
                     onClick={() => handleOpenScanner('reimburse')}
-                    className="bg-white p-3 rounded-xl border border-slate-100 shadow-2xs hover:border-slate-300 transition-all text-left flex flex-col justify-between h-20 relative overflow-hidden"
+                    className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-brand transition-all text-left flex flex-col justify-between h-24 relative overflow-hidden group"
                     id="mobile_action_reimburse"
                   >
-                    <div className="p-1.5 bg-indigo-50 text-brand rounded-lg w-max mb-1">
+                    <div className="absolute -right-4 -top-4 w-16 h-16 bg-indigo-50 rounded-full group-hover:bg-indigo-100 transition-colors"></div>
+                    <div className="p-2 bg-indigo-50 text-brand rounded-xl w-max mb-1 relative z-10">
                       <Camera className="w-4 h-4" />
                     </div>
-                    <div>
-                      <span className="font-bold text-[11px] block leading-snug">Ajukan Reimburse</span>
-                      <span className="text-[8px] text-indigo-500">Scan struk instan AI</span>
+                    <div className="relative z-10">
+                      <span className="font-black text-xs text-slate-800 block leading-snug">Reimburse</span>
+                      <span className="text-[9px] text-slate-500 font-medium">Scan struk instan</span>
                     </div>
                   </button>
 
                   <button 
                     onClick={() => handleOpenScanner('cash_advance')}
-                    className="bg-white p-3 rounded-xl border border-slate-100 shadow-2xs hover:border-slate-300 transition-all text-left flex flex-col justify-between h-20 relative overflow-hidden"
+                    className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-brand transition-all text-left flex flex-col justify-between h-24 relative overflow-hidden group"
                     id="mobile_action_cashadvance"
                   >
-                    <div className="p-1.5 bg-violet-50 text-violet-700 rounded-lg w-max mb-1">
+                    <div className="absolute -right-4 -top-4 w-16 h-16 bg-violet-50 rounded-full group-hover:bg-violet-100 transition-colors"></div>
+                    <div className="p-2 bg-violet-50 text-violet-700 rounded-xl w-max mb-1 relative z-10">
                       <CreditCard className="w-4 h-4" />
                     </div>
-                    <div>
-                      <span className="font-bold text-[11px] block leading-snug">Request Advance</span>
-                      <span className="text-[8px] text-purple-500">Injeksi modal kas di muka</span>
+                    <div className="relative z-10">
+                      <span className="font-black text-xs text-slate-800 block leading-snug">Cash Advance</span>
+                      <span className="text-[9px] text-slate-500 font-medium">Pinjaman kas muka</span>
                     </div>
                   </button>
                 </div>
@@ -570,34 +597,36 @@ export default function MobileAppSimulator({
 
                   {staffTransactions.length === 0 ? (
                     /* Empty States specifically for employee */
-                    <div className="bg-white p-6 rounded-2xl border border-slate-100 text-center space-y-1 text-slate-500">
-                      <AlertCircle className="w-7 h-7 mx-auto text-slate-300" />
+                    <div className="bg-white p-6 rounded-2xl border border-slate-100 text-center space-y-2 text-slate-500 shadow-sm mt-2">
+                      <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
+                        <AlertCircle className="w-6 h-6 text-slate-300" />
+                      </div>
                       <p className="text-[10px] font-medium text-slate-400">Belum ada pengajuan reimburse bulan ini.</p>
                     </div>
                   ) : (
-                    <div className="space-y-1.5">
+                    <div className="space-y-2 mt-2">
                       {staffTransactions.slice(0, 3).map((tx) => (
                         <div 
                           key={tx.id}
                           onClick={() => handleOpenDetail(tx)}
-                          className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-2xs hover:border-slate-200 transition-all flex items-center justify-between cursor-pointer"
+                          className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm hover:shadow hover:border-brand/30 transition-all flex items-center justify-between cursor-pointer"
                         >
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-slate-50 text-slate-600 rounded-lg text-xs font-bold w-7 h-7 flex items-center justify-center">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-slate-50 text-slate-600 rounded-xl text-xs font-black w-10 h-10 flex items-center justify-center">
                               {tx.merchant.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <h5 className="font-bold text-[10px] text-slate-800 tracking-tight leading-3 truncate w-[140px]">{tx.merchant}</h5>
-                              <p className="text-[8px] text-slate-400 mt-0.5">{tx.date} • {tx.category}</p>
+                              <h5 className="font-bold text-[11px] text-slate-800 tracking-tight leading-3 truncate w-[130px]">{tx.merchant}</h5>
+                              <p className="text-[9px] text-slate-500 font-medium mt-1">{tx.date} • {tx.category}</p>
                             </div>
                           </div>
                           
                           <div className="text-right">
-                            <span className="font-mono text-[10px] font-bold text-slate-700 block">Rp {tx.amount.toLocaleString('id-ID')}</span>
-                            <span className={`inline-block text-[7px] font-bold px-1.5 py-0.5 rounded-full mt-0.5 ${
-                              tx.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
-                              tx.status === 'Rejected' ? 'bg-rose-50 text-rose-700 border border-rose-100' :
-                              'bg-amber-50 text-amber-700 border border-amber-100'
+                            <span className="font-mono text-xs font-black text-slate-800 block">Rp {tx.amount.toLocaleString('id-ID')}</span>
+                            <span className={`inline-block text-[8px] font-bold px-2 py-0.5 rounded-md mt-1 ${
+                              tx.status === 'Approved' ? 'bg-emerald-50 text-emerald-700' :
+                              tx.status === 'Rejected' ? 'bg-rose-50 text-rose-700' :
+                              'bg-amber-50 text-amber-700'
                             }`}>
                               {tx.status}
                             </span>
@@ -648,7 +677,11 @@ export default function MobileAppSimulator({
                   <div className="w-[250px] h-[340px] border-2 border-dashed border-indigo-400 rounded-2xl relative flex items-center justify-center p-3 overflow-hidden bg-slate-900/60 z-10 shadow-lg shadow-black/80">
                     
                     {/* Laser line effect scan */}
-                    <div className="absolute left-0 right-0 h-0.5 bg-indigo-400 shadow-[0_0_12px_#503eff] animate-bounce w-full" style={{ animationDuration: '3s' }}></div>
+                    <motion.div 
+                      animate={{ top: ['0%', '98%', '0%'] }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
+                      className="absolute left-0 right-0 h-0.5 bg-brand shadow-[0_0_15px_rgba(99,102,241,1)] w-full z-20"
+                    />
                     
                     {/* Corner decorators overlay */}
                     <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-brand-light"></div>
@@ -819,6 +852,68 @@ export default function MobileAppSimulator({
                         placeholder="0"
                         required
                       />
+                    </div>
+                  </div>
+
+                  {/* Line Items Section */}
+                  <div className="pt-2 border-t border-slate-100">
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Produk Terdeteksi</label>
+                      <button 
+                        type="button" 
+                        onClick={addManualItem}
+                        className="text-[9px] font-bold text-brand bg-indigo-50 px-2 py-1 rounded-md"
+                      >
+                        + Tambah Manual
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {formItems.map((item, idx) => (
+                        <div key={item.id || idx} className="p-2 bg-slate-50 rounded-xl border border-slate-200 flex gap-2 items-center relative">
+                          <button 
+                            type="button" 
+                            onClick={() => removeItem(idx)}
+                            className="absolute -top-1.5 -right-1.5 bg-rose-100 text-rose-600 rounded-full p-0.5"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                          <div className="flex-1 space-y-1">
+                            <input 
+                              type="text" 
+                              value={item.name}
+                              onChange={(e) => handleItemChange(idx, 'name', e.target.value)}
+                              className="w-full text-[10px] bg-white border border-slate-200 rounded px-2 py-1 font-semibold"
+                              placeholder="Nama Produk"
+                            />
+                            <div className="flex gap-2">
+                              <div className="flex-1 relative">
+                                <span className="absolute left-1.5 top-1 text-[9px] font-bold text-slate-500">Rp</span>
+                                <input 
+                                  type="number" 
+                                  value={item.price}
+                                  onChange={(e) => handleItemChange(idx, 'price', Number(e.target.value))}
+                                  className="w-full pl-6 pr-2 py-1 text-[10px] bg-white border border-slate-200 rounded font-mono"
+                                  placeholder="Harga"
+                                />
+                              </div>
+                              <div className="w-16 relative">
+                                <span className="absolute left-1.5 top-1 text-[9px] font-bold text-slate-500">x</span>
+                                <input 
+                                  type="number" 
+                                  value={item.quantity}
+                                  onChange={(e) => handleItemChange(idx, 'quantity', Number(e.target.value))}
+                                  className="w-full pl-5 pr-2 py-1 text-[10px] bg-white border border-slate-200 rounded text-center"
+                                  placeholder="Qty"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {formItems.length === 0 && (
+                        <div className="text-[9px] text-slate-400 italic text-center py-2">Belum ada item produk terdeteksi.</div>
+                      )}
                     </div>
                   </div>
 
@@ -1115,48 +1210,69 @@ export default function MobileAppSimulator({
 
             {/* SCREEN 10: PORTFOLIO & PAYROLL DETAIL */}
             {currentScreen === 'profile' && (
-              <div className="p-4 space-y-4">
+              <div className="p-4 space-y-4 pb-24 h-full overflow-y-auto bg-slate-50/50">
                 
-                {/* Header mock */}
-                <div className="flex justify-between items-center">
-                  <button 
-                    onClick={() => setCurrentScreen('home')}
-                    className="p-1.5 bg-white border border-slate-100 rounded-lg shadow-2xs text-[10px] flex items-center"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="text-xs font-bold font-display text-slate-800">Profil & Payroll Gaji</span>
-                  <div className="w-8"></div>
+                <div className="flex justify-center items-center mb-2">
+                  <span className="text-sm font-black font-display text-slate-800 tracking-tight">Akun & Payroll</span>
                 </div>
 
                 {/* Profile section block card */}
-                <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-3xs flex flex-col justify-center items-center text-center space-y-2">
-                  <div className="relative">
+                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center space-y-3 relative overflow-hidden">
+                  <div className="absolute top-0 inset-x-0 h-20 bg-gradient-to-br from-indigo-100 to-indigo-50/20"></div>
+                  
+                  <div className="relative z-10 pt-2">
                     <img 
                       src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" 
                       alt="Avatar profile large" 
-                      className="w-16 h-16 rounded-full border-4 border-indigo-50 object-cover"
+                      className="w-20 h-20 rounded-full border-[3px] border-white shadow-md object-cover"
                     />
-                    <div className="absolute bottom-1 right-1 w-3.5 h-3.5 bg-indigo-600 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-bold">✓</div>
+                    <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-bold">✓</div>
                   </div>
 
-                  <div>
-                    <h5 className="font-bold text-xs text-slate-800 leading-tight">{staffName}</h5>
-                    <p className="text-[9px] text-indigo-600 font-semibold mt-0.5">Project Manager • Operations</p>
-                    <p className="text-[8px] text-slate-400">ID Karyawan: EMP-003</p>
+                  <div className="relative z-10">
+                    <h5 className="font-black text-sm text-slate-800 leading-tight">{staffName}</h5>
+                    <p className="text-[10px] text-brand font-bold mt-1">Project Manager • Operations</p>
+                    <p className="text-[9px] text-slate-400 font-medium mt-1">ID Karyawan: EMP-003</p>
                   </div>
 
-                  <div className="w-full border-t border-slate-100 pt-3 text-left space-y-1.5 pt-2">
-                    <div className="flex justify-between text-[9px]">
-                      <span className="text-slate-450 font-medium">Email Kantor</span>
-                      <span className="font-mono text-slate-705 text-right">{employeeEmail}</span>
+                  <div className="w-full bg-slate-50 rounded-2xl p-3.5 text-left space-y-2.5 mt-2 relative z-10 border border-slate-100/50">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-slate-500 font-medium">Email Kantor</span>
+                      <span className="font-semibold text-slate-700 text-right">{employeeEmail}</span>
                     </div>
-                    <div className="flex justify-between text-[9px]">
-                      <span className="text-slate-450 font-medium">Bank Rekening</span>
-                      <span className="font-semibold text-slate-705 text-right text-brand">Mandiri (5540982738)</span>
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-slate-500 font-medium">Bank Rekening</span>
+                      <span className="font-bold text-slate-800 text-right">Mandiri <span className="font-mono text-brand bg-indigo-50 px-1.5 py-0.5 rounded ml-1">5540982738</span></span>
                     </div>
                   </div>
+                  
+                  <button 
+                    onClick={() => setCurrentScreen('edit-profile')}
+                    className="w-full py-2.5 bg-white border border-slate-200 text-slate-700 font-bold text-[10px] rounded-xl hover:bg-slate-50 transition-colors relative z-10 shadow-xs mt-1"
+                  >
+                    Edit Profil
+                  </button>
                 </div>
+
+                {/* History Navigation Button */}
+                <button 
+                  onClick={() => {
+                    setCurrentScreen('history');
+                    setSelectedTx(null);
+                  }}
+                  className="w-full bg-white p-3.5 rounded-2xl border border-slate-100 shadow-3xs flex items-center justify-between text-left hover:border-slate-200 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-indigo-50 text-indigo-700 rounded-lg">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h6 className="font-bold text-sm text-slate-800">Riwayat Pengajuan</h6>
+                      <p className="text-[10px] text-slate-400">Pantau status transaksi & klaim</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
 
                 {/* Payroll Payslip Card listings */}
                 <div className="space-y-2">
@@ -1194,6 +1310,288 @@ export default function MobileAppSimulator({
                   </div>
                 </div>
 
+                {/* Logout Button */}
+                <button 
+                  onClick={() => {
+                    if (onLogout) onLogout();
+                    else setIsLogged(false);
+                  }}
+                  className="w-full bg-rose-50 text-rose-600 p-3.5 rounded-2xl border border-rose-100 shadow-3xs flex items-center justify-center gap-2 font-bold text-xs mt-6 hover:bg-rose-100 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Keluar Akun
+                </button>
+
+              </div>
+            )}
+
+            {/* SCREEN 11: EDIT PROFILE */}
+            {currentScreen === 'edit-profile' && (
+              <div className="p-4 space-y-4 pb-24 h-full overflow-y-auto">
+                <div className="flex justify-between items-center mb-4">
+                  <button 
+                    onClick={() => setCurrentScreen('profile')}
+                    className="p-1.5 bg-white border border-slate-100 rounded-lg shadow-2xs text-[10px] flex items-center"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-xs font-bold font-display text-slate-800">Edit Profil</span>
+                  <div className="w-8"></div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-3xs space-y-4">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="relative">
+                      <img 
+                        src={editProfileData.avatarImage}
+                        alt="Avatar profile" 
+                        className="w-16 h-16 rounded-full border-4 border-indigo-50 object-cover opacity-80"
+                      />
+                      <button 
+                        onClick={() => setShowAvatarPicker(true)}
+                        className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-full text-white"
+                      >
+                        <Camera className="w-4 h-4" />
+                        <span className="text-[7px] font-bold mt-0.5">UBAH</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <AnimatePresence>
+                    {showAvatarPicker && (
+                      <>
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 bg-slate-900/40 z-40 rounded-[40px]"
+                          onClick={() => setShowAvatarPicker(false)}
+                        />
+                        <motion.div 
+                          initial={{ opacity: 0, y: 100 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 100 }}
+                          className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-50 p-6 space-y-4"
+                        >
+                          <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-bold text-slate-800 text-sm">Ubah Foto Profil</h4>
+                            <button onClick={() => setShowAvatarPicker(false)} className="p-1 text-slate-400 bg-slate-100 rounded-full">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <button 
+                              onClick={() => {
+                                setShowAvatarPicker(false);
+                                setCurrentScreen('avatar-camera');
+                              }}
+                              className="flex flex-col items-center justify-center p-4 bg-indigo-50 border border-indigo-100 rounded-2xl text-indigo-700 space-y-2 active:bg-indigo-100 transition-colors"
+                            >
+                              <Camera className="w-6 h-6" />
+                              <span className="text-[10px] font-bold">Kamera</span>
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setShowAvatarPicker(false);
+                                setCurrentScreen('avatar-gallery');
+                              }}
+                              className="flex flex-col items-center justify-center p-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 space-y-2 active:bg-slate-100 transition-colors"
+                            >
+                              <Image className="w-6 h-6" />
+                              <span className="text-[10px] font-bold">Galeri</span>
+                            </button>
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Nama Lengkap</label>
+                      <input 
+                        type="text" 
+                        value={editProfileData.fullName}
+                        onChange={(e) => setEditProfileData({...editProfileData, fullName: e.target.value})}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-250 rounded-xl focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Email</label>
+                      <input 
+                        type="email" 
+                        value={editProfileData.email}
+                        onChange={(e) => setEditProfileData({...editProfileData, email: e.target.value})}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-250 rounded-xl focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Nomor Handphone (WhatsApp)</label>
+                      <input 
+                        type="tel" 
+                        value={editProfileData.phone}
+                        onChange={(e) => setEditProfileData({...editProfileData, phone: e.target.value})}
+                        placeholder="Contoh: 081234567890"
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-250 rounded-xl focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+                      />
+                      <p className="text-[9px] text-slate-400 mt-1 italic">* Pastikan nomor ini adalah nomor WhatsApp yang aktif untuk menerima notifikasi.</p>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100">
+                      <h6 className="text-[10px] font-bold text-slate-700 mb-3 uppercase tracking-wider">Informasi Rekening</h6>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 mb-1">Nama Bank</label>
+                          <input 
+                            type="text" 
+                            value={editProfileData.bankName}
+                            onChange={(e) => setEditProfileData({...editProfileData, bankName: e.target.value})}
+                            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-250 rounded-xl focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 mb-1">Nomor Rekening</label>
+                          <input 
+                            type="text" 
+                            value={editProfileData.bankAccount}
+                            onChange={(e) => setEditProfileData({...editProfileData, bankAccount: e.target.value})}
+                            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-250 rounded-xl font-mono focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 mb-1">Nama Pemilik Rekening</label>
+                          <input 
+                            type="text" 
+                            value={editProfileData.accountHolder}
+                            onChange={(e) => setEditProfileData({...editProfileData, accountHolder: e.target.value})}
+                            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-250 rounded-xl focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => {
+                      // Simulasikan penyimpanan
+                      setCurrentScreen('profile');
+                    }}
+                    className="w-full py-2.5 bg-brand text-white font-semibold text-xs rounded-xl shadow-xs mt-4 flex justify-center items-center gap-1.5"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Simpan Perubahan
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* SCREEN 12: AVATAR CAMERA */}
+            {currentScreen === 'avatar-camera' && (
+              <div className="flex-1 flex flex-col h-full bg-slate-950 relative overflow-hidden">
+                <div className="absolute top-6 left-4 right-4 flex justify-between z-10 text-white">
+                  <button onClick={() => setCurrentScreen('edit-profile')} className="p-2 bg-black/40 rounded-full backdrop-blur-sm">
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="flex-1 flex items-center justify-center relative">
+                  <div className="absolute inset-0 opacity-20 bg-cover bg-center" style={{backgroundImage: `url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80')`}}></div>
+                  <div className="w-64 h-64 rounded-full border-2 border-white/50 border-dashed relative z-10 bg-slate-900/40 backdrop-blur-md overflow-hidden flex items-center justify-center">
+                     <div className="w-full h-full bg-cover bg-center opacity-40" style={{backgroundImage: `url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80')`}}></div>
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                    <span className="text-white/70 text-xs bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">Arahkan wajah ke dalam lingkaran</span>
+                  </div>
+                </div>
+                <div className="h-32 bg-black/80 flex items-center justify-center pb-4 z-10">
+                  <button 
+                    onClick={() => {
+                      setEditProfileData({...editProfileData, avatarImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'});
+                      setCurrentScreen('edit-profile');
+                    }}
+                    className="w-16 h-16 rounded-full bg-white border-4 border-slate-300 flex items-center justify-center active:scale-95 transition-transform shadow-[0_0_15px_rgba(255,255,255,0.5)]"
+                  >
+                    <div className="w-12 h-12 rounded-full border-2 border-slate-900"></div>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* SCREEN 13: AVATAR GALLERY */}
+            {currentScreen === 'avatar-gallery' && (
+              <div className="flex-1 flex flex-col h-full bg-white relative overflow-hidden">
+                <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+                  <button onClick={() => setCurrentScreen('edit-profile')} className="p-1.5 bg-slate-50 text-slate-600 rounded-lg">
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <span className="font-bold text-xs text-slate-800">Pilih Foto dari Galeri</span>
+                </div>
+                <div className="flex-1 p-1 overflow-y-auto grid grid-cols-3 gap-1">
+                  {[
+                    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=200&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=200&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80'
+                  ].map((url, i) => (
+                    <button 
+                      key={i}
+                      onClick={() => {
+                        setEditProfileData({...editProfileData, avatarImage: url});
+                        setCurrentScreen('edit-profile');
+                      }}
+                      className="aspect-square relative group"
+                    >
+                      <img src={url} alt={`Gallery item ${i}`} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/0 group-active:bg-black/20 transition-colors"></div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* SCREEN 14: NOTIFICATIONS */}
+            {currentScreen === 'notifications' && (
+              <div className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden">
+                <div className="p-4 bg-white border-b border-slate-100 flex items-center gap-3">
+                  <button onClick={() => setCurrentScreen('home')} className="p-1.5 bg-slate-50 text-slate-600 rounded-lg shadow-2xs">
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <span className="font-bold text-xs text-slate-800">Notifikasi</span>
+                </div>
+                <div className="flex-1 p-4 overflow-y-auto space-y-3 pb-24">
+                  <div className="bg-white p-3 rounded-2xl shadow-3xs border border-indigo-50 flex gap-3">
+                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl h-fit">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h5 className="font-bold text-[11px] text-slate-800">Review AI Berhasil</h5>
+                      <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">Sistem AI JagoKeuangan mendeteksi struk Anda yang tertunda sudah berhasil masuk antrian audit admin.</p>
+                      <span className="text-[8px] font-bold text-slate-400 mt-1 block">Baru saja</span>
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded-2xl shadow-3xs border border-slate-50 flex gap-3 opacity-70">
+                    <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl h-fit">
+                      <CheckCircle className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h5 className="font-bold text-[11px] text-slate-800">Reimburse Disetujui</h5>
+                      <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">Pengajuan Rp 142.000 (Starbucks Coffee) telah disetujui dan ditransfer.</p>
+                      <span className="text-[8px] font-bold text-slate-400 mt-1 block">2 jam yang lalu</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1201,7 +1599,7 @@ export default function MobileAppSimulator({
 
           {/* Bottom Native Smartphone App Bar Navigation (Only when logged) */}
           {isLogged && (
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-150 rounded-b-[38px] px-6 flex justify-between items-center z-40">
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-150 rounded-b-[38px] px-10 flex justify-between items-center z-40">
               <button 
                 onClick={() => {
                   setCurrentScreen('home');
@@ -1210,18 +1608,7 @@ export default function MobileAppSimulator({
                 className={`flex flex-col items-center gap-0.5 ${currentScreen === 'home' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 <CreditCard className="w-4 h-4" />
-                <span className="text-[8px] font-bold">Klaim</span>
-              </button>
-
-              <button 
-                onClick={() => {
-                  setCurrentScreen('history');
-                  setSelectedTx(null);
-                }}
-                className={`flex flex-col items-center gap-0.5 ${currentScreen === 'history' || currentScreen === 'detail' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                <FileText className="w-4 h-4" />
-                <span className="text-[8px] font-bold">History</span>
+                <span className="text-[8px] font-bold">Home</span>
               </button>
 
               {/* Central Floating Camera quick action */}

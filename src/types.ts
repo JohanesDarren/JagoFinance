@@ -8,6 +8,13 @@ export type TransactionStatus = 'Pending' | 'Approved' | 'Rejected';
 
 
 
+export interface LineItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
 export interface Transaction {
   id: string;
   date: string;
@@ -19,6 +26,7 @@ export interface Transaction {
   receiptUrl?: string; // Base64 or mock URL
   type: TransactionType;
   employeeId: string;
+  items?: LineItem[];
 }
 
 export interface Subscription {

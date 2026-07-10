@@ -369,9 +369,22 @@ async function startServer() {
               date: { type: Type.STRING, description: 'Tanggal Transaksi dalam format YYYY-MM-DD. Jika tahun tidak tertera berasumsi tahun 2026.' },
               category: { type: Type.STRING, description: 'Kategori Pengeluaran: Operasional, Transportasi, Server, Marketing, Fasilitas & Utilitas, atau Lainnya' },
               amount: { type: Type.INTEGER, description: 'Total pengeluaran nominal bersih final rupiah tanpa mata uang, misal 135000' },
-              notes: { type: Type.STRING, description: 'Singkatan deskripsi barang/jasa yang dibeli dalam bahasa Indonesia sederhana.' }
+              notes: { type: Type.STRING, description: 'Singkatan deskripsi barang/jasa yang dibeli dalam bahasa Indonesia sederhana.' },
+              items: {
+                type: Type.ARRAY,
+                description: 'Daftar produk/barang yang dibeli dalam struk.',
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING, description: 'Nama produk' },
+                    price: { type: Type.INTEGER, description: 'Harga satuan produk (integer tanpa titik)' },
+                    quantity: { type: Type.INTEGER, description: 'Jumlah kuantitas produk' }
+                  },
+                  required: ['name', 'price', 'quantity']
+                }
+              }
             },
-            required: ['merchant', 'date', 'category', 'amount']
+            required: ['merchant', 'date', 'category', 'amount', 'items']
           }
         }
       });
@@ -489,7 +502,11 @@ function generateSmartMockReceipt(fileName: string = '', base64: string = ''): a
       date: new Date().toISOString().split('T')[0],
       category: 'Operasional',
       amount: 142000,
-      notes: 'Pembelian 2 cups Caramel Macchiato dan 1 Croissant untuk konsumsi tamu.'
+      notes: 'Pembelian 2 cups Caramel Macchiato dan 1 Croissant untuk konsumsi tamu.',
+      items: [
+        { id: Math.random().toString(36).substr(2, 9), name: 'Caramel Macchiato Grande', price: 56000, quantity: 2 },
+        { id: Math.random().toString(36).substr(2, 9), name: 'Butter Croissant', price: 30000, quantity: 1 }
+      ]
     };
   } else if (nameLower.includes('soto') || nameLower.includes('makan') || nameLower.includes('warung') || nameLower.includes('culinary')) {
     return {
@@ -497,7 +514,11 @@ function generateSmartMockReceipt(fileName: string = '', base64: string = ''): a
       date: new Date().toISOString().split('T')[0],
       category: 'Operasional',
       amount: 95000,
-      notes: 'Makan siang rapat produk tim designer.'
+      notes: 'Makan siang rapat produk tim designer.',
+      items: [
+        { id: Math.random().toString(36).substr(2, 9), name: 'Soto Pisah Daging', price: 35000, quantity: 2 },
+        { id: Math.random().toString(36).substr(2, 9), name: 'Es Teh Manis', price: 12500, quantity: 2 }
+      ]
     };
   } else if (nameLower.includes('grab') || nameLower.includes('gojek') || nameLower.includes('transport') || nameLower.includes('taxi')) {
     return {
@@ -505,7 +526,10 @@ function generateSmartMockReceipt(fileName: string = '', base64: string = ''): a
       date: new Date().toISOString().split('T')[0],
       category: 'Transportasi',
       amount: 68000,
-      notes: 'Transportasi pengantaran dokumen legal ke Kementerian Kominfo.'
+      notes: 'Transportasi pengantaran dokumen legal ke Kementerian Kominfo.',
+      items: [
+        { id: Math.random().toString(36).substr(2, 9), name: 'GrabCar XL (Kuningan - Kominfo)', price: 68000, quantity: 1 }
+      ]
     };
   } else if (nameLower.includes('aws') || nameLower.includes('server') || nameLower.includes('hosting') || nameLower.includes('vercel')) {
     return {
@@ -513,7 +537,10 @@ function generateSmartMockReceipt(fileName: string = '', base64: string = ''): a
       date: new Date().toISOString().split('T')[0],
       category: 'Server',
       amount: 299000,
-      notes: 'Tagihan hosting bulanan static assets server.'
+      notes: 'Tagihan hosting bulanan static assets server.',
+      items: [
+        { id: Math.random().toString(36).substr(2, 9), name: 'Pro Plan Subscription', price: 299000, quantity: 1 }
+      ]
     };
   }
 
@@ -529,7 +556,11 @@ function generateSmartMockReceipt(fileName: string = '', base64: string = ''): a
     date: new Date().toISOString().split('T')[0],
     category: selectedCat,
     amount: randomAmount,
-    notes: `Ekstraksi struk belanja di ${selectedMerchant} dengan scan AI lokal.`
+    notes: `Ekstraksi struk belanja di ${selectedMerchant} dengan scan AI lokal.`,
+    items: [
+      { id: Math.random().toString(36).substr(2, 9), name: 'Item Belanja 1', price: Math.floor(randomAmount * 0.6), quantity: 1 },
+      { id: Math.random().toString(36).substr(2, 9), name: 'Item Belanja 2', price: Math.floor(randomAmount * 0.4), quantity: 1 }
+    ]
   };
 }
 
