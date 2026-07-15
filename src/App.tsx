@@ -6,10 +6,12 @@ import {
 import MobileAppSimulator from './components/MobileAppSimulator';
 import WebDashboard from './components/WebDashboard';
 import LoginPage from './components/LoginPage';
-import { Transaction, ConnectedApp, Subscription, Employee } from './types';
+import LandingPage from './components/LandingPage';
+import { Transaction, ConnectedApp, Subscription, Employee, Branch } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
 export default function App() {
+  const [showLanding, setShowLanding] = useState<boolean>(true);
   // portal role selector ('staff' / 'finance' / null)
   const [userRole, setUserRole] = useState<'staff' | 'finance' | null>(null);
   
@@ -19,6 +21,7 @@ export default function App() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [connectedApps, setConnectedApps] = useState<ConnectedApp[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
@@ -127,9 +130,37 @@ export default function App() {
             .select('*');
           setSubscriptions(subs ? subs.map(mapSubFromDb) : []);
 
+          // Fetch branches
+          const { data: brnchs } = await supabase
+            .from('branches')
+            .select('*');
+          
+          if (brnchs) {
+            setBranches(brnchs.map((b: any) => ({
+              id: b.id,
+              name: b.name,
+              location: b.location,
+              managerName: b.manager_name || b.managerName,
+              status: b.status
+            })));
+          } else {
+            setBranches([]);
+          }
+
           setIsLoading(false);
           setIsRefreshing(false);
           return;
+        }
+      } else {
+        const response = await fetch('/api/financial-data');
+        if (response.ok) {
+          const data = await response.json();
+          setCashBalance(data.cashBalance || 0);
+          setTransactions(data.transactions || []);
+          setEmployees(data.employees || []);
+          setConnectedApps(data.connectedApps || []);
+          setSubscriptions(data.subscriptions || []);
+          setBranches(data.branches || []);
         }
       }
     } catch (error) {
@@ -438,6 +469,66 @@ export default function App() {
     }
   };
 
+  const handleSaveBranch = async (branchData: Partial<Branch>) => {
+    try {
+      if (isSupabaseConfigured()) {
+        const isUpdate = !!branchData.id;
+        if (isUpdate) {
+          const { error } = await supabase
+            .from('branches')
+            .update({
+              name: branchData.name,
+              location: branchData.location,
+              manager_name: branchData.managerName,
+              status: branchData.status
+            })
+            .eq('id', branchData.id);
+          if (error) {
+            console.error("Supabase Error Update Branch:", error);
+            // Fallback for if table is not created or snake_case fails
+            alert(`Gagal update: ${error.message}`);
+            return false;
+          }
+        } else {
+          const { error } = await supabase
+            .from('branches')
+            .insert([{
+              name: branchData.name,
+              location: branchData.location,
+              manager_name: branchData.managerName,
+              status: branchData.status || 'active'
+            }]);
+          if (error) {
+            console.error("Supabase Error Insert Branch:", error);
+            alert(`Gagal simpan: ${error.message}`);
+            return false;
+          }
+        }
+        await fetchFinancialData(true);
+        return true;
+      } else {
+        const isUpdate = !!branchData.id;
+        const method = isUpdate ? 'PUT' : 'POST';
+        const url = isUpdate ? `/api/branches/${branchData.id}` : '/api/branches';
+        
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(branchData)
+        });
+        
+        if (response.ok) {
+          await fetchFinancialData(true);
+          return true;
+        }
+        return false;
+      }
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
+
   // 7. Action: Run payroll generator mass
   const handlePayrollGenerate = async (division: string): Promise<any> => {
     try {
@@ -515,6 +606,63 @@ export default function App() {
     }
   };
 
+  // 8. Action: Invite Employee (Assign company_id)
+  const handleInviteEmployee = async (inviteEmail: string): Promise<{success: boolean, message: string}> => {
+    try {
+      if (isSupabaseConfigured() && profile) {
+        // Find profile by email first
+        const { data: targetProfile, error: searchErr } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('email', inviteEmail)
+          .single();
+
+        if (searchErr || !targetProfile) {
+          return { success: false, message: `Email ${inviteEmail} belum terdaftar di sistem. Minta karyawan mendaftar akun terlebih dahulu.` };
+        }
+
+        if (targetProfile.company_id) {
+          return { success: false, message: `Karyawan dengan email ${inviteEmail} sudah terhubung ke suatu perusahaan.` };
+        }
+
+        const { error: updateErr } = await supabase
+          .from('profiles')
+          .update({ company_id: profile.company_id })
+          .eq('id', targetProfile.id);
+
+        if (updateErr) throw updateErr;
+        
+        await fetchFinancialData(true);
+        return { success: true, message: `Undangan berhasil. Akun ${inviteEmail} kini terhubung ke perusahaan Anda.` };
+      } else {
+        // Offline Fallback Mock
+        const targetEmpIndex = employees.findIndex(e => e.email === inviteEmail);
+        if (targetEmpIndex === -1) {
+          return { success: false, message: `Email ${inviteEmail} belum mendaftar. (Mode Offline Mock)` };
+        }
+
+        const targetEmp = employees[targetEmpIndex];
+        if (targetEmp.companyId) {
+          return { success: false, message: `Karyawan ${inviteEmail} sudah terhubung ke perusahaan lain.` };
+        }
+        
+        // Mutate array for mock (simulating backend)
+        const updatedEmployees = [...employees];
+        updatedEmployees[targetEmpIndex] = {
+          ...targetEmp,
+          companyId: profile?.company_id || 'COMP-JAGOAI',
+          status: 'active'
+        };
+        setEmployees(updatedEmployees);
+
+        return { success: true, message: `Undangan simulasi berhasil. Akun ${inviteEmail} kini terhubung!` };
+      }
+    } catch (err: any) {
+      console.error(err);
+      return { success: false, message: err.message || 'Gagal mengundang karyawan.' };
+    }
+  };
+
   const handleLogout = async () => {
     if (isSupabaseConfigured()) {
       await supabase.auth.signOut();
@@ -533,20 +681,25 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       
       {!userRole ? (
-        /* Unified Gateway LoginPage */
-        <LoginPage 
-          onSelectRole={(role) => setUserRole(role)}
-          onAuthSuccess={(sess, profileData) => {
-            setSession(sess);
-            setProfile(profileData);
-            
-            if (profileData.role === 'admin') {
-              setUserRole('finance');
-            } else {
-              setUserRole('staff');
-            }
-          }}
-        />
+        showLanding ? (
+          <LandingPage onLoginClick={() => setShowLanding(false)} />
+        ) : (
+          /* Unified Gateway LoginPage */
+          <LoginPage 
+            onSelectRole={(role) => setUserRole(role)}
+            onAuthSuccess={(sess, profileData) => {
+              setSession(sess);
+              setProfile(profileData);
+              
+              if (profileData.role === 'admin' || profileData.role === 'super_admin') {
+                setUserRole('finance');
+              } else {
+                setUserRole('staff');
+              }
+            }}
+            onBack={() => setShowLanding(true)}
+          />
+        )
       ) : userRole === 'finance' ? (
         /* Render FULL screen Backoffice Web Dashboard */
         <div className="w-full h-screen overflow-hidden flex flex-col bg-white">
@@ -556,15 +709,19 @@ export default function App() {
             employees={employees}
             connectedApps={connectedApps}
             subscriptions={subscriptions}
-            onRefreshData={forceRefresh}
+            branches={branches}
+            onRefreshData={() => fetchFinancialData(true)}
             onApprove={handleApproveReimbursement}
             onReject={handleRejectReimbursement}
             onManualLedger={handleManualLedgerEntry}
             onToggleApp={handleToggleConnectedApp}
             onWebhookSave={handleSaveWebhook}
             onPayrollGenerate={handlePayrollGenerate}
+            onSaveBranch={handleSaveBranch}
             isLoading={isLoading}
             onLogout={handleLogout}
+            onInviteEmployee={handleInviteEmployee}
+            userRole={profile?.role as 'super_admin' | 'admin' | null}
           />
         </div>
       ) : (

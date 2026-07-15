@@ -8,6 +8,14 @@ export type TransactionStatus = 'Pending' | 'Approved' | 'Rejected';
 
 
 
+export interface Branch {
+  id: string;
+  name: string;
+  location: string;
+  managerName: string;
+  status: 'active' | 'inactive';
+}
+
 export interface LineItem {
   id: string;
   name: string;
@@ -26,6 +34,7 @@ export interface Transaction {
   receiptUrl?: string; // Base64 or mock URL
   type: TransactionType;
   employeeId: string;
+  branchId?: string;
   items?: LineItem[];
 }
 
@@ -48,6 +57,9 @@ export interface Employee {
   salary: number;
   bankAccount: string;
   bankName: string;
+  branchId?: string;
+  companyId?: string | null;
+  status?: 'active' | 'unassigned';
 }
 
 export interface ConnectedApp {

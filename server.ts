@@ -18,9 +18,10 @@ import {
   INITIAL_EMPLOYEES, 
   INITIAL_CONNECTED_APPS, 
   INITIAL_SUBSCRIPTIONS, 
-  INITIAL_TRANSACTIONS 
+  INITIAL_TRANSACTIONS,
+  INITIAL_BRANCHES
 } from './src/utils/mockData.js';
-import { Transaction, ConnectedApp, Subscription, Employee } from './src/types';
+import { Transaction, ConnectedApp, Subscription, Employee, Branch } from './src/types';
 import { extractWithHermesMock } from './src/services/hermesMock.js';
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
@@ -32,13 +33,15 @@ let db = {
   employees: [...INITIAL_EMPLOYEES],
   connectedApps: [...INITIAL_CONNECTED_APPS],
   subscriptions: [...INITIAL_SUBSCRIPTIONS],
-  transactions: [...INITIAL_TRANSACTIONS]
+  transactions: [...INITIAL_TRANSACTIONS],
+  branches: [...INITIAL_BRANCHES]
 };
 
 // Start Server Setup
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+
 
   // Middleware
   app.use(express.json({ limit: '15mb' }));
@@ -305,6 +308,53 @@ async function startServer() {
     }
   });
 
+  // Branch Management Endpoints
+  app.post('/api/branches', (req, res) => {
+    try {
+      const { name, location, managerName, status } = req.body;
+      if (!name || !location || !managerName) {
+        return res.status(400).json({ error: 'Mohon isi semua field cabang (Nama, Lokasi, Manajer).' });
+      }
+      
+      const newBranch = {
+        id: `BR-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+        name,
+        location,
+        managerName,
+        status: status || 'active'
+      };
+      
+      db.branches.push(newBranch);
+      res.json({ success: true, branch: newBranch });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put('/api/branches/:id', (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, location, managerName, status } = req.body;
+      
+      const branchIndex = db.branches.findIndex(b => b.id === id);
+      if (branchIndex === -1) {
+        return res.status(404).json({ error: 'Cabang tidak ditemukan.' });
+      }
+      
+      db.branches[branchIndex] = {
+        ...db.branches[branchIndex],
+        ...(name && { name }),
+        ...(location && { location }),
+        ...(managerName && { managerName }),
+        ...(status && { status })
+      };
+      
+      res.json({ success: true, branch: db.branches[branchIndex] });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // 9. AI SCANNER ENDPOINT (Receipt Extractor using Server-Side Gemini API)
   app.post('/api/scan-receipt', async (req, res) => {
     try {
@@ -476,7 +526,7 @@ async function startServer() {
     });
   }
 
-  // Bind to 0.0.0.0 and port 3000
+  // Bind to 0.0.0.0 and port 3001 (or env PORT)
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Jago Keuangan Full-Stack Server listening on http://0.0.0.0:${PORT}`);
   });

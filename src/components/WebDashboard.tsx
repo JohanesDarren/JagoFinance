@@ -9,9 +9,24 @@ import {
   Search, ShieldAlert, CheckCircle, XCircle, FileSpreadsheet, 
   Link, ArrowRightLeft, CreditCard, Users, Plus, SlidersHorizontal, 
   Trash2, Play, AlertTriangle, Eye, ArrowUpRight, Check, X, Info,
-  LayoutGrid, BookOpen, FileText, MessageSquare, Wallet, Cpu, Settings, GraduationCap, LogOut
+  LayoutGrid, BookOpen, FileText, MessageSquare, Wallet, Cpu, Settings, GraduationCap, LogOut, Bell, ChevronDown, ChevronLeft
 } from 'lucide-react';
 import { Transaction, ConnectedApp, Subscription, Employee } from '../types';
+import WebSidebar from './WebSidebar';
+import OverviewScreenAdmin from './web-screens/admin-cabang/OverviewScreen';
+import ApprovalsScreen from './web-screens/admin-cabang/ApprovalsScreen';
+import InboundScreen from './web-screens/admin-cabang/InboundScreen';
+import LedgerScreen from './web-screens/admin-cabang/LedgerScreen';
+import PayrollScreen from './web-screens/admin-cabang/PayrollScreen';
+
+import OverviewScreenSuperAdmin from './web-screens/super-admin/OverviewScreen';
+import IntegrationsScreen from './web-screens/super-admin/IntegrationsScreen';
+import SubscriptionsScreen from './web-screens/super-admin/SubscriptionsScreen';
+import BranchManagementScreen from './web-screens/super-admin/BranchManagementScreen';
+import BranchAdminManagementScreen from './web-screens/super-admin/BranchAdminManagementScreen';
+import BroadcastScreen from './web-screens/super-admin/BroadcastScreen';
+
+import ProfileScreen from './web-screens/shared/ProfileScreen';
 
 interface WebDashboardProps {
   transactions: Transaction[];
@@ -19,6 +34,7 @@ interface WebDashboardProps {
   employees: Employee[];
   connectedApps: ConnectedApp[];
   subscriptions: Subscription[];
+  branches?: any[];
   onRefreshData: () => void;
   onApprove: (
     id: string,
@@ -34,6 +50,9 @@ interface WebDashboardProps {
   onPayrollGenerate: (division: string) => Promise<any>;
   isLoading: boolean;
   onLogout?: () => void;
+  onInviteEmployee?: (email: string) => Promise<{success: boolean, message: string}>;
+  userRole?: 'super_admin' | 'admin' | null;
+  onSaveBranch?: (branch: any) => Promise<boolean>;
 }
 
 export default function WebDashboard({
@@ -42,6 +61,7 @@ export default function WebDashboard({
   employees,
   connectedApps,
   subscriptions,
+  branches,
   onRefreshData,
   onApprove,
   onReject,
@@ -50,11 +70,15 @@ export default function WebDashboard({
   onWebhookSave,
   onPayrollGenerate,
   isLoading,
-  onLogout
+  onLogout,
+  onInviteEmployee,
+  userRole = 'admin',
+  onSaveBranch
 }: WebDashboardProps) {
 
   // Active Sub-Menu Route within web dashboard
-  const [activeTab, setActiveTab] = useState<'overview' | 'approvals' | 'inbound' | 'integrations' | 'ledger' | 'subscriptions' | 'payroll'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'approvals' | 'inbound' | 'integrations' | 'ledger' | 'subscriptions' | 'payroll' | 'profile' | 'branches' | 'broadcast'>('overview');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Search & Filter state variables
   const [searchTerm, setSearchTerm] = useState('');
@@ -231,6 +255,9 @@ export default function WebDashboard({
       setIsSubmittingApproval(true);
       const res = await onApprove(id, recipientName, bankName, bankAccount, transferReceiptUrl);
       if (res) {
+        if (userRole === 'super_admin') {
+          alert('Notifikasi email berhasil dikirim ke karyawan bersangkutan dari sistem pusat.');
+        }
         setSplitViewTx(null);
         setErrorMessage(null);
       }
@@ -348,179 +375,61 @@ export default function WebDashboard({
       <div className="flex flex-1 overflow-hidden">
         
         {/* Sidebar Nav Panels */}
-        <aside className="w-80 bg-white flex flex-col justify-between border-r border-slate-150 select-none shrink-0 z-10">
-          
-          {/* Logo Brand Header Block */}
-          <div className="p-6 pb-7 border-b border-slate-100 flex items-center gap-4">
-            <div className="p-2.5 bg-[#0000a0]/95 text-white rounded-2xl flex items-center justify-center shadow-lg w-12 h-12 shadow-[#0000a0]/20 shrink-0">
-              <Sparkles className="w-7 h-7" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-black text-[#050630] text-lg lg:text-xl tracking-tight block leading-none mt-1">JagoAiFinance</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation Items list */}
-          <nav className="flex-1 py-6 space-y-2 overflow-y-auto">
-            {/* 1. overview */}
-            <button 
-              onClick={() => setActiveTab('overview')}
-              className={`w-full text-left py-3.5 px-6 text-[13px] sm:text-sm font-bold font-display flex items-center gap-4 transition-all relative ${
-                activeTab === 'overview' 
-                  ? 'bg-indigo-50/60 text-[#1800ad]' 
-                  : 'text-slate-500 hover:bg-slate-50/50 hover:text-slate-900'
-              }`}
-            >
-              {activeTab === 'overview' && (
-                <div className="absolute left-0 top-0 bottom-0 w-[4.5px] bg-amber-500" />
-              )}
-              <LayoutGrid className={`w-5 h-5 shrink-0 ${activeTab === 'overview' ? 'text-[#1800ad]' : 'text-slate-400'}`} />
-              <span>Eksekutif Overview</span>
-            </button>
-
-            {/* 2. approvals */}
-            <button 
-              onClick={() => setActiveTab('approvals')}
-              className={`w-full text-left py-3.5 px-6 text-[13px] sm:text-sm font-bold font-display flex items-center justify-between transition-all relative ${
-                activeTab === 'approvals' 
-                  ? 'bg-indigo-50/60 text-[#1800ad]' 
-                  : 'text-slate-500 hover:bg-slate-50/50 hover:text-slate-900'
-              }`}
-            >
-              <div className="flex items-center gap-4">
-                {activeTab === 'approvals' && (
-                  <div className="absolute left-0 top-0 bottom-0 w-[4.5px] bg-amber-500" />
-                )}
-                <CheckCircle className={`w-5 h-5 shrink-0 ${activeTab === 'approvals' ? 'text-[#1800ad]' : 'text-slate-400'}`} />
-                <span>Persetujuan Reimburse</span>
-              </div>
-              {pendingApprovals.length > 0 && (
-                <span className="bg-rose-500 text-white text-[11px] px-2.5 py-0.5 rounded-full font-black animate-scaleIn">
-                  {pendingApprovals.length}
-                </span>
-              )}
-            </button>
-
-            {/* 3. inbound */}
-            <button 
-              onClick={() => setActiveTab('inbound')}
-              className={`w-full text-left py-3.5 px-6 text-[13px] sm:text-sm font-bold font-display flex items-center gap-4 transition-all relative ${
-                activeTab === 'inbound' 
-                  ? 'bg-indigo-50/60 text-[#1800ad]' 
-                  : 'text-slate-500 hover:bg-slate-50/50 hover:text-slate-900'
-              }`}
-            >
-              {activeTab === 'inbound' && (
-                <div className="absolute left-0 top-0 bottom-0 w-[4.5px] bg-amber-500" />
-              )}
-              <ArrowUpRight className={`w-5 h-5 shrink-0 ${activeTab === 'inbound' ? 'text-[#1800ad]' : 'text-slate-400'}`} />
-              <span>Arus Uang Masuk</span>
-            </button>
-
-            {/* 4. ledger */}
-            <button 
-              onClick={() => setActiveTab('ledger')}
-              className={`w-full text-left py-3.5 px-6 text-[13px] sm:text-sm font-bold font-display flex items-center gap-4 transition-all relative ${
-                activeTab === 'ledger' 
-                  ? 'bg-indigo-50/60 text-[#1800ad]' 
-                  : 'text-slate-500 hover:bg-slate-50/50 hover:text-slate-900'
-              }`}
-            >
-              {activeTab === 'ledger' && (
-                <div className="absolute left-0 top-0 bottom-0 w-[4.5px] bg-amber-500" />
-              )}
-              <ArrowRightLeft className={`w-5 h-5 shrink-0 ${activeTab === 'ledger' ? 'text-[#1800ad]' : 'text-slate-400'}`} />
-              <span>Buku Kas Ledger</span>
-            </button>
-
-            {/* 5. subscriptions */}
-            <button 
-              onClick={() => setActiveTab('subscriptions')}
-              className={`w-full text-left py-3.5 px-6 text-[13px] sm:text-sm font-bold font-display flex items-center gap-4 transition-all relative ${
-                activeTab === 'subscriptions' 
-                  ? 'bg-indigo-50/60 text-[#1800ad]' 
-                  : 'text-slate-500 hover:bg-slate-50/50 hover:text-slate-900'
-              }`}
-            >
-              {activeTab === 'subscriptions' && (
-                <div className="absolute left-0 top-0 bottom-0 w-[4.5px] bg-amber-500" />
-              )}
-              <CreditCard className={`w-5 h-5 shrink-0 ${activeTab === 'subscriptions' ? 'text-[#1800ad]' : 'text-slate-400'}`} />
-              <span>Tagihan Langganan</span>
-            </button>
-
-            {/* 6. integrations */}
-            <button 
-              onClick={() => setActiveTab('integrations')}
-              className={`w-full text-left py-3.5 px-6 text-[13px] sm:text-sm font-bold font-display flex items-center gap-4 transition-all relative ${
-                activeTab === 'integrations' 
-                  ? 'bg-indigo-50/60 text-[#1800ad]' 
-                  : 'text-slate-500 hover:bg-slate-50/50 hover:text-slate-900'
-              }`}
-            >
-              {activeTab === 'integrations' && (
-                <div className="absolute left-0 top-0 bottom-0 w-[4.5px] bg-amber-500" />
-              )}
-              <Link className={`w-5 h-5 shrink-0 ${activeTab === 'integrations' ? 'text-[#1800ad]' : 'text-slate-400'}`} />
-              <span>Koneksi Produk API</span>
-            </button>
-
-            {/* 7. payroll */}
-            <button 
-              onClick={() => setActiveTab('payroll')}
-              className={`w-full text-left py-3.5 px-6 text-[13px] sm:text-sm font-bold font-display flex items-center gap-4 transition-all relative ${
-                activeTab === 'payroll' 
-                  ? 'bg-indigo-50/60 text-[#1800ad]' 
-                  : 'text-slate-500 hover:bg-slate-50/50 hover:text-slate-900'
-              }`}
-            >
-              {activeTab === 'payroll' && (
-                <div className="absolute left-0 top-0 bottom-0 w-[4.5px] bg-amber-500" />
-              )}
-              <Users className={`w-5 h-5 shrink-0 ${activeTab === 'payroll' ? 'text-[#1800ad]' : 'text-slate-400'}`} />
-              <span>Karyawan & Gaji</span>
-            </button>
-          </nav>
-
-          {/* Profile Card Footer block exactly like the design */}
-          <div className="p-5 border-t border-slate-100 bg-white space-y-4">
-            {/* Keadaan Finansial Kas Status indicator nested inside with high-precision design */}
-            <div className="bg-slate-50 p-3 px-4.5 rounded-2xl flex justify-between items-center text-xs">
-              <span className="font-extrabold text-slate-400 uppercase tracking-widest text-[9px]">Kas Operasional</span>
-              <span className="font-mono font-black text-slate-800 text-sm">Rp {cashBalance.toLocaleString('id-ID')}</span>
-            </div>
-
-             <div 
-               onClick={() => {
-                 if (onLogout) onLogout();
-               }}
-               className="bg-[#f8f9fe] border border-slate-100 p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:bg-rose-50/50 hover:border-rose-100 group/profile transition-all"
-               title="Klik untuk Log Out"
-             >
-               <div className="flex items-center gap-3">
-                 <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-slate-200 shadow-3xs">
-                   <img 
-                     src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" 
-                     alt="Alex Sterling Avatar"
-                     className="w-full h-full object-cover"
-                     referrerPolicy="no-referrer"
-                   />
-                 </div>
-                 <div>
-                   <span className="font-extrabold text-sm text-slate-800 block group-hover/profile:text-rose-700 transition-colors">Alex Sterling</span>
-                   <span className="text-[10px] text-[#4f46e5] font-black tracking-widest uppercase block mt-1 group-hover/profile:text-rose-500/70 transition-colors">EKSEKUTIF FINANCE</span>
-                 </div>
-               </div>
-               <LogOut className="w-5 h-5 text-slate-400 group-hover/profile:text-rose-600 transition-all group-hover/profile:translate-x-0.5" />
-             </div>
-          </div>
-        </aside>
+        <WebSidebar 
+          userRole={userRole}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          pendingApprovals={pendingApprovals}
+          isSidebarCollapsed={isSidebarCollapsed}
+          setIsSidebarCollapsed={setIsSidebarCollapsed}
+        />
 
         {/* Content Panel Area */}
         <main className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
           
+          {/* Top Header with Profile and Notifications */}
+          <div className="flex items-center justify-between bg-white/70 backdrop-blur-xl border border-white p-4 px-6 rounded-[2rem] shadow-sm mb-8 z-20 sticky top-0">
+            <div>
+              <h1 className="text-xl font-black font-display text-slate-900 tracking-tight capitalize">
+                {activeTab === 'overview' ? 'Dashboard Utama' :
+                 activeTab === 'approvals' ? 'Persetujuan Klaim' :
+                 activeTab === 'inbound' ? 'Arus Uang Masuk' :
+                 activeTab === 'ledger' ? 'Buku Kas' :
+                 activeTab === 'subscriptions' ? 'Langganan SaaS' :
+                 activeTab === 'integrations' ? 'Integrasi Sistem' :
+                 activeTab === 'payroll' ? 'Manajemen Gaji' :
+                 activeTab === 'profile' ? 'Profil Akun' : activeTab}
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* Notifications */}
+              <button className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:bg-slate-50 transition-all relative">
+                <Bell className="w-5 h-5 text-slate-600" />
+                <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
+              </button>
+
+              {/* Profile Dropdown Trigger */}
+              <button 
+                onClick={() => setActiveTab('profile')}
+                className="flex items-center gap-3 p-1.5 pr-4 bg-white border border-slate-100 rounded-full shadow-sm hover:shadow-md hover:bg-slate-50 transition-all"
+              >
+                <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-100">
+                  <img 
+                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" 
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="hidden md:block text-left">
+                  <span className="block text-xs font-black text-slate-800 leading-tight">Alex S.</span>
+                  <span className="block text-[10px] text-indigo-600 font-bold tracking-widest uppercase mt-0.5">Executive</span>
+                </div>
+                <ChevronDown className="w-4 h-4 text-slate-400 hidden md:block" />
+              </button>
+            </div>
+          </div>
+
           {/* SKELETON LOADING STATE */}
           {isLoading ? (
             <div className="space-y-6">
@@ -536,832 +445,258 @@ export default function WebDashboard({
             </div>
           ) : (
             <>
-              {/* SCREEN B-2: EXECUTIVE MAIN OVERVIEW VIEW */}
-              {activeTab === 'overview' && (
-                <div className="space-y-6">
-                  
-                  {/* Top Dashboard Head */}
-                  <div className="flex justify-between items-center pb-2 bg-slate-50/50">
-                    <div>
-                      <h2 className="text-2xl lg:text-3xl font-black font-display text-slate-900 select-all">Executive Cockpit</h2>
-                      <p className="text-sm text-slate-550 mt-1.5">Status neraca digital PT JagoAI yang terintegrasi real-time.</p>
-                    </div>
-                  </div>
-
-                  {/* 4 Hero Stats Metrics Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-3xs hover:shadow-2xs transition-all relative">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="text-xs text-slate-450 uppercase font-black tracking-wider block">Saldo Kas Saat Ini</span>
-                          <h3 className="text-xl lg:text-2xl font-extrabold font-mono tracking-tight mt-2 text-brand">Rp {cashBalance.toLocaleString('id-ID')}</h3>
-                        </div>
-                        <div className="p-3.5 bg-indigo-50 text-brand rounded-2xl w-12 h-12 flex items-center justify-center shrink-0">
-                          <DollarSign className="w-6 h-6" />
-                        </div>
-                      </div>
-                      <div className="mt-4 text-xs text-slate-500">
-                        <span className="text-emerald-600 font-extrabold">100% Likuid</span> • Escrow Gateway Aman
-                      </div>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-3xs hover:shadow-2xs transition-all relative">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="text-xs text-slate-450 uppercase font-black tracking-wider block">Total Pemasukan (Mei)</span>
-                          <h3 className="text-xl lg:text-2xl font-extrabold font-mono tracking-tight mt-2 text-emerald-600">Rp {totalInflowThisMonth.toLocaleString('id-ID')}</h3>
-                        </div>
-                        <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl w-12 h-12 flex items-center justify-center shrink-0">
-                          <TrendingUp className="w-6 h-6" />
-                        </div>
-                      </div>
-                      <div className="mt-4 text-xs text-slate-500">
-                        <span className="text-emerald-600 font-extrabold">+{connectedApps.filter(a=>a.status==='active').length} App</span> Stream otomatis
-                      </div>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-3xs hover:shadow-2xs transition-all relative">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="text-xs text-slate-450 uppercase font-black tracking-wider block">Total Pengeluaran (Mei)</span>
-                          <h3 className="text-xl lg:text-2xl font-extrabold font-mono tracking-tight mt-2 text-rose-600">Rp {totalOutflowThisMonth.toLocaleString('id-ID')}</h3>
-                        </div>
-                        <div className="p-3.5 bg-rose-50 text-rose-600 rounded-2xl w-12 h-12 flex items-center justify-center shrink-0">
-                          <TrendingDown className="w-6 h-6" />
-                        </div>
-                      </div>
-                      <div className="mt-4 text-xs text-slate-500">
-                        Termasuk gaji karyawan & reimburse
-                      </div>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-3xs hover:shadow-2xs transition-all relative">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="text-xs text-slate-450 uppercase font-black tracking-wider block">Estimasi Runway Sisa</span>
-                          <h3 className="text-xl lg:text-2xl font-extrabold mt-2 text-slate-800">{runwayMonths} Bulan</h3>
-                        </div>
-                        <div className="p-3.5 bg-slate-50 text-slate-600 rounded-2xl w-12 h-12 flex items-center justify-center shrink-0">
-                          <Calendar className="w-6 h-6" />
-                        </div>
-                      </div>
-                      <div className="mt-4 text-xs text-slate-500">
-                        Asumsi burn rate: Rp {averageMonthlyBurn.toLocaleString('id-ID')}/bln
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Profit & Loss Chart and Expense Breakdown Grid Row info */}
-                  <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                    
-                    {/* B-2.1: P&L Chart custom SVG based view */}
-                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-3xs xl:col-span-2 space-y-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="text-base lg:text-lg font-black text-slate-900 font-display">Grafik P&L (Profit & Loss) 2026</h4>
-                          <p className="text-xs text-slate-500 mt-0.5">Pemasukan (Bar) vs Pengeluaran (Line) historis.</p>
-                        </div>
-                        <div className="flex items-center gap-3.5 text-xs font-bold text-slate-600">
-                          <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 bg-[#1800ad] rounded-xs"></span> Pemasukan</span>
-                          <span className="flex items-center gap-1.5"><span className="w-4 h-0.5 bg-rose-500 inline-block"></span> Pengeluaran</span>
-                        </div>
-                      </div>
-
-                      {/* Custom SVG Line & Column Chart */}
-                      <div className="w-full h-56 pt-2">
-                        <svg viewBox="0 0 600 220" className="w-full h-full overflow-visible">
-                          {/* Horizontal guideline paths */}
-                          <line x1="40" y1="20" x2="580" y2="20" stroke="#f1f5f9" strokeWidth="1" />
-                          <line x1="40" y1="70" x2="580" y2="70" stroke="#f1f5f9" strokeWidth="1" />
-                          <line x1="40" y1="120" x2="580" y2="120" stroke="#f1f5f9" strokeWidth="1" />
-                          <line x1="40" y1="170" x2="580" y2="170" stroke="#f1f5f9" strokeWidth="1" />
-                          <line x1="40" y1="200" x2="580" y2="200" stroke="#cbd5e1" strokeWidth="1" />
-
-                          {/* Left y-axis notes values */}
-                          <text x="-5" y="24" className="text-[10.5px] fill-slate-450 font-mono font-semibold">Rp 500jt</text>
-                          <text x="-5" y="74" className="text-[10.5px] fill-slate-450 font-mono font-semibold">Rp 300jt</text>
-                          <text x="-5" y="124" className="text-[10.5px] fill-slate-450 font-mono font-semibold">Rp 100jt</text>
-                          <text x="5" y="174" className="text-[10.5px] fill-slate-450 font-mono font-semibold">Rp 0jt</text>
-
-                          {/* Data sets for last 6 months (Jan - Jun) */}
-                          {/* Income Columns / Expense Lines */}
-                          {/* January */}
-                          <rect x="75" y="60" width="28" height="140" fill="#1800ad" rx="4" className="hover:opacity-85 transition-all text-neutral-100" />
-                          {/* February */}
-                          <rect x="165" y="80" width="28" height="120" fill="#1800ad" rx="4" />
-                          {/* March */}
-                          <rect x="255" y="50" width="28" height="150" fill="#1800ad" rx="4" />
-                          {/* April */}
-                          <rect x="345" y="45" width="28" height="155" fill="#1800ad" rx="4" />
-                          {/* May */}
-                          <rect x="435" y="75" width="28" height="125" fill="#1800ad" rx="4" />
-                          {/* June (Proj) */}
-                          <rect x="525" y="65" width="28" height="135" fill="#1800ad" rx="4" opacity="0.6" strokeDasharray="3" />
-
-                          {/* Line tracker path for Expenses */}
-                          <path 
-                            d="M 90 140 L 180 150 L 270 120 L 360 135 L 450 160 L 540 145" 
-                            fill="none" 
-                            stroke="#f43f5e" 
-                            strokeWidth="3.5" 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round"
-                          />
-                          
-                          {/* Highlight circles onto line path */}
-                          <circle cx="90" cy="140" r="4.5" fill="#e11d48" stroke="#fff" strokeWidth="1.5" />
-                          <circle cx="180" cy="150" r="4.5" fill="#e11d48" stroke="#fff" strokeWidth="1.5" />
-                          <circle cx="270" cy="120" r="4.5" fill="#e11d48" stroke="#fff" strokeWidth="1.5" />
-                          <circle cx="360" cy="135" r="4.5" fill="#e11d48" stroke="#fff" strokeWidth="1.5" />
-                          <circle cx="450" cy="160" r="4.5" fill="#e11d48" stroke="#fff" strokeWidth="1.5" />
-                          <circle cx="540" cy="145" r="4.5" fill="#e11d48" stroke="#fff" strokeWidth="1.5" />
-
-                          {/* X-axis labels names */}
-                          <text x="80" y="216" className="text-[11.5px] font-black text-slate-550 fill-slate-550">Jan</text>
-                          <text x="170" y="216" className="text-[11.5px] font-black text-slate-550 fill-slate-550">Feb</text>
-                          <text x="260" y="216" className="text-[11.5px] font-black text-slate-550 fill-slate-550">Mar</text>
-                          <text x="350" y="216" className="text-[11.5px] font-black text-slate-550 fill-slate-550">Apr</text>
-                          <text x="440" y="216" className="text-[11.5px] font-black text-slate-550 fill-slate-550">Mei</text>
-                          <text x="530" y="216" className="text-[11.5px] font-black text-slate-550 fill-slate-550">Jun*</text>
-                        </svg>
-                      </div>
-                    </div>
-
-                    {/* B-2.2: Expense Breakdown SVG Pie Donut Chart */}
-                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-3xs space-y-4">
-                      <div>
-                        <h4 className="text-base lg:text-lg font-black text-slate-900 font-display">Alokasi Biaya Terporsi</h4>
-                        <p className="text-xs text-slate-500 mt-0.5">Distribusi pengeluaran riil berdasarkan tipe.</p>
-                      </div>
-
-                      {/* Donut Chart representation */}
-                      <div className="flex flex-col items-center justify-center space-y-4 py-2">
-                        <div className="relative w-36 h-36">
-                          <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                            {categoryEntries.length === 0 ? (
-                               <circle cx="50" cy="50" r="38" fill="none" stroke="#e2e8f0" strokeWidth="20" />
-                            ) : (
-                              categoryEntries.map(([cat, val], idx) => {
-                                const percent = val / totalExpenseAllocated;
-                                const strokeDash = `${percent * 238.76} ${238.76}`;
-                                const strokeOffset = -accumulatedAngle;
-                                accumulatedAngle += percent * 238.76;
-
-                                // Unique hex colors per index
-                                const colors = ['#1800ad', '#3b82f6', '#f43f5e', '#a855f7', '#fbbf24', '#06b6d4'];
-                                const activeColor = colors[idx % colors.length];
-
-                                return (
-                                  <circle 
-                                    key={idx}
-                                    cx="50" 
-                                    cy="50" 
-                                    r="38" 
-                                    fill="none" 
-                                    stroke={activeColor} 
-                                    strokeWidth="20" 
-                                    strokeDasharray={strokeDash}
-                                    strokeDashoffset={strokeOffset}
-                                  />
-                                );
-                              })
-                            )}
-                            <circle cx="50" cy="50" r="26" fill="#ffffff" />
-                          </svg>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                            <span className="text-[9px] text-slate-450 uppercase tracking-widest font-extrabold">TOTAL</span>
-                            <span className="text-sm font-black font-mono">Rp {totalOutflowThisMonth.toLocaleString('id-ID')}</span>
-                          </div>
-                        </div>
-
-                        {/* Pie Chart Legend detail list */}
-                        <div className="w-full space-y-2 pt-2 text-xs">
-                          {categoryEntries.length === 0 ? (
-                            <div className="text-center text-slate-400 italic">Belum ada pengeluaran disetujui.</div>
-                          ) : (
-                            categoryEntries.slice(0, 3).map(([cat, val], idx) => {
-                              const colors = ['bg-brand', 'bg-blue-500', 'bg-rose-500', 'bg-purple-500', 'bg-amber-500'];
-                              return (
-                                <div key={cat} className="flex justify-between items-center text-slate-700">
-                                  <div className="flex items-center gap-2 font-bold">
-                                    <span className={`w-3 h-3 rounded-full ${colors[idx % colors.length]}`}></span>
-                                    <span>{cat}</span>
-                                  </div>
-                                  <span className="font-extrabold font-mono">Rp {val.toLocaleString('id-ID')}</span>
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  {/* Pending Approvals Table and Product Leaderboard widget */}
-                  <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                    
-                    {/* B-3.1: Pending Action mini widget */}
-                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-3xs xl:col-span-2 space-y-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="text-base font-black text-slate-900 font-display">Verifikasi Klaim Tertunda</h4>
-                          <p className="text-xs text-slate-500">Pengajuan staf yang butuh pertimbangan audit mendesak.</p>
-                        </div>
-                        <span className="text-xs font-extrabold bg-amber-50 text-amber-800 p-1.5 px-3 rounded-full border border-amber-200">Pending audit: {pendingApprovals.length}</span>
-                      </div>
-
-                      {pendingApprovals.length === 0 ? (
-                        /* Empty state */
-                        <div className="p-10 text-center bg-slate-50 border border-slate-150 border-dashed rounded-2xl space-y-3 text-slate-500">
-                          <CheckCircle className="w-10 h-10 text-slate-300 mx-auto" strokeWidth="1.5" />
-                          <div>
-                            <span className="text-sm font-extrabold text-slate-700 block">Semua Beres!</span>
-                            <span className="text-xs text-slate-400">Tidak ada pengajuan klaim staf yang tertunda di antrian hari ini.</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-sm bg-white rounded-xl overflow-hidden">
-                            <thead>
-                              <tr className="bg-slate-50 text-slate-600 border-b border-slate-100 text-[11px] font-black uppercase tracking-wider">
-                                <th className="p-4">Staff</th>
-                                <th className="p-4">Merchant / Toko</th>
-                                <th className="p-4">Kategori</th>
-                                <th className="p-4">Nominal</th>
-                                <th className="p-4 text-right">Tindakan</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
-                              {pendingApprovals.slice(0, 4).map((tx) => (
-                                <tr key={tx.id} className="hover:bg-slate-50/50 transition-all font-semibold">
-                                  <td className="p-4">
-                                    <div className="leading-tight">
-                                      <span className="font-extrabold text-slate-900 block text-[13.5px]">{employees.find(e => e.id === tx.employeeId)?.name || "Unknown"}</span>
-                                      <span className="text-[10px] text-slate-400 font-mono block mt-0.5">{tx.employeeId}</span>
-                                    </div>
-                                  </td>
-                                  <td className="p-4 font-bold text-slate-800 truncate max-w-[140px] text-[13px]">{tx.merchant}</td>
-                                  <td className="p-4">
-                                    <span className="text-[11px] bg-slate-100 text-slate-700 p-1.5 px-3 rounded-xl font-black">{tx.category}</span>
-                                  </td>
-                                  <td className="p-4 font-mono font-black text-slate-900 text-[13.5px]">Rp {tx.amount.toLocaleString('id-ID')}</td>
-                                  <td className="p-4 text-right">
-                                    <button 
-                                      onClick={() => setSplitViewTx(tx)}
-                                      className="p-2 px-4 bg-brand text-white text-xs font-black rounded-xl hover:opacity-90 inline-flex items-center gap-1.5 transition-all shadow-sm"
-                                    >
-                                      <Eye className="w-4 h-4" />
-                                      <span>Split Review</span>
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* B-2.3: Revenue Leaderboard Widget */}
-                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-3xs space-y-4">
-                      <div>
-                        <h4 className="text-base font-black text-slate-900 font-display">Peringkat Pemasukan Produk</h4>
-                        <p className="text-xs text-slate-500">Kontribusi revenue terbesar oleh jagoAI bulan ini.</p>
-                      </div>
-
-                      <div className="space-y-4 pt-2">
-                        {connectedApps.map((app, idx) => {
-                          const rankings = ['🥇', '🥈', '🥉'];
-                          return (
-                            <div key={app.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <span className="text-xl">{rankings[idx] || '🔹'}</span>
-                                <div>
-                                  <h6 className="font-extrabold text-xs sm:text-sm text-slate-850 leading-tight">{app.name}</h6>
-                                  <span className={`text-[9.5px] font-black px-2 py-0.5 rounded-full inline-block mt-1.5 ${
-                                    app.status === 'active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-100 text-slate-500'
-                                  }`}>{app.status === 'active' ? 'AKTIF' : 'NON-AKTIF'}</span>
-                                </div>
-                              </div>
-                              <span className="font-mono text-sm font-black text-slate-800">Rp {app.monthlyRevenue.toLocaleString('id-ID')}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                  </div>
-
-                </div>
+              {/* === SUPER ADMIN SCREENS === */}
+              {userRole === 'super_admin' && activeTab === 'overview' && (
+                <OverviewScreenSuperAdmin {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
+                }} />
+              )}
+              {userRole === 'super_admin' && activeTab === 'subscriptions' && (
+                <SubscriptionsScreen {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
+                }} />
+              )}
+              {userRole === 'super_admin' && activeTab === 'integrations' && (
+                <IntegrationsScreen {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
+                }} />
               )}
 
-              {/* SCREEN B-3: APPROVAL SPLIT VIEW DATA TABLE */}
+              {/* === SUPER ADMIN SCREENS (ADDITIONAL) === */}
+              {userRole === 'super_admin' && activeTab === 'branches' && (
+                <BranchManagementScreen {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, branches, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals, onSaveBranch
+                }} />
+              )}
+              {userRole === 'super_admin' && activeTab === 'admin_cabang' && (
+                <BranchAdminManagementScreen {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, branches, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals, onSaveBranch
+                }} />
+              )}
+              {userRole === 'super_admin' && activeTab === 'broadcast' && (
+                <BroadcastScreen {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, branches, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
+                }} />
+              )}
+
+              {/* === ADMIN CABANG SCREENS === */}
+              {userRole !== 'super_admin' && activeTab === 'overview' && (
+                <OverviewScreenAdmin {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
+                }} />
+              )}
               {activeTab === 'approvals' && (
-                <div className="space-y-6">
-                  
-                  <div>
-                    <h2 className="text-2xl lg:text-3xl font-black font-display text-slate-900">Area Persetujuan Tim Keuangan</h2>
-                    <p className="text-sm text-slate-500 mt-1.5">Audit keabsahan struk fisik di bawah ini menggunakan integrasi AI Scanner secara adil.</p>
-                  </div>
-
-                  {/* Global Search & Filter Bar */}
-                  <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-3xs flex flex-col md:flex-row gap-4 items-center">
-                    <div className="relative flex-1 w-full">
-                      <Search className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
-                      <input 
-                        type="text" 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Cari berdasarkan Merchant atau Nama Staff..."
-                        className="w-full pl-11 pr-5 py-3 text-sm bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-brand focus:ring-1 focus:ring-brand font-semibold"
-                      />
-                    </div>
-                    
-                    <div className="flex gap-4 w-full md:w-auto">
-                      <select 
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="p-3 px-4 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:border-brand focus:ring-1 focus:ring-brand outline-none cursor-pointer w-full font-bold text-slate-700"
-                      >
-                        <option value="Semua">Status: Semua</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                      </select>
-
-                      <select 
-                        value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="p-3 px-4 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:border-brand focus:ring-1 focus:ring-brand outline-none cursor-pointer w-full font-bold text-slate-700"
-                      >
-                        <option value="Semua">Kategori: Semua</option>
-                        <option value="Operasional">Operasional</option>
-                        <option value="Transportasi">Transportasi</option>
-                        <option value="Server">Server</option>
-                        <option value="Gaji Karyawan">Gaji Gaji</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* General datatable */}
-                  {(() => {
-                    const filtered = transactions.filter(t => {
-                      if (t.type === 'income') return false; // Hide income streams on reclaim area
-
-                      const matchSearch = t.merchant.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                          (employees.find(e => e.id === t.employeeId)?.name || "Unknown").toLowerCase().includes(searchTerm.toLowerCase());
-                      const matchStatus = statusFilter === 'Semua' ? true : t.status === statusFilter;
-                      const matchCategory = categoryFilter === 'Semua' ? true : t.category === categoryFilter;
-
-                      return matchSearch && matchStatus && matchCategory;
-                    });
-
-                    return filtered.length === 0 ? (
-                      <div className="bg-white p-14 rounded-3xl border border-slate-100 shadow-3xs text-center space-y-4">
-                        <AlertTriangle className="w-12 h-12 text-slate-300 mx-auto" strokeWidth="1.5" />
-                        <div>
-                          <h5 className="font-extrabold text-slate-700 text-base">Tidak Ada Transaksi Cocok</h5>
-                          <p className="text-sm text-slate-400 mt-1">Coba sesuaikan kata pencarian atau bersihkan filter Anda.</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-white rounded-3xl border border-slate-100 shadow-3xs overflow-hidden">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-sm">
-                            <thead>
-                              <tr className="bg-slate-50 text-slate-600 border-b border-indigo-20 font-black uppercase text-[10.5px] tracking-wider">
-                                <th className="p-5">Tanggal</th>
-                                <th className="p-5">ID / Staff</th>
-                                <th className="p-5">Merchant / Supplier</th>
-                                <th className="p-5">Kategori</th>
-                                <th className="p-5">Jumlah Biaya</th>
-                                <th className="p-5">Status</th>
-                                <th className="p-5 text-right">Panel Aksi</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 text-slate-700 font-semibold">
-                              {filtered.map((t) => (
-                                <tr key={t.id} className="hover:bg-slate-50/50 transition-all">
-                                  <td className="p-5 text-slate-500 font-mono text-xs">{t.date}</td>
-                                  <td className="p-5">
-                                    <div className="leading-tight">
-                                      <span className="font-black text-slate-900 block text-sm sm:text-[14.5px]">{employees.find(e => e.id === t.employeeId)?.name || "Unknown"}</span>
-                                      <span className="text-xs text-slate-400 font-mono block mt-0.5">{t.employeeId}</span>
-                                    </div>
-                                  </td>
-                                  <td className="p-5 font-extrabold text-slate-850 truncate max-w-[165px] text-sm sm:text-[14px]">{t.merchant}</td>
-                                  <td className="p-5">
-                                    <span className="bg-indigo-50 text-indigo-700 p-1.5 px-3 rounded-xl text-xs font-black">{t.category}</span>
-                                  </td>
-                                  <td className="p-5 font-mono font-black text-slate-900 text-sm sm:text-[15px]">Rp {t.amount.toLocaleString('id-ID')}</td>
-                                  <td className="p-5">
-                                    <span className={`inline-block text-xs font-extrabold px-3 py-1 rounded-full ${
-                                      t.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
-                                      t.status === 'Rejected' ? 'bg-rose-50 text-rose-700 border border-rose-100' :
-                                      'bg-amber-50 text-amber-700 border border-amber-100'
-                                    }`}>
-                                      {t.status}
-                                    </span>
-                                  </td>
-                                  <td className="p-5 text-right">
-                                    <button 
-                                      onClick={() => {
-                                        setSplitViewTx(t);
-                                        setShowRejectForm(false);
-                                        setRejectReasonText('');
-                                      }}
-                                      className="p-2 px-4 bg-brand text-white font-black text-xs sm:text-sm rounded-xl hover:opacity-90 inline-flex items-center gap-1.5 transition-all shadow-sm"
-                                    >
-                                      <Eye className="w-4 h-4" />
-                                      <span>Tinjau</span>
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                </div>
+                <ApprovalsScreen {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
+                }} />
               )}
-
-              {/* SCREEN B-4: AUTOMATED INBOUND REVENUE STREAMS */}
               {activeTab === 'inbound' && (
-                <div className="space-y-6">
-                  
-                  <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                    <div>
-                      <h2 className="text-2xl lg:text-3xl font-black font-display text-slate-900">Arus Kas Masuk (Automated Streams)</h2>
-                      <p className="text-sm text-slate-500 mt-1.5">Laporan uang masuk langsung yang diterima secara otomatis dari billing webhook produk.</p>
-                    </div>
-
-                    <button 
-                      onClick={handleExportCSV}
-                      className="p-3 px-5 bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-sm transition"
-                    >
-                      <FileSpreadsheet className="w-5 h-5" /> Unduh Format CSV
-                    </button>
-                  </div>
-
-                  {/* Inbound log table */}
-                  {(() => {
-                    const inboundTxs = transactions.filter(t => t.type === 'income');
-
-                    return (
-                      <div className="bg-white rounded-3xl border border-slate-100 shadow-3xs overflow-hidden">
-                        <div className="p-5 bg-indigo-50/50 border-b border-indigo-100/50 flex justify-between items-center text-sm">
-                          <span className="font-extrabold text-brand font-display flex items-center gap-2 text-sm sm:text-[14.5px]"><Sparkles className="w-5 h-5" /> Pemasukan Otomatis Terdeteksi</span>
-                          <span className="font-black text-emerald-600 text-sm sm:text-base">Total: Rp {totalInflowThisMonth.toLocaleString('id-ID')}</span>
-                        </div>
-
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-sm bg-white">
-                            <thead>
-                              <tr className="bg-slate-50 text-slate-600 border-b border-slate-100 font-extrabold uppercase text-[10.5px] tracking-wider">
-                                <th className="p-5">Tanggal Inflow</th>
-                                <th className="p-5">ID Aliran</th>
-                                <th className="p-5">Asal Produk AI</th>
-                                <th className="p-5">Klien / Detail Node Billing</th>
-                                <th className="p-5">Jumlah Pemasukan</th>
-                                <th className="p-5">Saluran / PG</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 text-slate-700 font-semibold">
-                              {inboundTxs.map((t) => (
-                                <tr key={t.id} className="hover:bg-slate-50/50 transition-all font-semibold">
-                                  <td className="p-5 font-mono text-xs text-slate-450">{t.date}</td>
-                                  <td className="p-5 font-mono text-xs text-brand font-extrabold">{t.id}</td>
-                                  <td className="p-5 font-black text-slate-900 text-sm sm:text-[14.5px]">{t.merchant}</td>
-                                  <td className="p-5 font-mono text-xs text-slate-500">{t.employeeId}</td>
-                                  <td className="p-5 font-mono font-black text-emerald-600 text-sm sm:text-[15.5px]">Rp {t.amount.toLocaleString('id-ID')}</td>
-                                  <td className="p-5">
-                                    <span className="bg-emerald-50 text-emerald-700 font-extrabold text-[10px] px-3 py-1 rounded-full border border-emerald-100 uppercase tracking-wide">Otomatis / PG</span>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                </div>
+                <InboundScreen {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
+                }} />
               )}
-
-              {/* SCREEN B-5: PRODUCT API CONNECTIONS / INTEGRATION */}
-              {activeTab === 'integrations' && (
-                <div className="space-y-6">
-                  
-                  <div>
-                    <h2 className="text-2xl lg:text-3xl font-black font-display text-slate-900">Koneksi Produk API jagoAI</h2>
-                    <p className="text-sm text-slate-500 mt-1.5">Sambungkan produk SaaS internal Anda ke dashboard keuangan untuk pelaporan kas berkala otomatis.</p>
-                  </div>
-
-                  {/* Integration settings connected apps grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {connectedApps.map((app) => (
-                      <div key={app.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-3xs hover:shadow-2xs transition-all space-y-5">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-extrabold text-base sm:text-lg text-slate-850 font-display leading-tight">{app.name}</h3>
-                            <p className="text-[10.5px] text-slate-400 mt-1 font-semibold">ID: {app.id}</p>
-                          </div>
-
-                          {/* Connection Status Toggle indicator click */}
-                          <button 
-                            onClick={() => onToggleApp(app.id)}
-                            className={`p-1.5 px-4 text-xs font-black rounded-full transition-all border ${
-                              app.status === 'active' 
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-3xs' 
-                                : 'bg-slate-100 text-slate-400 border-slate-200 hover:bg-slate-200 hover:text-slate-600'
-                            }`}
-                          >
-                            {app.status === 'active' ? '● Aktif' : '○ Mati'}
-                          </button>
-                        </div>
-
-                        <p className="text-sm text-slate-600 leading-relaxed font-medium">
-                          {app.description}
-                        </p>
-
-                        <div className="bg-slate-50 p-3.5 rounded-2xl text-xs space-y-2">
-                          <div className="flex justify-between items-center text-slate-550 font-bold">
-                            <span>Payment Gateway</span>
-                            <span className="font-black text-slate-800">{app.paymentGateway || 'Belum Terhubung'}</span>
-                          </div>
-                          <div className="flex justify-between items-center text-slate-550 font-bold">
-                            <span>Inflow Mei</span>
-                            <span className="font-mono font-black text-slate-800 text-[13px]">Rp {app.monthlyRevenue.toLocaleString('id-ID')}</span>
-                          </div>
-                        </div>
-
-                        {/* Webhook endpoint Setup Trigger */}
-                        <div className="pt-2 flex gap-2">
-                          <button 
-                            onClick={() => openWebhookSetup(app)}
-                            className="flex-1 py-3 bg-indigo-50 text-indigo-700 hover:bg-brand hover:text-white rounded-2xl text-xs sm:text-sm font-black font-display transition-all text-center flex items-center justify-center gap-1.5"
-                          >
-                            <Link className="w-4 h-4" /> Configure Webhook
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                </div>
-              )}
-
-              {/* SCREEN B-6: MANUAL ENTRY & MASTER TRANSACTIONS */}
               {activeTab === 'ledger' && (
-                <div className="space-y-6">
-                  
-                  <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                    <div>
-                      <h2 className="text-2xl lg:text-3xl font-black font-display text-slate-900">Buku Kas & Ledger Finansial</h2>
-                      <p className="text-sm text-slate-500 mt-1.5">Buku besar historis kas perseroan yang mencatat seluruh aktivitas in & out secara hierarkis.</p>
-                    </div>
-
-                    <button 
-                      onClick={() => setShowManualModal(true)}
-                      className="p-3 px-5 bg-brand hover:opacity-90 text-white font-extrabold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-sm transition-all"
-                    >
-                      <Plus className="w-5 h-5" /> Entri Manual Ledger
-                    </button>
-                  </div>
-
-                  {/* Ledger Table */}
-                  <div className="bg-white rounded-3xl border border-slate-100 shadow-3xs overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm bg-white">
-                        <thead>
-                          <tr className="bg-slate-50 text-slate-600 border-b border-slate-100 font-extrabold uppercase text-[10.5px] tracking-wider">
-                            <th className="p-5">Tanggal Ledger</th>
-                            <th className="p-5">Ref ID</th>
-                            <th className="p-5">Merchant / Sumber Kas</th>
-                            <th className="p-5">Kategori Akun</th>
-                            <th className="p-5">Operator / Validator</th>
-                            <th className="p-5">Status</th>
-                            <th className="p-5">Debit (Masuk)</th>
-                            <th className="p-5">Kredit (Keluar)</th>
-                            <th className="p-5">Bukti</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-slate-750 font-semibold">
-                          {transactions.filter(t => t.status === 'Approved').map((t) => {
-                            const isIncome = t.type === 'income';
-                            return (
-                              <tr key={t.id} className="hover:bg-slate-50/50 transition-all font-semibold">
-                                <td className="p-5 font-mono text-xs text-slate-450">{t.date}</td>
-                                <td className="p-5 font-mono text-xs text-slate-400">{t.id}</td>
-                                <td className="p-5 font-black text-slate-900 max-w-[200px] truncate text-sm sm:text-[14.5px]">{t.merchant}</td>
-                                <td className="p-5">
-                                  <span className="bg-indigo-50 text-indigo-700 p-1.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider">{t.category}</span>
-                                </td>
-                                <td className="p-5 text-slate-650 text-xs sm:text-sm">{employees.find(e => e.id === t.employeeId)?.name || "Unknown"}</td>
-                                <td className="p-5">
-                                  <span className="inline-block text-[9.5px] tracking-wider font-black uppercase px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-250">POSTED</span>
-                                </td>
-                                <td className="p-5 font-mono font-black text-emerald-600 text-sm sm:text-[14.5px]">
-                                  {isIncome ? `+Rp ${t.amount.toLocaleString('id-ID')}` : '-'}
-                                </td>
-                                <td className="p-5 font-mono font-black text-rose-600 text-sm sm:text-[14.5px]">
-                                  {!isIncome ? `-Rp ${t.amount.toLocaleString('id-ID')}` : '-'}
-                                </td>
-                                <td className="p-5">
-                                  {t.receiptUrl  ? (
-                                    <button 
-                                      onClick={() => setSelectedLedgerReceipt(t.receiptUrl || null)}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-black text-indigo-700 bg-indigo-50 hover:bg-indigo-150 rounded-xl transition-all border border-indigo-150/65 cursor-pointer shadow-3xs"
-                                    >
-                                      <FileText className="w-3.5 h-3.5 shrink-0 text-indigo-600" /> Lihat Bukti
-                                    </button>
-                                  ) : (
-                                    <span className="text-[11px] text-slate-400 font-bold italic">-</span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                </div>
+                <LedgerScreen {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
+                }} />
               )}
-
-              {/* SCREEN B-7: SUBSCRIPTION TRACKING SYSTEM */}
-              {activeTab === 'subscriptions' && (
-                <div className="space-y-6">
-                  
-                  <div>
-                    <h2 className="text-2xl lg:text-3xl font-black font-display text-slate-900">Tagihan & Langganan Cloud (SaaS)</h2>
-                    <p className="text-sm text-slate-500 mt-1.5 font-medium">Pelacakan pengeluaran berulang (AWS, OpenAI API, SaaS) lengkap dengan notifikasi pencegah kegagalan payment.</p>
-                  </div>
-
-                  {/* Active listings cards */}
-                  <div className="bg-white rounded-3xl border border-slate-100 shadow-3xs overflow-hidden">
-                    <div className="p-5 bg-slate-50 border-b border-slate-100 flex justify-between items-center text-sm">
-                      <span className="font-extrabold text-slate-800">Daftar Langganan Aktif ({subscriptions.length})</span>
-                      <span className="text-xs bg-amber-50 text-amber-800 p-1.5 px-3 rounded-full font-bold flex items-center gap-1.5 border border-amber-200"><AlertTriangle className="w-4 h-4 text-amber-600" /> Pembaruan Menjelang: {subscriptions.filter(s=>s.status==='warning').length} Tagihan</span>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm bg-white">
-                        <thead>
-                          <tr className="bg-slate-50 text-slate-600 border-b border-slate-100 font-extrabold uppercase tracking-wider text-[10.5px] p-5">
-                            <th className="p-5">Layanan SaaS / Vendor</th>
-                            <th className="p-5">Kategori Akun</th>
-                            <th className="p-5">Biaya Berulang</th>
-                            <th className="p-5">Siklus</th>
-                            <th className="p-5">Jatuh Tempo Pembayaran</th>
-                            <th className="p-5">Fase Alaram</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-slate-705 font-semibold">
-                          {subscriptions.map((sub) => (
-                            <tr key={sub.id} className="hover:bg-slate-50/50 transition-all font-semibold">
-                              <td className="p-5">
-                                <div className="leading-tight">
-                                  <span className="font-black text-slate-900 block text-sm sm:text-[14.5px]">{sub.name}</span>
-                                  <span className="text-xs text-slate-400 font-mono block mt-0.5">ID: {sub.id}</span>
-                                </div>
-                              </td>
-                              <td className="p-5">
-                                <span className="bg-slate-100 text-slate-700 p-1.5 px-3 rounded-xl text-xs font-black">{sub.category}</span>
-                              </td>
-                              <td className="p-5 font-mono font-black text-rose-600 text-sm sm:text-[15.5px]">Rp {sub.cost.toLocaleString('id-ID')}</td>
-                              <td className="p-5 capitalize text-slate-600 font-bold">{sub.cycle}</td>
-                              <td className="p-5 font-mono text-[13px] font-black text-slate-700">{sub.nextBilling}</td>
-                              <td className="p-5">
-                                {sub.status === 'warning' ? (
-                                  <span className="bg-rose-50 text-rose-800 px-3 py-1 rounded-xl text-[10.5px] font-black flex items-center gap-1.5 w-max border border-rose-200 uppercase tracking-wide">
-                                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
-                                    <span>Hampir Jatuh Tempo</span>
-                                  </span>
-                                ) : (
-                                  <span className="bg-emerald-50 text-emerald-800 px-3 py-1 rounded-xl text-[10.5px] font-black flex items-center gap-1.5 w-max border border-emerald-250 uppercase tracking-wide">
-                                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                                    <span>Lancar (Auto-debet)</span>
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                </div>
-              )}
-
-              {/* SCREEN B-8: EMPLOYEE DIRECTORY & PAYROLL MASS GENERATOR */}
               {activeTab === 'payroll' && (
-                <div className="space-y-6">
-                  
-                  <div className="flex flex-col md:flex-row justify-between md:items-center gap-3">
-                    <div>
-                      <h2 className="text-2xl lg:text-3xl font-black font-display text-slate-900">Manajemen Tim & Gaji Karyawan</h2>
-                      <p className="text-sm text-slate-500 mt-1.5 font-medium">Manajemen database staf PT JagoAI. Terbitkan dan transfer payroll bulanan massal dengan sekali klik rasa bank.</p>
-                    </div>
-                  </div>
-
-                  {/* Mass Payroll Generator Control Center panel */}
-                  <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-sm border border-slate-800 space-y-6">
-                    <div>
-                      <h4 className="text-base sm:text-lg font-black font-display text-white flex items-center gap-2"><Sparkles className="w-5 h-5 text-brand-light" /> Pemrosesan Payroll Massal Otomatis</h4>
-                      <p className="text-xs sm:text-[13px] text-slate-400 mt-1.5 leading-relaxed">Sistem akan merekam pengeluaran gaji ke kas ledger, mengurangi dana kas, dan menerbitkan invoice pembayaran ke Mandiri API gateway secara serentak.</p>
-                    </div>
-
-                    {payrollMessage && (
-                      <div className={`p-4 rounded-2xl text-xs sm:text-sm font-bold border ${
-                        payrollMessage.type === 'success' 
-                          ? 'bg-emerald-950/60 text-emerald-200 border-emerald-800' 
-                          : 'bg-rose-950/60 text-rose-200 border-rose-800'
-                      }`}>
-                        {payrollMessage.text}
-                      </div>
-                    )}
-
-                    <div className="flex flex-col md:flex-row gap-5 items-end">
-                      <div className="flex-1 space-y-2">
-                        <label className="text-[10.5px] uppercase font-black tracking-widest text-slate-400 block">Pilih Divisi Pembayaran</label>
-                        <select 
-                          value={payrollDivision}
-                          onChange={(e) => setPayrollDivision(e.target.value)}
-                          className="w-full p-3.5 bg-slate-800 text-white rounded-2xl border border-slate-700 outline-none focus:border-indigo-400 text-xs sm:text-sm font-bold cursor-pointer"
-                        >
-                          <option value="Semua">Semua Karyawan (4 Staff)</option>
-                          <option value="Engineering">Divisi Engineering</option>
-                          <option value="Product">Divisi Product</option>
-                          <option value="Operations">Divisi Operations</option>
-                        </select>
-                      </div>
-
-                      <button 
-                        onClick={handleMassPayroll}
-                        className="p-3.5 px-8 bg-brand-light hover:bg-[#2510c4] active:scale-[0.99] text-white font-black text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 transition-all w-full md:w-auto shadow-md"
-                      >
-                        <Play className="w-4 h-4" /> Terbitkan & Bayar Payroll Massal
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Employee directories listings */}
-                  <div className="bg-white rounded-3xl border border-slate-100 shadow-3xs overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm bg-white">
-                        <thead>
-                          <tr className="bg-slate-50 text-slate-650 border-b border-slate-100 font-extrabold uppercase tracking-wider text-[10.5px] p-5">
-                            <th className="p-5">Karyawan</th>
-                            <th className="p-5">Jabatan (Role)</th>
-                            <th className="p-5">Divisi</th>
-                            <th className="p-5">Gaji Pokok / Bln</th>
-                            <th className="p-5">Informasi Rekening Bank</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-slate-700 font-semibold">
-                          {employees.map((emp) => (
-                            <tr key={emp.id} className="hover:bg-slate-50/50 transition-all font-semibold">
-                              <td className="p-5">
-                                <div className="leading-tight">
-                                  <span className="font-extrabold text-slate-900 block text-sm sm:text-[14.5px]">{emp.name}</span>
-                                  <span className="text-xs text-slate-450 font-mono block mt-1">ID: {emp.id} • {emp.email}</span>
-                                </div>
-                              </td>
-                              <td className="p-5 text-slate-700 text-xs sm:text-sm font-semibold">{emp.role}</td>
-                              <td className="p-5 capitalize text-slate-600 font-bold text-xs sm:text-sm">{emp.division}</td>
-                              <td className="p-5 font-mono font-black text-slate-900 text-sm sm:text-[14.5px]">Rp {emp.salary.toLocaleString('id-ID')}</td>
-                              <td className="p-5">
-                                <span className="font-mono text-xs text-brand font-black bg-indigo-50/70 p-2 px-3 rounded-xl inline-block">
-                                  {emp.bankName} - {emp.bankAccount}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                </div>
+                <PayrollScreen {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
+                }} />
               )}
 
-
+              {/* === SHARED SCREENS === */}
+              {activeTab === 'profile' && (
+                <ProfileScreen {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
+                }} />
+              )}
             </>
           )}
-
         </main>
-
       </div>
-
-      {/* MODAL 1: B-3.2 Persetujuan Split-View Modal */}
+{/* MODAL 1: B-3.2 Persetujuan Split-View Modal */}
       {splitViewTx && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-4xl h-[680px] max-h-[92vh] rounded-3xl shadow-xl overflow-hidden flex flex-col relative animate-in fade-in zoom-in" style={{ animationDuration: '0.2s' }}>
@@ -1370,7 +705,7 @@ export default function WebDashboard({
             <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <div>
                 <span className="text-[9px] uppercase font-bold tracking-widest text-indigo-600">Double-Entry Verification AI</span>
-                <h3 className="font-bold text-sm text-slate-850 font-display">Split-View Persetujuan Reimburse • #{splitViewTx.id}</h3>
+                <h3 className="font-bold text-sm text-slate-850 font-display">Split-View Persetujuan Reimburse ΓÇó #{splitViewTx.id}</h3>
               </div>
               <button 
                 onClick={() => setSplitViewTx(null)}
@@ -1591,7 +926,7 @@ export default function WebDashboard({
 
                 {/* Warning warning: safe balance deduction preview */}
                 <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-[10px] space-y-1">
-                  <span className="font-bold text-amber-800 block">⚠️ Prakiraan Sisa Kas:</span>
+                  <span className="font-bold text-amber-800 block">ΓÜá∩╕Å Prakiraan Sisa Kas:</span>
                   <div className="flex justify-between font-mono">
                     <span>Kas Setelah Pengurangan:</span>
                     <span className="font-bold">Rp {(cashBalance - splitViewTx.amount).toLocaleString('id-ID')}</span>
@@ -1668,7 +1003,7 @@ export default function WebDashboard({
                         </>
                       ) : (
                         <div className="w-full text-center text-xs py-2 bg-slate-100 rounded-xl text-slate-500 font-bold block">
-                          Tindakan terkunci • Status klaim ini adalah {splitViewTx.status}
+                          Tindakan terkunci ΓÇó Status klaim ini adalah {splitViewTx.status}
                         </div>
                       )}
                     </>
@@ -1863,7 +1198,7 @@ export default function WebDashboard({
             <div className="flex justify-between items-center mb-4">
               <div>
                 <span className="text-[9px] uppercase font-bold tracking-widest text-brand">Configure API Integration</span>
-                <h3 className="font-bold text-sm text-slate-850 font-display">Webhook Configurator • {showWebhookModal.name}</h3>
+                <h3 className="font-bold text-sm text-slate-850 font-display">Webhook Configurator ΓÇó {showWebhookModal.name}</h3>
               </div>
               <button 
                 onClick={() => setShowWebhookModal(null)}
@@ -1967,6 +1302,8 @@ export default function WebDashboard({
           </div>
         </div>
       )}
+
+
 
     </div>
   );

@@ -3,7 +3,7 @@ import {
   Bell, User, CreditCard, ArrowLeft, Camera, CheckCircle, 
   AlertCircle, Loader2, Calendar, DollarSign, X, FileText, 
   ChevronRight, Image, Search, Lock, Mail, ArrowUpRight, ArrowRight,
-  Check, Download, Maximize2, Sparkles, LogOut, Settings
+  Check, Download, Maximize2, Sparkles, LogOut, Settings, Info, Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Transaction } from '../types';
@@ -378,6 +378,7 @@ export default function MobileAppSimulator({
                 loginError={loginError}
                 handleLogin={handleLogin}
                 setCurrentScreen={setCurrentScreen}
+                isSubmitting={isSubmitting}
               />
             )}
 
@@ -402,7 +403,7 @@ export default function MobileAppSimulator({
                 limitMax={limitMax}
                 handleOpenScanner={handleOpenScanner}
                 setCurrentScreen={setCurrentScreen}
-                recentTransactions={recentTransactions}
+                staffTransactions={staffTransactions}
                 handleOpenDetail={handleOpenDetail}
               />
             )}
@@ -525,10 +526,43 @@ export default function MobileAppSimulator({
                 setCurrentScreen={setCurrentScreen}
               />
             )}
-</div>
+            {/* SCREEN 15: UNASSIGNED COMPANY LOCK */}
+            {currentScreen === 'unassigned' && (
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-6 mt-16">
+                <div className="w-24 h-24 bg-rose-50 text-rose-500 rounded-[2rem] flex items-center justify-center shadow-inner relative border border-rose-100">
+                  <Lock className="w-10 h-10" />
+                  <div className="absolute top-0 right-0 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center border-2 border-white shadow-sm -mr-2 -mt-2">
+                    <AlertCircle className="w-4 h-4" />
+                  </div>
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-800 mb-2 font-display tracking-tight">Portal Terkunci</h2>
+                  <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                    Akun <strong>{employeeEmail}</strong> belum dihubungkan dengan profil perusahaan mana pun.
+                  </p>
+                </div>
+                <div className="w-full bg-indigo-50 border border-indigo-100 p-4 rounded-2xl text-left flex items-start gap-3 shadow-sm">
+                  <Info className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+                  <p className="text-xs font-bold text-indigo-800 leading-relaxed">
+                    Silakan hubungi HRD atau Admin Cabang perusahaan Anda untuk mengundang email ini melalui Dashboard Utama.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => {
+                     setIsLogged(false);
+                     setCurrentScreen('auth');
+                     if (onLogout) onLogout();
+                  }}
+                  className="w-full py-4 mt-4 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" /> Keluar dari Akun
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Bottom Native Smartphone App Bar Navigation (Only when logged) */}
-          {isLogged && (
+          {isLogged && currentScreen !== 'unassigned' && (
             <div className="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-150 rounded-b-[38px] px-10 flex justify-between items-center z-40">
               <button 
                 onClick={() => {
