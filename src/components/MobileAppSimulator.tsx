@@ -145,7 +145,7 @@ export default function MobileAppSimulator({
 
         // Fetch user profile
         const { data: profileData, error: profileErr } = await supabase
-          .from('profiles')
+          .from('users')
           .select('*, companies(*)')
           .eq('id', data.user.id)
           .single();
@@ -681,3 +681,4 @@ export default function MobileAppSimulator({
     </div>
   );
 }
+

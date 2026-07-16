@@ -17,15 +17,15 @@ const DUMMY_BRANCHES: Branch[] = [
 ];
 
 const DUMMY_APPS: ConnectedApp[] = [
-  { id: '1', name: 'Gojek API', description: 'Integrasi Transportasi & Makanan', status: 'connected', apiKey: 'gjk-123', webhookUrl: 'https://jagoai.com/webhook/gojek', monthlyRevenue: 15000000, paymentGateway: 'Midtrans' },
-  { id: '2', name: 'Tokopedia API', description: 'Integrasi E-commerce', status: 'disconnected', apiKey: '', webhookUrl: '', monthlyRevenue: 0, paymentGateway: 'Xendit' },
-  { id: '3', name: 'Xero', description: 'Sistem Akuntansi', status: 'connected', apiKey: 'xro-999', webhookUrl: 'https://jagoai.com/webhook/xero', monthlyRevenue: 0, paymentGateway: 'None' }
+  { id: '1', name: 'Gojek API', description: 'Integrasi Transportasi & Makanan', status: 'active', apiKey: 'gjk-123', webhookUrl: 'https://jagoai.com/webhook/gojek', monthlyRevenue: 15000000, paymentGateway: 'Midtrans' },
+  { id: '2', name: 'Tokopedia API', description: 'Integrasi E-commerce', status: 'inactive', apiKey: '', webhookUrl: '', monthlyRevenue: 0, paymentGateway: 'Xendit' },
+  { id: '3', name: 'Xero', description: 'Sistem Akuntansi', status: 'active', apiKey: 'xro-999', webhookUrl: 'https://jagoai.com/webhook/xero', monthlyRevenue: 0, paymentGateway: 'None' }
 ];
 
 const DUMMY_SUBSCRIPTIONS: Subscription[] = [
-  { id: '1', name: 'Google Workspace', cost: 1500000, cycle: 'monthly', nextBilling: '2026-08-01', category: 'Software', status: 'active' },
-  { id: '2', name: 'AWS Cloud', cost: 5000000, cycle: 'monthly', nextBilling: '2026-08-05', category: 'Infrastructure', status: 'active' },
-  { id: '3', name: 'Canva Pro', cost: 150000, cycle: 'monthly', nextBilling: '2026-07-20', category: 'Design', status: 'active' }
+  { id: '1', name: 'Google Workspace', cost: 1500000, cycle: 'bulanan', nextBilling: '2026-08-01', category: 'Software', status: 'active' },
+  { id: '2', name: 'AWS Cloud', cost: 5000000, cycle: 'bulanan', nextBilling: '2026-08-05', category: 'Infrastructure', status: 'active' },
+  { id: '3', name: 'Canva Pro', cost: 150000, cycle: 'bulanan', nextBilling: '2026-07-20', category: 'Design', status: 'active' }
 ];
 
 const DUMMY_EMPLOYEES: Employee[] = [
@@ -35,10 +35,10 @@ const DUMMY_EMPLOYEES: Employee[] = [
 ];
 
 const DUMMY_TRANSACTIONS: Transaction[] = [
-  { id: 'TX-001', date: '2026-07-10', merchant: 'Gojek', category: 'Transportasi', amount: 50000, notes: 'Meeting klien', status: 'Approved', receiptUrl: '', type: 'outbound', employeeId: '3' },
-  { id: 'TX-002', date: '2026-07-12', merchant: 'AWS', category: 'Infrastructure', amount: 5000000, notes: 'Tagihan bulanan', status: 'Approved', receiptUrl: '', type: 'outbound', employeeId: '1' },
-  { id: 'TX-003', date: '2026-07-14', merchant: 'Kopi Kenangan', category: 'Konsumsi', amount: 100000, notes: 'Snack tim', status: 'Pending', receiptUrl: '', type: 'outbound', employeeId: '3' },
-  { id: 'TX-004', date: '2026-07-15', merchant: 'Deposit Tokopedia', category: 'Penjualan', amount: 15000000, notes: 'Pendapatan Q3', status: 'Approved', receiptUrl: '', type: 'inbound', employeeId: '2' }
+  { id: 'TX-001', date: '2026-07-10', merchant: 'Gojek', category: 'Transportasi', amount: 50000, notes: 'Meeting klien', status: 'Approved', receiptUrl: '', type: 'expense_manual', employeeId: '3' },
+  { id: 'TX-002', date: '2026-07-12', merchant: 'AWS', category: 'Infrastructure', amount: 5000000, notes: 'Tagihan bulanan', status: 'Approved', receiptUrl: '', type: 'expense_manual', employeeId: '1' },
+  { id: 'TX-003', date: '2026-07-14', merchant: 'Kopi Kenangan', category: 'Konsumsi', amount: 100000, notes: 'Snack tim', status: 'Pending', receiptUrl: '', type: 'expense_manual', employeeId: '3' },
+  { id: 'TX-004', date: '2026-07-15', merchant: 'Deposit Tokopedia', category: 'Penjualan', amount: 15000000, notes: 'Pendapatan Q3', status: 'Approved', receiptUrl: '', type: 'income', employeeId: '2' }
 ];
 
 const DUMMY_BALANCE = 150000000;
@@ -46,7 +46,7 @@ const DUMMY_BALANCE = 150000000;
 export default function App() {
   const [showLanding, setShowLanding] = useState<boolean>(true);
   // portal role selector ('staff' / 'finance' / null)
-  const [userRole, setUserRole] = useState<'staff' | 'finance' | null>(null);
+  const [userRole, setUserRole] = useState<'super_admin' | 'admin_corp' | 'karyawan' | null>(null);
   
   // Real-time server-synced database states
   const [cashBalance, setCashBalance] = useState<number>(0);
@@ -119,7 +119,7 @@ export default function App() {
         if (user) {
           // Fetch user profile
           const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
+            .from('users')
             .select('*')
             .eq('id', user.id)
             .single();
@@ -127,43 +127,20 @@ export default function App() {
           if (profileError) throw profileError;
 
           setProfile(profileData);
+          setUserRole(profileData.role);
 
-          // Fetch global finance settings for balance
-          const { data: financeData } = await supabase
-            .from('finance_settings')
-            .select('current_balance')
-            .eq('id', 1)
-            .single();
-          if (financeData && financeData.current_balance > 0) {
-            setCashBalance(financeData.current_balance);
-          } else {
-            setCashBalance(DUMMY_BALANCE);
-          }
-          
+          // Set dummy data for non-existent tables (will be migrated to DB later)
+          setCashBalance(DUMMY_BALANCE);
+          setEmployees(DUMMY_EMPLOYEES);
+          setConnectedApps(DUMMY_APPS);
+          setSubscriptions(DUMMY_SUBSCRIPTIONS);
+
           // Fetch transactions
           const { data: txs } = await supabase
             .from('transactions')
             .select('*')
             .order('created_at', { ascending: false });
           setTransactions(txs && txs.length > 0 ? txs.map(mapTxFromDb) : DUMMY_TRANSACTIONS);
-
-          // Fetch employees
-          const { data: emps } = await supabase
-            .from('employees')
-            .select('*');
-          setEmployees(emps && emps.length > 0 ? emps.map(mapEmployeeFromDb) : DUMMY_EMPLOYEES);
-
-          // Fetch connected apps
-          const { data: apps } = await supabase
-            .from('connected_apps')
-            .select('*');
-          setConnectedApps(apps && apps.length > 0 ? apps.map(mapAppFromDb) : DUMMY_APPS);
-
-          // Fetch subscriptions
-          const { data: subs } = await supabase
-            .from('subscriptions')
-            .select('*');
-          setSubscriptions(subs && subs.length > 0 ? subs.map(mapSubFromDb) : DUMMY_SUBSCRIPTIONS);
 
           // Fetch branches
           const { data: brnchs } = await supabase
@@ -192,7 +169,7 @@ export default function App() {
           const data = await response.json();
           setCashBalance(data.cashBalance || 0);
           setTransactions(data.transactions || []);
-          setEmployees(data.employees && data.employees.length > 0 ? data.employees : INITIAL_EMPLOYEES);
+          setEmployees(data.employees && data.employees.length > 0 ? data.employees : DUMMY_EMPLOYEES);
           setConnectedApps(data.connectedApps || []);
           setSubscriptions(data.subscriptions || []);
           setBranches(data.branches || []);
@@ -528,6 +505,7 @@ export default function App() {
           const { error } = await supabase
             .from('branches')
             .insert([{
+              company_id: profile?.company_id,
               name: branchData.name,
               location: branchData.location,
               manager_name: branchData.managerName,
@@ -647,7 +625,7 @@ export default function App() {
       if (isSupabaseConfigured() && profile) {
         // Find profile by email first
         const { data: targetProfile, error: searchErr } = await supabase
-          .from('profiles')
+          .from('users')
           .select('*')
           .eq('email', inviteEmail)
           .single();
@@ -661,7 +639,7 @@ export default function App() {
         }
 
         const { error: updateErr } = await supabase
-          .from('profiles')
+          .from('users')
           .update({ company_id: profile.company_id })
           .eq('id', targetProfile.id);
 
@@ -725,17 +703,16 @@ export default function App() {
             onAuthSuccess={(sess, profileData) => {
               setSession(sess);
               setProfile(profileData);
-              
-              if (profileData.role === 'admin' || profileData.role === 'super_admin') {
-                setUserRole('finance');
+              if (profileData.role === 'admin_corp' || profileData.role === 'super_admin') {
+                setUserRole(profileData.role);
               } else {
-                setUserRole('staff');
+                setUserRole(profileData.role);
               }
             }}
             onBack={() => setShowLanding(true)}
           />
         )
-      ) : userRole === 'finance' ? (
+      ) : (userRole === 'admin_corp' || userRole === 'super_admin') ? (
         /* Render FULL screen Backoffice Web Dashboard */
         <div className="w-full h-screen overflow-hidden flex flex-col bg-white">
           <WebDashboard 
@@ -756,7 +733,7 @@ export default function App() {
             isLoading={isLoading}
             onLogout={handleLogout}
             onInviteEmployee={handleInviteEmployee}
-            userRole={profile?.role as 'super_admin' | 'admin' | null}
+            userRole={profile?.role as 'super_admin' | 'admin_corp' | null}
           />
         </div>
       ) : (
@@ -785,3 +762,4 @@ export default function App() {
     </div>
   );
 }
+

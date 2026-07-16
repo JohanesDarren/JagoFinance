@@ -51,7 +51,7 @@ interface WebDashboardProps {
   isLoading: boolean;
   onLogout?: () => void;
   onInviteEmployee?: (email: string) => Promise<{success: boolean, message: string}>;
-  userRole?: 'super_admin' | 'admin' | null;
+  userRole?: 'super_admin' | 'admin_corp' | null;
   onSaveBranch?: (branch: any) => Promise<boolean>;
 }
 
@@ -72,7 +72,7 @@ export default function WebDashboard({
   isLoading,
   onLogout,
   onInviteEmployee,
-  userRole = 'admin',
+  userRole = 'admin_corp',
   onSaveBranch
 }: WebDashboardProps) {
 
@@ -528,7 +528,7 @@ export default function WebDashboard({
                   handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals, onSaveBranch
                 }} />
               )}
-              {userRole === 'super_admin' && activeTab === 'admin_cabang' && (
+              {userRole === 'super_admin' && activeTab === 'admin_corp' && (
                 <BranchAdminManagementScreen {...{
                   transactions, cashBalance, employees, connectedApps, subscriptions, branches, onRefreshData,
                   onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
@@ -1308,3 +1308,4 @@ export default function WebDashboard({
     </div>
   );
 }
+

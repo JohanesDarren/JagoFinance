@@ -5,7 +5,7 @@ import {
 import { Transaction } from '../types';
 
 interface WebSidebarProps {
-  userRole: 'super_admin' | 'admin_cabang';
+  userRole: 'super_admin' | 'admin_corp';
   activeTab: string;
   setActiveTab: (tab: any) => void;
   pendingApprovals: Transaction[];
@@ -82,7 +82,7 @@ export default function WebSidebar({
 
             {[
               { id: 'branches', icon: LayoutGrid, label: 'Kelola Cabang', color: 'text-[#1800ad]', activeBg: 'bg-emerald-500' },
-              { id: 'admin_cabang', icon: Users, label: 'Kelola Admin Cabang', color: 'text-[#1800ad]', activeBg: 'bg-indigo-500' },
+              { id: 'admin_corp', icon: Users, label: 'Kelola Admin Cabang', color: 'text-[#1800ad]', activeBg: 'bg-indigo-500' },
             ].map((item) => (
               <button 
                 key={item.id}
@@ -251,3 +251,4 @@ export default function WebSidebar({
     </aside>
   );
 }
+
