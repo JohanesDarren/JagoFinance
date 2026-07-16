@@ -220,6 +220,34 @@ export default function WebSidebar({
         )}
       </nav>
 
+      {/* User Profile Snippet (Bottom) */}
+      <div className="p-4 border-t border-slate-100 bg-slate-50/50 mt-auto shrink-0">
+        <button 
+          onClick={() => setActiveTab('profile')}
+          className={`w-full flex items-center gap-3 p-2 rounded-[1.25rem] text-sm font-semibold transition-all relative group ${isSidebarCollapsed ? 'justify-center' : ''} ${
+            activeTab === 'profile' ? 'bg-[#f0ebff] text-[#1800ad] shadow-sm' : 'text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200'
+          }`}
+          title={isSidebarCollapsed ? 'Pengaturan Profil' : undefined}
+        >
+          <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border-2 border-white shadow-sm">
+            <img 
+              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60" 
+              alt="Avatar" 
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+          {!isSidebarCollapsed && (
+            <div className="text-left flex-1 overflow-hidden pr-2">
+              <p className="font-bold text-slate-800 text-[13px] leading-tight truncate">Alex Sterling</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate mt-0.5">
+                {userRole === 'super_admin' ? 'Super Admin' : 'Admin Cabang'}
+              </p>
+            </div>
+          )}
+        </button>
+      </div>
+
     </aside>
   );
 }

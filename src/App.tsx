@@ -10,6 +10,39 @@ import LandingPage from './components/LandingPage';
 import { Transaction, ConnectedApp, Subscription, Employee, Branch } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
+const DUMMY_BRANCHES: Branch[] = [
+  { id: '1', name: 'Cabang Jakarta Pusat', location: 'Jakarta', managerName: 'Budi Santoso', status: 'active' },
+  { id: '2', name: 'Cabang Surabaya', location: 'Surabaya', managerName: 'Siti Aminah', status: 'active' },
+  { id: '3', name: 'Cabang Bandung', location: 'Bandung', managerName: 'Agus Salim', status: 'inactive' }
+];
+
+const DUMMY_APPS: ConnectedApp[] = [
+  { id: '1', name: 'Gojek API', description: 'Integrasi Transportasi & Makanan', status: 'connected', apiKey: 'gjk-123', webhookUrl: 'https://jagoai.com/webhook/gojek', monthlyRevenue: 15000000, paymentGateway: 'Midtrans' },
+  { id: '2', name: 'Tokopedia API', description: 'Integrasi E-commerce', status: 'disconnected', apiKey: '', webhookUrl: '', monthlyRevenue: 0, paymentGateway: 'Xendit' },
+  { id: '3', name: 'Xero', description: 'Sistem Akuntansi', status: 'connected', apiKey: 'xro-999', webhookUrl: 'https://jagoai.com/webhook/xero', monthlyRevenue: 0, paymentGateway: 'None' }
+];
+
+const DUMMY_SUBSCRIPTIONS: Subscription[] = [
+  { id: '1', name: 'Google Workspace', cost: 1500000, cycle: 'monthly', nextBilling: '2026-08-01', category: 'Software', status: 'active' },
+  { id: '2', name: 'AWS Cloud', cost: 5000000, cycle: 'monthly', nextBilling: '2026-08-05', category: 'Infrastructure', status: 'active' },
+  { id: '3', name: 'Canva Pro', cost: 150000, cycle: 'monthly', nextBilling: '2026-07-20', category: 'Design', status: 'active' }
+];
+
+const DUMMY_EMPLOYEES: Employee[] = [
+  { id: '1', name: 'Budi Santoso', email: 'budi@jagoai.com', role: 'manager', division: 'Jakarta', salary: 15000000, bankAccount: '123456789', bankName: 'BCA' },
+  { id: '2', name: 'Siti Aminah', email: 'siti@jagoai.com', role: 'manager', division: 'Surabaya', salary: 12000000, bankAccount: '987654321', bankName: 'Mandiri' },
+  { id: '3', name: 'Andi', email: 'andi@jagoai.com', role: 'staff', division: 'Jakarta', salary: 6000000, bankAccount: '1122334455', bankName: 'BNI' }
+];
+
+const DUMMY_TRANSACTIONS: Transaction[] = [
+  { id: 'TX-001', date: '2026-07-10', merchant: 'Gojek', category: 'Transportasi', amount: 50000, notes: 'Meeting klien', status: 'Approved', receiptUrl: '', type: 'outbound', employeeId: '3' },
+  { id: 'TX-002', date: '2026-07-12', merchant: 'AWS', category: 'Infrastructure', amount: 5000000, notes: 'Tagihan bulanan', status: 'Approved', receiptUrl: '', type: 'outbound', employeeId: '1' },
+  { id: 'TX-003', date: '2026-07-14', merchant: 'Kopi Kenangan', category: 'Konsumsi', amount: 100000, notes: 'Snack tim', status: 'Pending', receiptUrl: '', type: 'outbound', employeeId: '3' },
+  { id: 'TX-004', date: '2026-07-15', merchant: 'Deposit Tokopedia', category: 'Penjualan', amount: 15000000, notes: 'Pendapatan Q3', status: 'Approved', receiptUrl: '', type: 'inbound', employeeId: '2' }
+];
+
+const DUMMY_BALANCE = 150000000;
+
 export default function App() {
   const [showLanding, setShowLanding] = useState<boolean>(true);
   // portal role selector ('staff' / 'finance' / null)
@@ -101,8 +134,10 @@ export default function App() {
             .select('current_balance')
             .eq('id', 1)
             .single();
-          if (financeData) {
+          if (financeData && financeData.current_balance > 0) {
             setCashBalance(financeData.current_balance);
+          } else {
+            setCashBalance(DUMMY_BALANCE);
           }
           
           // Fetch transactions
@@ -110,32 +145,32 @@ export default function App() {
             .from('transactions')
             .select('*')
             .order('created_at', { ascending: false });
-          setTransactions(txs ? txs.map(mapTxFromDb) : []);
+          setTransactions(txs && txs.length > 0 ? txs.map(mapTxFromDb) : DUMMY_TRANSACTIONS);
 
           // Fetch employees
           const { data: emps } = await supabase
             .from('employees')
             .select('*');
-          setEmployees(emps ? emps.map(mapEmployeeFromDb) : []);
+          setEmployees(emps && emps.length > 0 ? emps.map(mapEmployeeFromDb) : DUMMY_EMPLOYEES);
 
           // Fetch connected apps
           const { data: apps } = await supabase
             .from('connected_apps')
             .select('*');
-          setConnectedApps(apps ? apps.map(mapAppFromDb) : []);
+          setConnectedApps(apps && apps.length > 0 ? apps.map(mapAppFromDb) : DUMMY_APPS);
 
           // Fetch subscriptions
           const { data: subs } = await supabase
             .from('subscriptions')
             .select('*');
-          setSubscriptions(subs ? subs.map(mapSubFromDb) : []);
+          setSubscriptions(subs && subs.length > 0 ? subs.map(mapSubFromDb) : DUMMY_SUBSCRIPTIONS);
 
           // Fetch branches
           const { data: brnchs } = await supabase
             .from('branches')
             .select('*');
           
-          if (brnchs) {
+          if (brnchs && brnchs.length > 0) {
             setBranches(brnchs.map((b: any) => ({
               id: b.id,
               name: b.name,
@@ -144,7 +179,7 @@ export default function App() {
               status: b.status
             })));
           } else {
-            setBranches([]);
+            setBranches(DUMMY_BRANCHES);
           }
 
           setIsLoading(false);
@@ -157,7 +192,7 @@ export default function App() {
           const data = await response.json();
           setCashBalance(data.cashBalance || 0);
           setTransactions(data.transactions || []);
-          setEmployees(data.employees || []);
+          setEmployees(data.employees && data.employees.length > 0 ? data.employees : INITIAL_EMPLOYEES);
           setConnectedApps(data.connectedApps || []);
           setSubscriptions(data.subscriptions || []);
           setBranches(data.branches || []);

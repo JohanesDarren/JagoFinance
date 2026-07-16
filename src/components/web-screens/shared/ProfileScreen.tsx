@@ -7,6 +7,24 @@ import { WebScreenProps } from './WebScreenProps';
 export default function ProfileScreen(props: WebScreenProps) {
   const { onLogout } = props;
 
+  const [profileData, setProfileData] = React.useState({
+    name: 'Alex Sterling',
+    email: 'alex.sterling@jagoai.com',
+    phone: '+62 812 3456 7890',
+    location: 'SCBD, Jakarta Selatan'
+  });
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [saveSuccess, setSaveSuccess] = React.useState(false);
+
+  const handleSave = () => {
+    setIsSaving(true);
+    setTimeout(() => {
+      setIsSaving(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    }, 1000);
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
@@ -29,7 +47,7 @@ export default function ProfileScreen(props: WebScreenProps) {
               <Shield className="w-3.5 h-3.5 text-brand" />
               Eksekutif Finance
             </div>
-            <h2 className="text-4xl lg:text-5xl font-black font-display tracking-tight text-white">Alex Sterling</h2>
+            <h2 className="text-4xl lg:text-5xl font-black font-display tracking-tight text-white">{profileData.name}</h2>
             <p className="text-slate-300 mt-2 text-base max-w-xl font-medium">Pengaturan profil akun, keamanan, dan preferensi notifikasi dashboard.</p>
           </div>
         </div>
@@ -46,37 +64,68 @@ export default function ProfileScreen(props: WebScreenProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Nama Lengkap</label>
-                <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] shadow-inner">
-                  <User className="w-5 h-5 text-slate-400" />
-                  <span className="font-bold text-slate-800">Alex Sterling</span>
+                <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] shadow-inner focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition-all">
+                  <User className="w-5 h-5 text-slate-400 shrink-0" />
+                  <input 
+                    type="text"
+                    value={profileData.name}
+                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                    className="w-full bg-transparent border-none focus:outline-none font-bold text-slate-800" 
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Alamat Email</label>
-                <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] shadow-inner">
-                  <Mail className="w-5 h-5 text-slate-400" />
-                  <span className="font-bold text-slate-800">alex.sterling@jagoai.com</span>
+                <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] shadow-inner focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition-all">
+                  <Mail className="w-5 h-5 text-slate-400 shrink-0" />
+                  <input 
+                    type="email"
+                    value={profileData.email}
+                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                    className="w-full bg-transparent border-none focus:outline-none font-bold text-slate-800" 
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Nomor Telepon</label>
-                <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] shadow-inner">
-                  <Phone className="w-5 h-5 text-slate-400" />
-                  <span className="font-bold text-slate-800">+62 812 3456 7890</span>
+                <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] shadow-inner focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition-all">
+                  <Phone className="w-5 h-5 text-slate-400 shrink-0" />
+                  <input 
+                    type="text"
+                    value={profileData.phone}
+                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                    className="w-full bg-transparent border-none focus:outline-none font-bold text-slate-800" 
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Lokasi Kantor</label>
-                <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] shadow-inner">
-                  <MapPin className="w-5 h-5 text-slate-400" />
-                  <span className="font-bold text-slate-800">SCBD, Jakarta Selatan</span>
+                <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] shadow-inner focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition-all">
+                  <MapPin className="w-5 h-5 text-slate-400 shrink-0" />
+                  <input 
+                    type="text"
+                    value={profileData.location}
+                    onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
+                    className="w-full bg-transparent border-none focus:outline-none font-bold text-slate-800" 
+                  />
                 </div>
               </div>
             </div>
             
-            <div className="pt-6 border-t border-slate-100 flex justify-end">
-              <button className="px-8 py-4 bg-brand text-white font-black text-[15px] rounded-[1.5rem] hover:bg-brand/90 transition-all shadow-xl hover:shadow-2xl hover:shadow-brand/40 hover:-translate-y-1">
-                Simpan Perubahan
+            <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+              <div>
+                {saveSuccess && (
+                  <span className="text-emerald-500 font-bold text-sm animate-in fade-in zoom-in duration-300">
+                    Berhasil disimpan!
+                  </span>
+                )}
+              </div>
+              <button 
+                onClick={handleSave}
+                disabled={isSaving}
+                className="px-8 py-4 bg-brand text-white font-black text-[15px] rounded-[1.5rem] hover:bg-brand/90 transition-all shadow-xl hover:shadow-2xl hover:shadow-brand/40 hover:-translate-y-1 disabled:opacity-70 disabled:hover:translate-y-0"
+              >
+                {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
               </button>
             </div>
           </div>
