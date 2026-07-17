@@ -7,7 +7,7 @@ import { WebScreenProps } from '../shared/WebScreenProps';
 export default function PayrollScreen(props: WebScreenProps) {
   const {
     employees, payrollDivision, setPayrollDivision, payrollMessage,
-    handleMassPayroll, onInviteEmployee, branches
+    handleMassPayroll, onInviteEmployee, companies
   } = props;
 
   const [inviteEmail, setInviteEmail] = React.useState('');
@@ -173,10 +173,10 @@ export default function PayrollScreen(props: WebScreenProps) {
                           <span className="text-xs text-slate-400 font-mono font-semibold block mt-1">{emp.email} • ID: {emp.id.substring(0,6)}...</span>
                         </div>
                       </div>
-                      {branches && emp.branchId && (
+                      {companies && emp.companyId && (
                         <div className="mt-3">
                           <span className="inline-flex items-center text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200 uppercase tracking-widest font-black">
-                            {branches.find(b => b.id === emp.branchId)?.name || "Cabang Pusat"}
+                            {companies.find(b => b.id === emp.companyId)?.name || "Cabang Pusat"}
                           </span>
                         </div>
                       )}
@@ -209,3 +209,4 @@ export default function PayrollScreen(props: WebScreenProps) {
     </div>
   );
 }
+

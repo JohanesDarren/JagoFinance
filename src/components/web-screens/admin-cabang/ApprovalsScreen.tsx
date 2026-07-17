@@ -8,7 +8,7 @@ export default function ApprovalsScreen(props: WebScreenProps) {
   const {
     transactions, employees, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
     categoryFilter, setCategoryFilter, setSplitViewTx, setShowRejectForm, setRejectReasonText,
-    pendingApprovals, branches
+    pendingApprovals
   } = props;
 
   return (
@@ -131,11 +131,7 @@ export default function ApprovalsScreen(props: WebScreenProps) {
                     <h4 className="font-black text-slate-900 text-lg group-hover:text-indigo-600 transition-colors">{employees.find(e => e.id === t.employeeId)?.name || "Unknown"}</h4>
                     <div className="flex items-center gap-3 mt-1">
                       <span className="text-[11px] text-slate-400 font-mono font-bold bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">{t.employeeId}</span>
-                      {branches && t.branchId && (
-                        <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md border border-indigo-100 uppercase tracking-widest font-black">
-                          {branches.find(b => b.id === t.branchId)?.name || "Cabang Pusat"}
-                        </span>
-                      )}
+
                     </div>
                   </div>
                 </div>
@@ -189,3 +185,4 @@ export default function ApprovalsScreen(props: WebScreenProps) {
     </div>
   );
 }
+

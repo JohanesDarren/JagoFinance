@@ -8,12 +8,12 @@ export type TransactionStatus = 'Pending' | 'Approved' | 'Rejected';
 
 
 
-export interface Branch {
+export interface Company {
   id: string;
   name: string;
-  location: string;
-  managerName: string;
-  status: 'active' | 'inactive';
+  subscription_tier: string;
+  subscription_status: string;
+  created_at: string;
 }
 
 export interface LineItem {
@@ -32,9 +32,9 @@ export interface Transaction {
   notes?: string;
   status: TransactionStatus;
   receiptUrl?: string; // Base64 or mock URL
+  rejectReason?: string;
   type: TransactionType;
   employeeId: string;
-  branchId?: string;
   items?: LineItem[];
 }
 
@@ -57,7 +57,6 @@ export interface Employee {
   salary: number;
   bankAccount: string;
   bankName: string;
-  branchId?: string;
   companyId?: string | null;
   status?: 'active' | 'unassigned';
 }

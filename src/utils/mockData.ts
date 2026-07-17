@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Transaction, Subscription, Employee, ConnectedApp, Branch } from '../types';
+import { Transaction, Subscription, Employee, ConnectedApp, Company } from '../types';
 
 export const INITIAL_CASH_BALANCE = 1245600000; // Rp 1.245.600.000
 
-export const INITIAL_BRANCHES: Branch[] = [
+export const INITIAL_CompanyES: any[] = [
   {
     id: "BR-HQ",
     name: "Kantor Pusat (HQ) Jakarta",
@@ -42,7 +42,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     salary: 22000000,
     bankAccount: "8839201948",
     bankName: "KB Bukopin",
-    branchId: "BR-BDG",
+
     companyId: "COMP-JAGOAI",
     status: "active"
   },
@@ -55,7 +55,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     salary: 15000000,
     bankAccount: "0092837482",
     bankName: "BCA",
-    branchId: "BR-HQ",
+
     companyId: "COMP-JAGOAI",
     status: "active"
   },
@@ -68,7 +68,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     salary: 18000000,
     bankAccount: "5540982738",
     bankName: "Mandiri",
-    branchId: "BR-SBY",
+
     companyId: "COMP-JAGOAI",
     status: "active"
   },
@@ -81,7 +81,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     salary: 17500000,
     bankAccount: "4429381029",
     bankName: "BNI",
-    branchId: "BR-HQ",
+
     companyId: "COMP-JAGOAI",
     status: "active"
   },
@@ -94,7 +94,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     salary: 5000000,
     bankAccount: "1122334455",
     bankName: "BCA",
-    branchId: "BR-BDG",
+
     companyId: null,
     status: "unassigned"
   }
@@ -192,7 +192,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     status: "Approved",
     type: "reimburse",
     employeeId: '123',
-    branchId: "BR-HQ",
+
         receiptUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format&fit=crop&q=60"
   },
   {
@@ -205,7 +205,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     status: "Approved",
     type: "reimburse",
     employeeId: '123',
-    branchId: "BR-BDG",
+
         receiptUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format&fit=crop&q=60"
   },
   {
@@ -218,7 +218,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     status: "Pending",
     type: "reimburse",
     employeeId: '123',
-    branchId: "BR-BDG",
+
         receiptUrl: "/receipt-starbucks.jpg", // Preloaded base64 reference or placeholder
     
   },
@@ -232,7 +232,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     status: "Pending",
     type: "reimburse",
     employeeId: '123',
-    branchId: "BR-SBY",
+
         receiptUrl: "/receipt-soto.jpg"
   },
   {
@@ -245,7 +245,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     status: "Rejected",
     type: "reimburse",
     employeeId: '123',
-    branchId: "BR-BDG",
+
         receiptUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&auto=format&fit=crop&q=60",
       },
   // Inbound Automated Streams (Uang Masuk)
@@ -259,7 +259,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     status: "Approved",
     type: "income",
     employeeId: '123',
-    branchId: "BR-HQ"
+
   },
   {
     id: "TX-INC-002",
@@ -305,7 +305,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     status: "Approved",
     type: "expense_manual",
     employeeId: '123',
-    branchId: "BR-HQ"
+
   }
 ];
 

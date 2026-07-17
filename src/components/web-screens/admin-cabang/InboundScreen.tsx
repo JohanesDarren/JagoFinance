@@ -6,7 +6,7 @@ import { WebScreenProps } from '../shared/WebScreenProps';
 
 export default function InboundScreen(props: WebScreenProps) {
   const {
-    transactions, totalInflowThisMonth, handleExportCSV, branches
+    transactions, totalInflowThisMonth, handleExportCSV, companies
   } = props;
 
   return (
@@ -80,9 +80,9 @@ export default function InboundScreen(props: WebScreenProps) {
                       <td className="p-5 font-mono text-xs text-brand font-black bg-brand/5 group-hover:bg-brand/10 border border-transparent group-hover:border-brand/20 px-3 py-1.5 my-4 rounded-xl inline-block mx-2 transition-colors">{t.id}</td>
                       <td className="p-5 font-black text-slate-900 text-base group-hover:text-emerald-600 transition-colors">
                         {t.merchant}
-                        {branches && t.branchId && (
+                        {companies && t.employeeId && (
                           <div className="mt-2 text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded inline-block">
-                            {branches.find(b => b.id === t.branchId)?.name || "Cabang Pusat"}
+                            {"Cabang Pusat"}
                           </div>
                         )}
                       </td>
@@ -103,3 +103,4 @@ export default function InboundScreen(props: WebScreenProps) {
     </div>
   );
 }
+

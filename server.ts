@@ -18,10 +18,9 @@ import {
   INITIAL_EMPLOYEES, 
   INITIAL_CONNECTED_APPS, 
   INITIAL_SUBSCRIPTIONS, 
-  INITIAL_TRANSACTIONS,
-  INITIAL_BRANCHES
+  INITIAL_TRANSACTIONS
 } from './src/utils/mockData.js';
-import { Transaction, ConnectedApp, Subscription, Employee, Branch } from './src/types';
+import { Transaction, ConnectedApp, Subscription, Employee, Company } from './src/types';
 import { extractWithHermesMock } from './src/services/hermesMock.js';
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
@@ -33,8 +32,7 @@ let db = {
   employees: [...INITIAL_EMPLOYEES],
   connectedApps: [...INITIAL_CONNECTED_APPS],
   subscriptions: [...INITIAL_SUBSCRIPTIONS],
-  transactions: [...INITIAL_TRANSACTIONS],
-  branches: [...INITIAL_BRANCHES]
+  transactions: [...INITIAL_TRANSACTIONS]
 };
 
 // Start Server Setup
@@ -308,52 +306,7 @@ async function startServer() {
     }
   });
 
-  // Branch Management Endpoints
-  app.post('/api/branches', (req, res) => {
-    try {
-      const { name, location, managerName, status } = req.body;
-      if (!name || !location || !managerName) {
-        return res.status(400).json({ error: 'Mohon isi semua field cabang (Nama, Lokasi, Manajer).' });
-      }
-      
-      const newBranch = {
-        id: `BR-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-        name,
-        location,
-        managerName,
-        status: status || 'active'
-      };
-      
-      db.branches.push(newBranch);
-      res.json({ success: true, branch: newBranch });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
 
-  app.put('/api/branches/:id', (req, res) => {
-    try {
-      const { id } = req.params;
-      const { name, location, managerName, status } = req.body;
-      
-      const branchIndex = db.branches.findIndex(b => b.id === id);
-      if (branchIndex === -1) {
-        return res.status(404).json({ error: 'Cabang tidak ditemukan.' });
-      }
-      
-      db.branches[branchIndex] = {
-        ...db.branches[branchIndex],
-        ...(name && { name }),
-        ...(location && { location }),
-        ...(managerName && { managerName }),
-        ...(status && { status })
-      };
-      
-      res.json({ success: true, branch: db.branches[branchIndex] });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
 
   // 9. AI SCANNER ENDPOINT (Receipt Extractor using Server-Side Gemini API)
   app.post('/api/scan-receipt', async (req, res) => {

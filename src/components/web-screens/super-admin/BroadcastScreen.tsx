@@ -3,11 +3,9 @@ import {
   Send, Users, MapPin, CheckCircle, MessageSquare, AlertCircle
 } from 'lucide-react';
 import { WebScreenProps } from '../shared/WebScreenProps';
-import { INITIAL_BRANCHES } from '../../../utils/mockData';
 
 export default function BroadcastScreen(props: WebScreenProps) {
-  const { employees } = props;
-  const branches = props.branches || INITIAL_BRANCHES;
+  const { employees, companies } = props;
 
   const [targetType, setTargetType] = useState<'all' | 'branch' | 'employees'>('all');
   const [selectedBranch, setSelectedBranch] = useState<string>('');
@@ -90,7 +88,7 @@ export default function BroadcastScreen(props: WebScreenProps) {
                   required
                 >
                   <option value="">-- Pilih Cabang --</option>
-                  {branches.map(b => (
+                  {companies.map(b => (
                     <option key={b.id} value={b.id}>{b.name}</option>
                   ))}
                 </select>
@@ -145,3 +143,4 @@ export default function BroadcastScreen(props: WebScreenProps) {
     </div>
   );
 }
+

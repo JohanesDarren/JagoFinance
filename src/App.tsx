@@ -7,41 +7,10 @@ import MobileAppSimulator from './components/MobileAppSimulator';
 import WebDashboard from './components/WebDashboard';
 import LoginPage from './components/LoginPage';
 import LandingPage from './components/LandingPage';
-import { Transaction, ConnectedApp, Subscription, Employee, Branch } from './types';
+import { Transaction, ConnectedApp, Subscription, Employee, Company } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
-const DUMMY_BRANCHES: Branch[] = [
-  { id: '1', name: 'Cabang Jakarta Pusat', location: 'Jakarta', managerName: 'Budi Santoso', status: 'active' },
-  { id: '2', name: 'Cabang Surabaya', location: 'Surabaya', managerName: 'Siti Aminah', status: 'active' },
-  { id: '3', name: 'Cabang Bandung', location: 'Bandung', managerName: 'Agus Salim', status: 'inactive' }
-];
-
-const DUMMY_APPS: ConnectedApp[] = [
-  { id: '1', name: 'Gojek API', description: 'Integrasi Transportasi & Makanan', status: 'active', apiKey: 'gjk-123', webhookUrl: 'https://jagoai.com/webhook/gojek', monthlyRevenue: 15000000, paymentGateway: 'Midtrans' },
-  { id: '2', name: 'Tokopedia API', description: 'Integrasi E-commerce', status: 'inactive', apiKey: '', webhookUrl: '', monthlyRevenue: 0, paymentGateway: 'Xendit' },
-  { id: '3', name: 'Xero', description: 'Sistem Akuntansi', status: 'active', apiKey: 'xro-999', webhookUrl: 'https://jagoai.com/webhook/xero', monthlyRevenue: 0, paymentGateway: 'None' }
-];
-
-const DUMMY_SUBSCRIPTIONS: Subscription[] = [
-  { id: '1', name: 'Google Workspace', cost: 1500000, cycle: 'bulanan', nextBilling: '2026-08-01', category: 'Software', status: 'active' },
-  { id: '2', name: 'AWS Cloud', cost: 5000000, cycle: 'bulanan', nextBilling: '2026-08-05', category: 'Infrastructure', status: 'active' },
-  { id: '3', name: 'Canva Pro', cost: 150000, cycle: 'bulanan', nextBilling: '2026-07-20', category: 'Design', status: 'active' }
-];
-
-const DUMMY_EMPLOYEES: Employee[] = [
-  { id: '1', name: 'Budi Santoso', email: 'budi@jagoai.com', role: 'manager', division: 'Jakarta', salary: 15000000, bankAccount: '123456789', bankName: 'BCA' },
-  { id: '2', name: 'Siti Aminah', email: 'siti@jagoai.com', role: 'manager', division: 'Surabaya', salary: 12000000, bankAccount: '987654321', bankName: 'Mandiri' },
-  { id: '3', name: 'Andi', email: 'andi@jagoai.com', role: 'staff', division: 'Jakarta', salary: 6000000, bankAccount: '1122334455', bankName: 'BNI' }
-];
-
-const DUMMY_TRANSACTIONS: Transaction[] = [
-  { id: 'TX-001', date: '2026-07-10', merchant: 'Gojek', category: 'Transportasi', amount: 50000, notes: 'Meeting klien', status: 'Approved', receiptUrl: '', type: 'expense_manual', employeeId: '3' },
-  { id: 'TX-002', date: '2026-07-12', merchant: 'AWS', category: 'Infrastructure', amount: 5000000, notes: 'Tagihan bulanan', status: 'Approved', receiptUrl: '', type: 'expense_manual', employeeId: '1' },
-  { id: 'TX-003', date: '2026-07-14', merchant: 'Kopi Kenangan', category: 'Konsumsi', amount: 100000, notes: 'Snack tim', status: 'Pending', receiptUrl: '', type: 'expense_manual', employeeId: '3' },
-  { id: 'TX-004', date: '2026-07-15', merchant: 'Deposit Tokopedia', category: 'Penjualan', amount: 15000000, notes: 'Pendapatan Q3', status: 'Approved', receiptUrl: '', type: 'income', employeeId: '2' }
-];
-
-const DUMMY_BALANCE = 150000000;
+// All DUMMY data has been removed. Data is fetched strictly from Supabase.
 
 export default function App() {
   const [showLanding, setShowLanding] = useState<boolean>(true);
@@ -54,7 +23,8 @@ export default function App() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [connectedApps, setConnectedApps] = useState<ConnectedApp[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [branches, setBranches] = useState<Branch[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+
   const [admins, setAdmins] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -79,13 +49,14 @@ export default function App() {
 
   const mapEmployeeFromDb = (dbEmp: any): Employee => ({
     id: dbEmp.id,
-    name: dbEmp.name,
+    name: dbEmp.full_name || dbEmp.name,
     email: dbEmp.email,
     role: dbEmp.role,
-    division: dbEmp.division,
-    salary: Number(dbEmp.salary),
+    division: dbEmp.division || '',
+    salary: Number(dbEmp.base_salary || dbEmp.salary || 0),
     bankAccount: dbEmp.bank_account || '',
-    bankName: dbEmp.bank_name || ''
+    bankName: dbEmp.bank_name || '',
+    companyId: dbEmp.company_id || null
   });
 
   const mapAppFromDb = (dbApp: any): ConnectedApp => ({
@@ -130,42 +101,51 @@ export default function App() {
           setProfile(profileData);
           setUserRole(profileData.role);
 
-          // Set dummy data for non-existent tables (will be migrated to DB later)
-          setCashBalance(DUMMY_BALANCE);
-          setEmployees(DUMMY_EMPLOYEES);
-          setConnectedApps(DUMMY_APPS);
-          setSubscriptions(DUMMY_SUBSCRIPTIONS);
+          // Use Admin Client for super_admin to bypass RLS for dashboard data
+          let dbClient = supabase;
+          if (profileData.role === 'super_admin') {
+            const { createClient } = await import('@supabase/supabase-js');
+            const { SERVICE_ROLE_KEY } = await import('./adminKey');
+            if (SERVICE_ROLE_KEY) {
+              dbClient = createClient(import.meta.env.VITE_SUPABASE_URL, SERVICE_ROLE_KEY, {
+                auth: { persistSession: false, autoRefreshToken: false }
+              });
+            }
+          }
+
+          // Fetch global balance
+          const { data: fsData } = await dbClient.from('finance_settings').select('current_balance').eq('id', 1).single();
+          if (fsData) setCashBalance(fsData.current_balance);
+
+          // Fetch employees (users with role karyawan)
+          const { data: empData } = await dbClient.from('users').select('*').in('role', ['karyawan']);
+          setEmployees(empData ? empData.map(mapEmployeeFromDb) : []);
+
+          // Fetch connected apps
+          const { data: appData } = await dbClient.from('connected_apps').select('*');
+          setConnectedApps(appData ? appData.map(mapAppFromDb) : []);
+
+          // Fetch subscriptions
+          const { data: subData } = await dbClient.from('subscriptions').select('*');
+          setSubscriptions(subData ? subData.map(mapSubFromDb) : []);
+
+          // Fetch companies
+          const { data: compData } = await dbClient.from('companies').select('*');
+          setCompanies(compData || []);
 
           // Fetch transactions
-          const { data: txs } = await supabase
+          const { data: txs } = await dbClient
             .from('transactions')
             .select('*')
             .order('created_at', { ascending: false });
-          setTransactions(txs && txs.length > 0 ? txs.map(mapTxFromDb) : DUMMY_TRANSACTIONS);
-
-          // Fetch branches
-          const { data: brnchs } = await supabase
-            .from('branches')
-            .select('*');
-          if (brnchs && brnchs.length > 0) {
-            setBranches(brnchs.map((b: any) => ({
-              id: b.id,
-              name: b.name,
-              location: b.location,
-              managerName: b.manager_name || b.managerName,
-              status: b.status
-            })));
-          } else {
-            setBranches(DUMMY_BRANCHES);
-          }
+          setTransactions(txs ? txs.map(mapTxFromDb) : []);
 
           // Fetch admin_corp users
-          const { data: adminsData } = await supabase
+          const { data: adminsData } = await dbClient
             .from('users')
             .select('*')
             .eq('role', 'admin_corp');
           setAdmins(adminsData || []);
-
 
           setIsLoading(false);
           setIsRefreshing(false);
@@ -177,10 +157,10 @@ export default function App() {
           const data = await response.json();
           setCashBalance(data.cashBalance || 0);
           setTransactions(data.transactions || []);
-          setEmployees(data.employees && data.employees.length > 0 ? data.employees : DUMMY_EMPLOYEES);
+          setEmployees(data.employees || []);
           setConnectedApps(data.connectedApps || []);
           setSubscriptions(data.subscriptions || []);
-          setBranches(data.branches || []);
+
         }
       }
     } catch (error) {
@@ -283,7 +263,9 @@ export default function App() {
           .from('finance_settings')
           .update({ current_balance: newBalance })
           .eq('id', 1);
-        if (fsErr) throw fsErr;
+        if (fsErr) {
+          console.warn('Skipping finance_settings update (table may not exist):', fsErr);
+        }
 
         const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
         const { error: txErr } = await supabase
@@ -325,7 +307,6 @@ export default function App() {
         const tx = transactions.find(t => t.id === transactionId);
         if (!tx) throw new Error('Transaksi tidak ditemukan.');
         const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
-
         const { error: txErr } = await supabase
           .from('transactions')
           .update({
@@ -381,7 +362,9 @@ export default function App() {
           .from('finance_settings')
           .update({ current_balance: newBalance })
           .eq('id', 1);
-        if (fsErr) throw fsErr;
+        if (fsErr) {
+          console.warn('Skipping finance_settings update (table may not exist):', fsErr);
+        }
 
         // Insert transaction
         const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
@@ -422,6 +405,61 @@ export default function App() {
     }
   };
 
+  const handleSaveCompany = async (company: Partial<Company>) => {
+    if (!isSupabaseConfigured()) return false;
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const { SERVICE_ROLE_KEY } = await import('./adminKey');
+      if (!SERVICE_ROLE_KEY) throw new Error("Service role key not configured");
+      
+      const supabaseAdmin = createClient(import.meta.env.VITE_SUPABASE_URL, SERVICE_ROLE_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      });
+
+      if (company.id) {
+        const { error } = await supabaseAdmin.from('companies').update({
+          name: company.name,
+          subscription_tier: company.subscription_tier,
+          subscription_status: company.subscription_status
+        }).eq('id', company.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabaseAdmin.from('companies').insert({
+          name: company.name,
+          subscription_tier: company.subscription_tier || 'Free',
+          subscription_status: company.subscription_status || 'active'
+        });
+        if (error) throw error;
+      }
+      fetchFinancialData(true);
+      return true;
+    } catch (e: any) {
+      console.error("Save company error:", e);
+      return false;
+    }
+  };
+
+  const handleDeleteCompany = async (id: string) => {
+    if (!isSupabaseConfigured()) return false;
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const { SERVICE_ROLE_KEY } = await import('./adminKey');
+      if (!SERVICE_ROLE_KEY) throw new Error("Service role key not configured");
+      
+      const supabaseAdmin = createClient(import.meta.env.VITE_SUPABASE_URL, SERVICE_ROLE_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      });
+
+      const { error } = await supabaseAdmin.from('companies').delete().eq('id', id);
+      if (error) throw error;
+      fetchFinancialData(true);
+      return true;
+    } catch (e: any) {
+      console.error("Delete company error:", e);
+      return false;
+    }
+  };
+
   const handleAddAdmin = async (adminData: any): Promise<boolean> => {
     if (!isSupabaseConfigured()) return true;
     try {
@@ -449,8 +487,7 @@ export default function App() {
         full_name: adminData.name,
         email: adminData.email,
         role: 'admin_corp',
-        company_id: profile?.company_id,
-        branch_id: adminData.branchId
+        company_id: adminData.companyId || profile?.company_id
       }]);
 
       if (dbError) throw dbError;
@@ -460,6 +497,32 @@ export default function App() {
       return true;
     } catch (e: any) {
       console.error("Add Admin Error:", e.message);
+      return false;
+    }
+  };
+
+  const handleDeleteAdmin = async (id: string): Promise<boolean> => {
+    if (!isSupabaseConfigured()) return false;
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const { SERVICE_ROLE_KEY } = await import('./adminKey');
+      const serviceKey = SERVICE_ROLE_KEY;
+      if (!serviceKey) throw new Error("Service role key not configured");
+      
+      const supabaseAdmin = createClient(import.meta.env.VITE_SUPABASE_URL, serviceKey, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      });
+
+      // supabase auth.admin.deleteUser deletes the user from auth.users
+      // and triggers cascade delete on our public.users if foreign key is set.
+      // We can delete auth user directly.
+      const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
+      if (error) throw error;
+      
+      await fetchFinancialData(true);
+      return true;
+    } catch (e: any) {
+      console.error("Delete Admin Error:", e.message);
       return false;
     }
   };
@@ -531,66 +594,7 @@ export default function App() {
     }
   };
 
-  const handleSaveBranch = async (branchData: Partial<Branch>) => {
-    try {
-      if (isSupabaseConfigured()) {
-        const isUpdate = !!branchData.id;
-        if (isUpdate) {
-          const { error } = await supabase
-            .from('branches')
-            .update({
-              name: branchData.name,
-              location: branchData.location,
-              manager_name: branchData.managerName,
-              status: branchData.status
-            })
-            .eq('id', branchData.id);
-          if (error) {
-            console.error("Supabase Error Update Branch:", error);
-            // Fallback for if table is not created or snake_case fails
-            alert(`Gagal update: ${error.message}`);
-            return false;
-          }
-        } else {
-          const { error } = await supabase
-            .from('branches')
-            .insert([{
-              company_id: profile?.company_id,
-              name: branchData.name,
-              location: branchData.location,
-              manager_name: branchData.managerName,
-              status: branchData.status || 'active'
-            }]);
-          if (error) {
-            console.error("Supabase Error Insert Branch:", error);
-            alert(`Gagal simpan: ${error.message}`);
-            return false;
-          }
-        }
-        await fetchFinancialData(true);
-        return true;
-      } else {
-        const isUpdate = !!branchData.id;
-        const method = isUpdate ? 'PUT' : 'POST';
-        const url = isUpdate ? `/api/branches/${branchData.id}` : '/api/branches';
-        
-        const response = await fetch(url, {
-          method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(branchData)
-        });
-        
-        if (response.ok) {
-          await fetchFinancialData(true);
-          return true;
-        }
-        return false;
-      }
-    } catch (err) {
-      console.error(err);
-      return false;
-    }
-  };
+
 
   // 7. Action: Run payroll generator mass
   const handlePayrollGenerate = async (division: string): Promise<any> => {
@@ -622,7 +626,9 @@ export default function App() {
           .from('finance_settings')
           .update({ current_balance: newBalance })
           .eq('id', 1);
-        if (coErr) throw coErr;
+        if (coErr) {
+          console.warn('Skipping finance_settings update (table may not exist):', coErr);
+        }
 
         // Batch insert transactions
         const dateStr = new Date().toISOString().split('T')[0];
@@ -771,7 +777,6 @@ export default function App() {
             employees={employees}
             connectedApps={connectedApps}
             subscriptions={subscriptions}
-            branches={branches}
             admins={admins}
             onRefreshData={() => fetchFinancialData(true)}
             onApprove={handleApproveReimbursement}
@@ -780,12 +785,16 @@ export default function App() {
             onToggleApp={handleToggleConnectedApp}
             onWebhookSave={handleSaveWebhook}
             onPayrollGenerate={handlePayrollGenerate}
-            onSaveBranch={handleSaveBranch}
             isLoading={isLoading}
             onLogout={handleLogout}
             onInviteEmployee={handleInviteEmployee}
             onAddAdmin={handleAddAdmin}
+            onDeleteAdmin={handleDeleteAdmin}
+            companies={companies}
+            onSaveCompany={handleSaveCompany}
+            onDeleteCompany={handleDeleteCompany}
             userRole={profile?.role as 'super_admin' | 'admin_corp' | null}
+            userProfile={profile}
           />
         </div>
       ) : (

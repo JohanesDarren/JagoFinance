@@ -1,28 +1,76 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   User, Mail, Phone, MapPin, Building, Briefcase, Shield, Key
 } from 'lucide-react';
 import { WebScreenProps } from './WebScreenProps';
+import { supabase } from '../../../lib/supabase';
 
 export default function ProfileScreen(props: WebScreenProps) {
-  const { onLogout } = props;
+  const { onLogout, userProfile, companies } = props;
 
   const [profileData, setProfileData] = React.useState({
-    name: 'Alex Sterling',
-    email: 'alex.sterling@jagoai.com',
-    phone: '+62 812 3456 7890',
-    location: 'SCBD, Jakarta Selatan'
+    name: userProfile?.full_name || 'Admin',
+    email: userProfile?.email || '',
+    phone: '+62',
+    location: 'Kantor Pusat',
+    avatar_url: userProfile?.avatar_url || ''
   });
+
+  // Sync state if userProfile changes (e.g. initial load)
+  useEffect(() => {
+    if (userProfile) {
+      setProfileData({
+        name: userProfile.full_name || 'Admin',
+        email: userProfile.email || '',
+        phone: '+62',
+        location: 'Kantor Pusat',
+        avatar_url: userProfile.avatar_url || ''
+      });
+    }
+  }, [userProfile]);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileData({ ...profileData, avatar_url: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveSuccess, setSaveSuccess] = React.useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!userProfile?.id) return;
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          full_name: profileData.name,
+          email: profileData.email,
+          avatar_url: profileData.avatar_url
+        })
+        .eq('id', userProfile.id);
+
+      if (error) throw error;
+      
+      // Update successful
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-    }, 1000);
+      
+      // We should ideally call onRefreshData here, but App.tsx might need to re-fetch profile.
+      if (props.onRefreshData) props.onRefreshData();
+      
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Gagal menyimpan profil.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -34,18 +82,32 @@ export default function ProfileScreen(props: WebScreenProps) {
         <div className="absolute bottom-0 left-20 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000"></div>
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-8">
-          <div className="w-24 h-24 rounded-full overflow-hidden shrink-0 border-4 border-white/20 shadow-xl group-hover:scale-105 transition-transform duration-500">
-            <img 
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80" 
-              alt="Alex Sterling Avatar"
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
+          <div className="relative group/avatar cursor-pointer">
+            <div className="w-24 h-24 rounded-full overflow-hidden shrink-0 border-4 border-white/20 shadow-xl group-hover:scale-105 transition-transform duration-500 bg-indigo-50 flex items-center justify-center">
+              {profileData.avatar_url ? (
+                <img 
+                  src={profileData.avatar_url}
+                  alt="Profile Avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="w-10 h-10 text-indigo-400" />
+              )}
+            </div>
+            <div className="absolute inset-0 bg-slate-900/40 rounded-full flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+              <span className="text-[10px] font-bold text-white uppercase tracking-widest text-center">Ubah<br/>Foto</span>
+            </div>
+            <input 
+              type="file" 
+              accept="image/*" 
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              onChange={handlePhotoChange}
             />
           </div>
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white text-[11px] font-black tracking-widest uppercase mb-3 shadow-inner">
               <Shield className="w-3.5 h-3.5 text-brand" />
-              Eksekutif Finance
+              {userProfile?.role === 'super_admin' ? 'Super Administrator' : userProfile?.role === 'admin_corp' ? 'Admin Cabang' : 'Karyawan'}
             </div>
             <h2 className="text-4xl lg:text-5xl font-black font-display tracking-tight text-white">{profileData.name}</h2>
             <p className="text-slate-300 mt-2 text-base max-w-xl font-medium">Pengaturan profil akun, keamanan, dan preferensi notifikasi dashboard.</p>
@@ -93,7 +155,16 @@ export default function ProfileScreen(props: WebScreenProps) {
                   <input 
                     type="text"
                     value={profileData.phone}
-                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val.startsWith('+62')) {
+                        setProfileData({ ...profileData, phone: val });
+                      } else if (val === '+6' || val === '+' || val === '') {
+                        setProfileData({ ...profileData, phone: '+62' });
+                      } else {
+                        setProfileData({ ...profileData, phone: '+62' + val.replace(/^\+?6?2?/, '') });
+                      }
+                    }}
                     className="w-full bg-transparent border-none focus:outline-none font-bold text-slate-800" 
                   />
                 </div>
@@ -143,7 +214,12 @@ export default function ProfileScreen(props: WebScreenProps) {
                 </div>
                 <div>
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Perusahaan</span>
-                  <p className="font-black text-slate-900 mt-0.5">PT JagoAI Inovasi</p>
+                  <p className="font-black text-slate-900 mt-0.5">
+                    {userProfile?.role === 'super_admin' 
+                      ? 'JagoFinance' 
+                      : (companies?.find(c => c.id === userProfile?.company_id)?.name || 'Pusat / Tidak Terhubung')
+                    }
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -152,7 +228,9 @@ export default function ProfileScreen(props: WebScreenProps) {
                 </div>
                 <div>
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Jabatan / Role</span>
-                  <p className="font-black text-slate-900 mt-0.5">Eksekutif Finance</p>
+                  <p className="font-black text-slate-900 mt-0.5">
+                    {userProfile?.role === 'super_admin' ? 'Super Administrator' : userProfile?.role === 'admin_corp' ? 'Admin Cabang' : 'Karyawan'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -167,13 +245,6 @@ export default function ProfileScreen(props: WebScreenProps) {
                   <span className="font-bold text-slate-800">Ubah Kata Sandi</span>
                 </div>
               </button>
-              
-              <button 
-                onClick={onLogout}
-                className="w-full flex items-center justify-center gap-2 p-4 bg-rose-50 text-rose-600 border border-rose-200 rounded-[1.5rem] hover:bg-rose-600 hover:text-white transition-all font-black shadow-sm"
-              >
-                Logout dari Sistem
-              </button>
             </div>
           </div>
 
@@ -184,3 +255,4 @@ export default function ProfileScreen(props: WebScreenProps) {
     </div>
   );
 }
+

@@ -6,7 +6,7 @@ import { WebScreenProps } from '../shared/WebScreenProps';
 
 export default function LedgerScreen(props: WebScreenProps) {
   const {
-    transactions, employees, setShowManualModal, setSelectedLedgerReceipt, branches
+    transactions, employees, setShowManualModal, setSelectedLedgerReceipt, companies
   } = props;
 
   return (
@@ -63,9 +63,9 @@ export default function LedgerScreen(props: WebScreenProps) {
                     <td className="p-5 font-mono text-xs text-slate-400 bg-slate-50 group-hover:bg-white border border-transparent group-hover:border-slate-200 px-3 py-1.5 my-4 mx-2 inline-block rounded-xl transition-colors">{t.id.substring(0, 8)}...</td>
                     <td className="p-5 font-black text-slate-900 max-w-[200px] truncate text-base group-hover:text-indigo-600 transition-colors">
                       {t.merchant}
-                      {branches && t.branchId && (
+                      {companies && t.employeeId && (
                         <div className="mt-2 text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded inline-block">
-                          {branches.find(b => b.id === t.branchId)?.name || "Cabang Pusat"}
+                          {"Cabang Pusat"}
                         </div>
                       )}
                     </td>
@@ -107,3 +107,4 @@ export default function LedgerScreen(props: WebScreenProps) {
     </div>
   );
 }
+

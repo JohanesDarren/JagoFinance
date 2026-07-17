@@ -51,8 +51,8 @@ export default function HistoryScreen({
       {(() => {
         const filtered = staffTransactions.filter(t => {
           if (historyTab === 'Semua') return true;
-          if (historyTab === 'Pending') return t.status === 'pending' || t.status === 'Pending';
-          return t.status === 'Approved' || t.status === 'Rejected' || t.status === 'approved' || t.status === 'rejected';
+          if (historyTab === 'Pending') return t.status === 'Pending';
+          return t.status === 'Approved' || t.status === 'Rejected';
         });
 
         return filtered.length === 0 ? (
@@ -80,8 +80,8 @@ export default function HistoryScreen({
                 <div className="text-right flex flex-col items-end">
                   <span className="font-mono text-[9px] font-bold text-slate-700 block">Rp {t.amount.toLocaleString('id-ID')}</span>
                   <span className={`inline-block text-[7px] font-bold px-1.5 py-0.5 rounded-full mt-0.5 ${
-                    t.status === 'Approved' || t.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
-                    t.status === 'Rejected' || t.status === 'rejected' ? 'bg-rose-50 text-rose-700 border border-rose-100' :
+                    t.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                    t.status === 'Rejected' ? 'bg-rose-50 text-rose-700 border border-rose-100' :
                     'bg-amber-50 text-amber-700 border border-amber-100'
                   }`}>
                     {t.status}

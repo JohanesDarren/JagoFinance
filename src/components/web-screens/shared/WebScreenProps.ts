@@ -1,5 +1,5 @@
 import React from 'react';
-import { Transaction, ConnectedApp, Subscription, Employee, Branch } from '../../../types';
+import { Transaction, ConnectedApp, Subscription, Employee, Company } from '../../../types';
 
 export interface WebScreenProps {
   transactions: Transaction[];
@@ -7,7 +7,11 @@ export interface WebScreenProps {
   employees: Employee[];
   connectedApps: ConnectedApp[];
   subscriptions: Subscription[];
-  branches?: Branch[];
+  companies?: Company[];
+  admins?: any[];
+  userProfile?: any;
+  onSaveCompany?: (company: Partial<Company>) => Promise<boolean>;
+  onDeleteCompany?: (id: string) => Promise<boolean>;
   onRefreshData: () => void;
   onApprove: (id: string, recipientName?: string, bankName?: string, bankAccount?: string, transferReceiptUrl?: string) => Promise<boolean>;
   onReject: (id: string, reason: string) => Promise<boolean>;
@@ -100,5 +104,4 @@ export interface WebScreenProps {
   handleMassPayroll: () => Promise<void>;
   openWebhookSetup: (app: ConnectedApp) => void;
   pendingApprovals: Transaction[];
-  onSaveBranch?: (branch: Partial<Branch>) => Promise<boolean>;
 }

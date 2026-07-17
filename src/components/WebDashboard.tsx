@@ -9,9 +9,9 @@ import {
   Search, ShieldAlert, CheckCircle, XCircle, FileSpreadsheet, 
   Link, ArrowRightLeft, CreditCard, Users, Plus, SlidersHorizontal, 
   Trash2, Play, AlertTriangle, Eye, ArrowUpRight, Check, X, Info,
-  LayoutGrid, BookOpen, FileText, MessageSquare, Wallet, Cpu, Settings, GraduationCap, LogOut, Bell, ChevronDown, ChevronLeft
+  LayoutGrid, BookOpen, FileText, MessageSquare, Wallet, Cpu, Settings, GraduationCap, LogOut, Bell, ChevronDown, ChevronLeft, User
 } from 'lucide-react';
-import { Transaction, ConnectedApp, Subscription, Employee } from '../types';
+import { Transaction, ConnectedApp, Subscription, Employee, Company } from '../types';
 import WebSidebar from './WebSidebar';
 import OverviewScreenAdmin from './web-screens/admin-cabang/OverviewScreen';
 import ApprovalsScreen from './web-screens/admin-cabang/ApprovalsScreen';
@@ -22,10 +22,10 @@ import PayrollScreen from './web-screens/admin-cabang/PayrollScreen';
 import OverviewScreenSuperAdmin from './web-screens/super-admin/OverviewScreen';
 import IntegrationsScreen from './web-screens/super-admin/IntegrationsScreen';
 import SubscriptionsScreen from './web-screens/super-admin/SubscriptionsScreen';
-import BranchManagementScreen from './web-screens/super-admin/BranchManagementScreen';
 import BranchAdminManagementScreen from './web-screens/super-admin/BranchAdminManagementScreen';
 import BroadcastScreen from './web-screens/super-admin/BroadcastScreen';
 import EmployeeManagementScreen from './web-screens/super-admin/EmployeeManagementScreen';
+import CompanyManagementScreen from './web-screens/super-admin/CompanyManagementScreen';
 
 import ProfileScreen from './web-screens/shared/ProfileScreen';
 
@@ -35,7 +35,7 @@ interface WebDashboardProps {
   employees: Employee[];
   connectedApps: ConnectedApp[];
   subscriptions: Subscription[];
-  branches?: any[];
+  companies?: Company[];
   onRefreshData: () => void;
   onApprove: (
     id: string,
@@ -53,9 +53,12 @@ interface WebDashboardProps {
   onLogout?: () => void;
   onInviteEmployee?: (email: string) => Promise<{success: boolean, message: string}>;
   userRole?: 'super_admin' | 'admin_corp' | null;
-  onSaveBranch?: (branch: any) => Promise<boolean>;
   onAddAdmin?: (adminData: any) => Promise<boolean>;
+  onDeleteAdmin?: (id: string) => Promise<boolean>;
   admins?: any[];
+  userProfile?: any;
+  onSaveCompany?: (company: Partial<Company>) => Promise<boolean>;
+  onDeleteCompany?: (id: string) => Promise<boolean>;
 }
 
 export default function WebDashboard({
@@ -64,7 +67,7 @@ export default function WebDashboard({
   employees,
   connectedApps,
   subscriptions,
-  branches,
+  companies,
   onRefreshData,
   onApprove,
   onReject,
@@ -76,14 +79,18 @@ export default function WebDashboard({
   onLogout,
   onInviteEmployee,
   userRole = 'admin_corp',
-  onSaveBranch,
   onAddAdmin,
-  admins
+  onDeleteAdmin,
+  admins,
+  userProfile,
+  onSaveCompany,
+  onDeleteCompany
 }: WebDashboardProps) {
 
   // Active Sub-Menu Route within web dashboard
-  const [activeTab, setActiveTab] = useState<'overview' | 'approvals' | 'inbound' | 'integrations' | 'ledger' | 'subscriptions' | 'payroll' | 'employees' | 'profile' | 'branches' | 'broadcast'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'approvals' | 'inbound' | 'integrations' | 'ledger' | 'subscriptions' | 'payroll' | 'employees' | 'profile' | 'companies' | 'broadcast'>('overview');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Search & Filter state variables
   const [searchTerm, setSearchTerm] = useState('');
@@ -416,23 +423,49 @@ export default function WebDashboard({
               </button>
 
               {/* Profile Dropdown Trigger */}
-              <button 
-                onClick={() => setActiveTab('profile')}
-                className="flex items-center gap-3 p-1.5 pr-4 bg-white border border-slate-100 rounded-full shadow-sm hover:shadow-md hover:bg-slate-50 transition-all"
-              >
-                <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-100">
-                  <img 
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" 
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="hidden md:block text-left">
-                  <span className="block text-xs font-black text-slate-800 leading-tight">Alex S.</span>
-                  <span className="block text-[10px] text-indigo-600 font-bold tracking-widest uppercase mt-0.5">Executive</span>
-                </div>
-                <ChevronDown className="w-4 h-4 text-slate-400 hidden md:block" />
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center gap-3 p-1.5 pr-4 bg-white border border-slate-100 rounded-full shadow-sm hover:shadow-md hover:bg-slate-50 transition-all"
+                >
+                  <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-100 bg-indigo-50 flex items-center justify-center">
+                    {userProfile?.avatar_url ? (
+                      <img 
+                        src={userProfile.avatar_url}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-5 h-5 text-indigo-400" />
+                    )}
+                  </div>
+                  <div className="hidden md:block text-left">
+                    <span className="block text-xs font-black text-slate-800 leading-tight truncate max-w-[100px]">{userProfile?.full_name || 'Admin'}</span>
+                    <span className="block text-[10px] text-indigo-600 font-bold tracking-widest uppercase mt-0.5">{userRole === 'super_admin' ? 'Super Admin' : userRole === 'admin_corp' ? 'Admin' : 'Karyawan'}</span>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-slate-400 hidden md:block" />
+                </button>
+
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 shadow-xl rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                    <button 
+                      onClick={() => { setActiveTab('profile'); setShowProfileMenu(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors"
+                    >
+                      <User className="w-4 h-4 text-slate-400" />
+                      <span className="text-sm font-bold text-slate-700">Profil Akun</span>
+                    </button>
+                    <div className="h-px w-full bg-slate-100"></div>
+                    <button 
+                      onClick={() => { setShowProfileMenu(false); if(onLogout) onLogout(); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-rose-50 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4 text-rose-500" />
+                      <span className="text-sm font-bold text-rose-600">Keluar Sistem</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -469,7 +502,7 @@ export default function WebDashboard({
                   setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
                   averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
                   handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
-                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals, admins
                 }} />
               )}
               {userRole === 'super_admin' && activeTab === 'subscriptions' && (
@@ -513,30 +546,10 @@ export default function WebDashboard({
                 }} />
               )}
 
-              {/* === SUPER ADMIN SCREENS (ADDITIONAL) === */}
-              {userRole === 'super_admin' && activeTab === 'branches' && (
-                <BranchManagementScreen {...{
-                  transactions, cashBalance, employees, connectedApps, subscriptions, branches, onRefreshData,
-                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
-                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
-                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
-                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
-                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
-                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
-                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
-                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
-                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
-                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
-                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
-                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
-                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
-                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
-                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals, onSaveBranch
-                }} />
-              )}
+
               {userRole === 'super_admin' && activeTab === 'admin_corp' && (
                 <BranchAdminManagementScreen {...{
-                  transactions, cashBalance, employees, connectedApps, subscriptions, branches, onRefreshData,
+                  transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
                   onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
                   isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
                   categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
@@ -551,13 +564,34 @@ export default function WebDashboard({
                   setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
                   averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
                   handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
-                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals, onSaveBranch,
-                  onAddAdmin, admins
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals,
+                  onAddAdmin, onDeleteAdmin, admins, companies
+                }} />
+              )}
+              {userRole === 'super_admin' && activeTab === 'companies' && (
+                <CompanyManagementScreen {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals,
+                  companies, onSaveCompany, onDeleteCompany
                 }} />
               )}
               {userRole === 'super_admin' && activeTab === 'employees' && (
                 <EmployeeManagementScreen {...{
-                  transactions, cashBalance, employees, connectedApps, subscriptions, branches, onRefreshData,
+                  transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
                   onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
                   isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
                   categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
@@ -572,12 +606,13 @@ export default function WebDashboard({
                   setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
                   averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
                   handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
-                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals,
+                  companies, onSaveCompany, onDeleteCompany
                 }} />
               )}
               {userRole === 'super_admin' && activeTab === 'broadcast' && (
                 <BroadcastScreen {...{
-                  transactions, cashBalance, employees, connectedApps, subscriptions, branches, onRefreshData,
+                  transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
                   onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
                   isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
                   categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
@@ -716,7 +751,7 @@ export default function WebDashboard({
                   setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
                   averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
                   handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
-                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals, userProfile, companies
                 }} />
               )}
             </>
@@ -860,33 +895,21 @@ export default function WebDashboard({
                         <div className="grid grid-cols-2 gap-4">
                           <div className="col-span-2 relative group">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Penerima Dana</label>
-                            <input 
-                              type="text"
-                              value={approveRecipientName}
-                              onChange={(e) => setApproveRecipientName(e.target.value)}
-                              placeholder="Nama di rekening bank..."
-                              className="w-full p-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 font-bold text-slate-800 transition-all shadow-sm placeholder:text-slate-300"
-                            />
+                            <div className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-800 shadow-sm truncate">
+                              {approveRecipientName || '-'}
+                            </div>
                           </div>
                           <div className="relative group">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Nama Bank</label>
-                            <input 
-                              type="text"
-                              value={approveBankName}
-                              onChange={(e) => setApproveBankName(e.target.value)}
-                              placeholder="Contoh: BCA"
-                              className="w-full p-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 font-bold text-slate-800 transition-all shadow-sm placeholder:text-slate-300"
-                            />
+                            <div className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-800 shadow-sm truncate">
+                              {approveBankName || '-'}
+                            </div>
                           </div>
                           <div className="relative group">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">No. Rekening</label>
-                            <input 
-                              type="text"
-                              value={approveBankAccount}
-                              onChange={(e) => setApproveBankAccount(e.target.value)}
-                              placeholder="Contoh: 70123"
-                              className="w-full p-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 font-bold text-slate-800 font-mono transition-all shadow-sm placeholder:text-slate-300"
-                            />
+                            <div className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-800 font-mono shadow-sm truncate">
+                              {approveBankAccount || '-'}
+                            </div>
                           </div>
                         </div>
 

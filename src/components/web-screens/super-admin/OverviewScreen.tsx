@@ -11,7 +11,7 @@ export default function OverviewScreen(props: WebScreenProps) {
   const {
     cashBalance, connectedApps, totalInflowThisMonth, totalOutflowThisMonth,
     averageMonthlyBurn, runwayMonths, categoryEntries, totalExpenseAllocated,
-    employees, setSplitViewTx, pendingApprovals, branches, transactions
+    employees, setSplitViewTx, pendingApprovals, companies, transactions
   } = props;
 
   let accumulatedAngle = 0;
@@ -136,7 +136,7 @@ export default function OverviewScreen(props: WebScreenProps) {
         </motion.div>
 
         {/* --- HERO METRICS (PILL CARDS) --- */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           
           {/* Card 1: Balance (Ultra Dark Pill) */}
           <div className="relative overflow-hidden bg-slate-900 text-white rounded-[2.5rem] p-8 shadow-[0_20px_50px_rgba(15,23,42,0.2)] group hover:-translate-y-1 transition-all duration-500">
@@ -151,8 +151,8 @@ export default function OverviewScreen(props: WebScreenProps) {
             
             <div className="relative z-10">
               <span className="text-slate-400 font-medium text-sm">Total Saldo Kas</span>
-              <div className="font-space font-bold text-4xl lg:text-5xl mt-2 tracking-tight truncate flex items-baseline gap-1">
-                <span className="text-2xl text-slate-500 font-sans">Rp</span>
+              <div className="font-space font-bold text-3xl lg:text-4xl mt-2 tracking-tight truncate flex items-baseline gap-1">
+                <span className="text-xl text-slate-500 font-sans">Rp</span>
                 {cashBalance.toLocaleString('id-ID')}
               </div>
             </div>
@@ -171,15 +171,15 @@ export default function OverviewScreen(props: WebScreenProps) {
             
             <div className="relative z-10">
               <span className="text-slate-500 font-medium text-sm">Pemasukan Ops</span>
-              <div className="font-space font-bold text-4xl lg:text-5xl mt-2 tracking-tight text-slate-900 truncate flex items-baseline gap-1">
-                <span className="text-2xl text-slate-400 font-sans">Rp</span>
+              <div className="font-space font-bold text-3xl lg:text-4xl mt-2 tracking-tight text-slate-900 truncate flex items-baseline gap-1">
+                <span className="text-xl text-slate-400 font-sans">Rp</span>
                 {totalInflowThisMonth.toLocaleString('id-ID')}
               </div>
             </div>
           </div>
 
           {/* Card 3: Outflow (Glass Pill) */}
-          <div className="relative overflow-hidden premium-glass rounded-[2.5rem] p-8 group hover:-translate-y-1 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(251,113,133,0.15)] cursor-pointer md:col-span-2 xl:col-span-1">
+          <div className="relative overflow-hidden premium-glass rounded-[2.5rem] p-8 group hover:-translate-y-1 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(251,113,133,0.15)] cursor-pointer">
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-rose-300/20 rounded-full blur-[50px] group-hover:scale-125 transition-transform duration-1000"></div>
             
             <div className="flex justify-between items-start relative z-10 mb-8">
@@ -191,9 +191,29 @@ export default function OverviewScreen(props: WebScreenProps) {
             
             <div className="relative z-10">
               <span className="text-slate-500 font-medium text-sm">Pengeluaran & Klaim</span>
-              <div className="font-space font-bold text-4xl lg:text-5xl mt-2 tracking-tight text-slate-900 truncate flex items-baseline gap-1">
-                <span className="text-2xl text-slate-400 font-sans">Rp</span>
+              <div className="font-space font-bold text-3xl lg:text-4xl mt-2 tracking-tight text-slate-900 truncate flex items-baseline gap-1">
+                <span className="text-xl text-slate-400 font-sans">Rp</span>
                 {totalOutflowThisMonth.toLocaleString('id-ID')}
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: Users (Glass Pill) */}
+          <div className="relative overflow-hidden premium-glass rounded-[2.5rem] p-8 group hover:-translate-y-1 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(99,102,241,0.15)] cursor-pointer">
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-300/20 rounded-full blur-[50px] group-hover:scale-125 transition-transform duration-1000"></div>
+            
+            <div className="flex justify-between items-start relative z-10 mb-8">
+              <div className="w-14 h-14 bg-white rounded-[1.2rem] flex items-center justify-center border border-indigo-100 shadow-sm group-hover:rotate-6 transition-transform">
+                <Eye className="w-7 h-7 text-indigo-500" strokeWidth="2.5" />
+              </div>
+              <span className="bg-indigo-50 px-4 py-1.5 rounded-full text-xs font-bold text-indigo-600 tracking-widest uppercase font-outfit border border-indigo-100">Sistem</span>
+            </div>
+            
+            <div className="relative z-10">
+              <span className="text-slate-500 font-medium text-sm">Total Pengguna</span>
+              <div className="font-space font-bold text-3xl lg:text-4xl mt-2 tracking-tight text-slate-900 truncate flex items-baseline gap-1">
+                {(props.admins?.length || 0) + (props.employees?.length || 0)}
+                <span className="text-lg text-slate-400 font-sans ml-2">Akun Aktif</span>
               </div>
             </div>
           </div>
@@ -438,3 +458,4 @@ export default function OverviewScreen(props: WebScreenProps) {
     </div>
   );
 }
+

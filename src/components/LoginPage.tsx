@@ -23,6 +23,10 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
   const [fullName, setFullName] = useState('');
   const [surname, setSurname] = useState('');
   
+  // Forgot Password states
+  const [forgotPasswordState, setForgotPasswordState] = useState<'none' | 'email' | 'code' | 'new_password'>('none');
+  const [otpCode, setOtpCode] = useState('');
+  
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
@@ -115,7 +119,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
 
         const profileRole = 'karyawan'; 
         const { error: profileError } = await supabase.from('users').insert([
-          { id: user.id, full_name: fullName, surname: surname, role: profileRole, company_id: '00000000-0000-0000-0000-000000000001' }
+          { id: user.id, full_name: fullName, surname: surname, email: email, role: profileRole, company_id: '00000000-0000-0000-0000-000000000001' }
         ]);
 
         if (profileError) throw profileError;
@@ -135,6 +139,73 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
         setSuccessMsg('Login berhasil! Mengalihkan...');
         if (onAuthSuccess) onAuthSuccess(signInData.session, profileData);
         onSelectRole(profileRole);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Terjadi kesalahan sistem.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+    setLoading(true);
+
+    try {
+      if (forgotPasswordState === 'email') {
+        if (!email) throw new Error('Silakan masukkan email.');
+        if (!isSupabase) {
+          setTimeout(() => {
+            setSuccessMsg('Kode verifikasi telah dikirim ke email Anda. (MOCK)');
+            setForgotPasswordState('code');
+            setLoading(false);
+          }, 1000);
+          return;
+        }
+        const { error } = await supabase.auth.resetPasswordForEmail(email);
+        if (error) throw error;
+        setSuccessMsg('Kode verifikasi telah dikirim ke email Anda.');
+        setForgotPasswordState('code');
+      } else if (forgotPasswordState === 'code') {
+        if (!otpCode || otpCode.length !== 6) throw new Error('Masukkan 6 digit kode dengan benar.');
+        if (!isSupabase) {
+          setTimeout(() => {
+            setSuccessMsg('Kode valid! Silakan masukkan kata sandi baru Anda. (MOCK)');
+            setForgotPasswordState('new_password');
+            setLoading(false);
+          }, 1000);
+          return;
+        }
+        const { error } = await supabase.auth.verifyOtp({ email, token: otpCode, type: 'recovery' });
+        if (error) throw error;
+        setSuccessMsg('Kode valid! Silakan masukkan kata sandi baru Anda.');
+        setForgotPasswordState('new_password');
+      } else if (forgotPasswordState === 'new_password') {
+        if (!password || password.length < 8) throw new Error('Kata sandi baru minimal 8 karakter.');
+        if (password !== confirmPassword) throw new Error('Konfirmasi kata sandi tidak cocok.');
+        
+        if (!isSupabase) {
+          setTimeout(() => {
+            setSuccessMsg('Kata sandi berhasil diubah! Silakan login kembali. (MOCK)');
+            setForgotPasswordState('none');
+            setPassword('');
+            setConfirmPassword('');
+            setLoading(false);
+          }, 1000);
+          return;
+        }
+        
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+
+        setSuccessMsg('Kata sandi berhasil diubah! Silakan login kembali.');
+        setTimeout(() => {
+          setForgotPasswordState('none');
+          setPassword('');
+          setConfirmPassword('');
+        }, 3000);
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Terjadi kesalahan sistem.');
@@ -275,10 +346,14 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
             className="mb-10 text-center"
           >
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-3 font-outfit">
-              {isSignUp ? 'Buat Akun Baru' : 'Selamat Datang'}
+              {forgotPasswordState !== 'none' 
+                ? (forgotPasswordState === 'email' ? 'Lupa Kata Sandi' : forgotPasswordState === 'code' ? 'Verifikasi Kode' : 'Sandi Baru')
+                : (isSignUp ? 'Buat Akun Baru' : 'Selamat Datang')}
             </h2>
             <p className="text-[15px] text-slate-500 font-jakarta">
-              {isSignUp ? 'Daftarkan diri Anda untuk akses penuh' : 'Masuk menggunakan kredensial perusahaan Anda'}
+              {forgotPasswordState !== 'none' 
+                ? (forgotPasswordState === 'email' ? 'Masukkan email terdaftar Anda' : forgotPasswordState === 'code' ? 'Masukkan 6 digit kode dari email' : 'Masukkan kata sandi baru Anda')
+                : (isSignUp ? 'Daftarkan diri Anda untuk akses penuh' : 'Masuk menggunakan kredensial perusahaan Anda')}
             </p>
           </motion.div>
 
@@ -296,8 +371,89 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
             ) : null}
           </AnimatePresence>
 
-          <form onSubmit={handleAuthSubmit} className="space-y-5">
-            <AnimatePresence mode="popLayout">
+          {forgotPasswordState !== 'none' ? (
+            <form onSubmit={handleForgotPasswordSubmit} className="space-y-5">
+              {forgotPasswordState === 'email' && (
+                <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="relative group">
+                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                  <input 
+                    type="email" 
+                    placeholder="Email terdaftar" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-12 pr-5 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 transition-all font-jakarta font-medium"
+                    required
+                  />
+                </motion.div>
+              )}
+
+              {forgotPasswordState === 'code' && (
+                <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="relative group">
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                  <input 
+                    type="text" 
+                    placeholder="Kode 6 Digit" 
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                    className="w-full pl-12 pr-5 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[20px] tracking-[0.5em] text-center text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 transition-all font-jakarta font-medium uppercase"
+                    required
+                  />
+                </motion.div>
+              )}
+
+              {forgotPasswordState === 'new_password' && (
+                <>
+                  <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="relative group">
+                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                    <input 
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Kata Sandi Baru" 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-12 pr-14 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 transition-all font-jakarta font-medium"
+                      required
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 p-1 hover:text-indigo-600 transition-colors">
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </motion.div>
+                  
+                  <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative group mt-5">
+                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                    <input 
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Konfirmasi Kata Sandi Baru" 
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full pl-12 pr-14 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 transition-all font-jakarta font-medium"
+                      required
+                    />
+                  </motion.div>
+                </>
+              )}
+
+              <button 
+                type="submit" 
+                disabled={loading}
+                className={`w-full py-4 mt-6 text-white font-bold text-[15px] rounded-full flex items-center justify-center transition-all ${loading ? 'bg-slate-300' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5'}`}
+              >
+                {loading ? 'Memproses...' : 'Kirim'}
+              </button>
+              
+              <div className="mt-4 text-center">
+                <button 
+                  type="button" 
+                  onClick={() => setForgotPasswordState('none')}
+                  className="text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  Batal
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <form onSubmit={handleAuthSubmit} className="space-y-5">
+                <AnimatePresence mode="popLayout">
               {isSignUp && (
                 <motion.div 
                   initial={{ opacity: 0, height: 0, scale: 0.9 }} 
@@ -454,11 +610,23 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
                 {!loading && <ArrowRight className="w-5 h-5" />}
               </button>
             </motion.div>
+            
+            {!isSignUp && (
+              <div className="flex justify-end mt-4">
+                <button 
+                  type="button" 
+                  onClick={() => setForgotPasswordState('email')}
+                  className="text-sm text-indigo-600 font-bold hover:text-indigo-800 transition-colors"
+                >
+                  Lupa Kata Sandi?
+                </button>
+              </div>
+            )}
           </form>
 
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-            className="mt-10 flex items-center justify-center gap-2"
+            className="mt-8 flex items-center justify-center gap-2"
           >
             <span className="text-[14px] text-slate-500 font-jakarta">
               {isSignUp ? 'Sudah memiliki akun?' : 'Belum memiliki akun?'}
@@ -477,6 +645,8 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-600 transition-all group-hover:w-full"></span>
             </button>
           </motion.div>
+          </>
+          )}
         </main>
       </div>
       

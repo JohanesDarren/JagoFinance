@@ -1,5 +1,5 @@
 import React from 'react';
-import { 
+import {
   Radio, Webhook, Settings, Cpu
 } from 'lucide-react';
 import { WebScreenProps } from '../shared/WebScreenProps';
@@ -11,12 +11,12 @@ export default function IntegrationsScreen(props: WebScreenProps) {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                  
+
       {/* Header */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 rounded-[3rem] p-10 text-white shadow-2xl shadow-indigo-900/30 relative overflow-hidden flex flex-col md:flex-row justify-between md:items-center gap-8 group">
         <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none group-hover:scale-110 transition-transform duration-1000"></div>
         <div className="absolute bottom-0 left-20 w-48 h-48 bg-brand/30 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-1000"></div>
-        
+
         <div className="relative z-10 flex items-center gap-6">
           <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-[1.5rem] border border-white/20 flex items-center justify-center shrink-0 shadow-inner group-hover:rotate-12 transition-transform duration-500">
             <Cpu className="w-8 h-8 text-indigo-300" strokeWidth="2.5" />
@@ -42,7 +42,7 @@ export default function IntegrationsScreen(props: WebScreenProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {connectedApps.map((app) => (
           <div key={app.id} className="bg-white/90 backdrop-blur-xl p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-900/10 hover:border-indigo-100 transition-all duration-500 group flex flex-col relative overflow-hidden">
-            
+
             <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-full pointer-events-none group-hover:scale-[2] transition-transform duration-700"></div>
 
             <div className="flex justify-between items-start mb-6 relative z-10">
@@ -75,13 +75,12 @@ export default function IntegrationsScreen(props: WebScreenProps) {
             {/* Actions */}
             <div className="flex items-center gap-4 relative z-10 mt-auto">
               {/* Connection Status Toggle indicator click */}
-              <button 
+              <button
                 onClick={() => onToggleApp(app.id)}
-                className={`flex-1 py-4 text-xs font-black rounded-[1.5rem] transition-all border shadow-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 ${
-                  app.status === 'active' 
-                    ? 'bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:shadow-emerald-900/5' 
+                className={`flex-1 py-4 text-xs font-black rounded-[1.5rem] transition-all border shadow-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 ${app.status === 'active'
+                    ? 'bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:shadow-emerald-900/5'
                     : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
-                }`}
+                  }`}
               >
                 {app.status === 'active' ? (
                   <>
@@ -99,7 +98,7 @@ export default function IntegrationsScreen(props: WebScreenProps) {
                 )}
               </button>
 
-              <button 
+              <button
                 onClick={() => openWebhookSetup(app)}
                 className="flex-1 py-4 bg-indigo-600 text-white hover:bg-brand rounded-[1.5rem] text-xs font-black transition-all flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl hover:shadow-indigo-500/30 hover:-translate-y-0.5"
               >
@@ -113,3 +112,4 @@ export default function IntegrationsScreen(props: WebScreenProps) {
     </div>
   );
 }
+
