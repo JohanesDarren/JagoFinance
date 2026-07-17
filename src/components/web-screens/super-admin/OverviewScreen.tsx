@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { motion } from 'motion/react';
 import { 
   TrendingUp, TrendingDown, DollarSign, Calendar, Sparkles, 
   Eye, CheckCircle, SlidersHorizontal, ArrowUpRight, BarChart3,
@@ -55,8 +56,21 @@ export default function OverviewScreen(props: WebScreenProps) {
 
   const topApps = [...connectedApps].sort((a, b) => b.monthlyRevenue - a.monthlyRevenue);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { type: 'spring', damping: 25, stiffness: 100 } }
+  };
+
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-20 relative overflow-x-hidden">
+    <div className="relative overflow-x-hidden min-h-screen pb-20">
       
       {/* INJECT CUSTOM PREMIUM FONTS */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -66,151 +80,160 @@ export default function OverviewScreen(props: WebScreenProps) {
         .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
         .font-space { font-family: 'Space Grotesk', monospace; }
         
-        .glass-card {
-          background: rgba(255, 255, 255, 0.7);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.5);
-          box-shadow: 0 30px 60px -15px rgba(0,0,0,0.05);
+        .premium-glass {
+          background: rgba(255, 255, 255, 0.6);
+          backdrop-filter: blur(40px);
+          -webkit-backdrop-filter: blur(40px);
+          border: 1px solid rgba(255, 255, 255, 0.8);
+          box-shadow: 0 10px 40px -10px rgba(0,0,0,0.03);
         }
         
         .mesh-bg {
-          background-color: #f6f8fb;
+          background-color: #fafafa;
           background-image: 
-            radial-gradient(at 0% 0%, hsla(253,16%,7%,0.03) 0, transparent 50%), 
-            radial-gradient(at 50% 0%, hsla(225,39%,30%,0.03) 0, transparent 50%), 
-            radial-gradient(at 100% 0%, hsla(339,49%,30%,0.03) 0, transparent 50%);
+            radial-gradient(at 0% 0%, hsla(253,16%,7%,0.02) 0, transparent 50%), 
+            radial-gradient(at 50% 0%, hsla(225,39%,30%,0.02) 0, transparent 50%), 
+            radial-gradient(at 100% 0%, hsla(339,49%,30%,0.02) 0, transparent 50%);
         }
       `}} />
 
       {/* Ambient background for the whole page */}
-      <div className="absolute top-[-10%] left-[-10%] w-[120%] h-[120%] mesh-bg -z-10 pointer-events-none rounded-[3rem]"></div>
+      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-indigo-50/50 to-transparent -z-10 pointer-events-none"></div>
+      
+      {/* Animated Orbs */}
+      <div className="absolute top-10 right-20 w-[400px] h-[400px] bg-cyan-200/30 rounded-full blur-[80px] pointer-events-none -z-10 animate-pulse duration-[7s]"></div>
+      <div className="absolute top-40 left-10 w-[500px] h-[500px] bg-indigo-200/20 rounded-full blur-[100px] pointer-events-none -z-10 animate-pulse duration-[10s]"></div>
 
-      <div className="font-jakarta space-y-6 md:space-y-10">
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="font-jakarta space-y-8 md:space-y-12 px-2 md:px-4 max-w-7xl mx-auto pt-6"
+      >
 
         {/* --- HEADER --- */}
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 px-2 md:px-4">
+        <motion.div variants={itemVariants} className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
           <div className="w-full xl:w-auto">
-            <div className="inline-flex items-center gap-2 mb-3 bg-indigo-50/80 px-4 py-2 rounded-full border border-indigo-100">
-              <span className="relative flex h-2.5 w-2.5 shrink-0">
+            <div className="inline-flex items-center gap-2 mb-4 bg-white/60 backdrop-blur-md px-4 py-2 rounded-full border border-white shadow-sm">
+              <span className="relative flex h-2 w-2 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
               </span>
-              <span className="text-[10px] md:text-[11px] font-bold text-indigo-600 tracking-widest uppercase font-outfit">Sistem Terpadu Aktif</span>
+              <span className="text-[11px] font-bold text-slate-600 tracking-widest uppercase font-outfit">Sistem Terpadu Aktif</span>
             </div>
-            <h1 className="text-3xl md:text-4xl xl:text-5xl font-outfit font-black text-[#0B0F19] tracking-tight leading-tight break-words">
-              Selamat datang,<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">JagoAI Global.</span>
+            <h1 className="text-4xl md:text-5xl xl:text-6xl font-outfit font-black text-slate-900 tracking-tight leading-tight">
+              Selamat datang,<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500">JagoAI Global.</span>
             </h1>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full xl:w-auto">
-            <button className="h-12 md:h-14 px-6 md:px-8 flex-1 sm:flex-none rounded-full bg-white text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-[0_10px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1 flex items-center justify-center gap-2 text-sm md:text-base">
-              <Activity className="w-4 h-4 md:w-5 md:h-5 text-indigo-500 shrink-0" /> Monitor
+          <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
+            <button className="h-14 px-8 flex-1 sm:flex-none rounded-full bg-white text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-[0_8px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_30px_rgba(0,0,0,0.08)] hover:-translate-y-1 flex items-center justify-center gap-2 border border-slate-100">
+              <Activity className="w-5 h-5 text-indigo-500 shrink-0" /> Monitor
             </button>
-            <button className="h-12 md:h-14 px-6 md:px-8 flex-1 sm:flex-none rounded-full bg-[#0B0F19] text-white font-bold hover:bg-slate-800 transition-all shadow-[0_10px_30px_rgba(0,0,0,0.1)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.15)] hover:-translate-y-1 text-sm md:text-base">
+            <button className="h-14 px-8 flex-1 sm:flex-none rounded-full bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-[0_8px_20px_rgba(15,23,42,0.2)] hover:shadow-[0_15px_30px_rgba(15,23,42,0.3)] hover:-translate-y-1">
               Unduh Laporan
             </button>
           </div>
-        </div>
+        </motion.div>
 
-        {/* --- HERO METRICS (FLUID CARDS) --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+        {/* --- HERO METRICS (PILL CARDS) --- */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           
-          {/* Card 1: Balance (Dark Elegant) */}
-          <div className="relative overflow-hidden bg-[#0B0F19] text-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-[0_20px_50px_rgba(11,15,25,0.15)] group hover:-translate-y-1 transition-transform duration-500">
-            <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-gradient-to-br from-indigo-500/30 to-transparent rounded-full blur-[40px] md:blur-[60px] -mr-16 -mt-16 md:-mr-20 md:-mt-20 group-hover:scale-125 transition-transform duration-1000"></div>
+          {/* Card 1: Balance (Ultra Dark Pill) */}
+          <div className="relative overflow-hidden bg-slate-900 text-white rounded-[2.5rem] p-8 shadow-[0_20px_50px_rgba(15,23,42,0.2)] group hover:-translate-y-1 transition-all duration-500">
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-indigo-500/40 to-cyan-500/0 rounded-full blur-[50px] group-hover:scale-125 transition-transform duration-1000"></div>
             
-            <div className="flex justify-between items-start relative z-10 mb-6 md:mb-8">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-white/10 backdrop-blur-md rounded-[1rem] md:rounded-[1.2rem] flex items-center justify-center border border-white/10 group-hover:-rotate-6 transition-transform shrink-0">
-                <DollarSign className="w-6 h-6 md:w-7 md:h-7 text-indigo-300" strokeWidth="2.5" />
+            <div className="flex justify-between items-start relative z-10 mb-8">
+              <div className="w-14 h-14 bg-white/10 backdrop-blur-xl rounded-[1.2rem] flex items-center justify-center border border-white/10 group-hover:rotate-6 transition-transform">
+                <DollarSign className="w-7 h-7 text-indigo-300" strokeWidth="2.5" />
               </div>
-              <span className="bg-white/10 px-3 py-1.5 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold text-white tracking-widest uppercase font-outfit border border-white/5 whitespace-nowrap">Likuiditas</span>
+              <span className="bg-white/10 px-4 py-1.5 rounded-full text-xs font-bold text-white tracking-widest uppercase font-outfit border border-white/10">Likuiditas</span>
             </div>
             
             <div className="relative z-10">
-              <span className="text-slate-400 font-medium text-xs md:text-sm">Total Saldo Kas</span>
-              <div className="font-space font-bold text-3xl lg:text-4xl xl:text-5xl mt-1 md:mt-2 tracking-tight truncate">
-                <span className="text-xl md:text-2xl text-slate-500 mr-1 font-sans opacity-70">Rp</span>
+              <span className="text-slate-400 font-medium text-sm">Total Saldo Kas</span>
+              <div className="font-space font-bold text-4xl lg:text-5xl mt-2 tracking-tight truncate flex items-baseline gap-1">
+                <span className="text-2xl text-slate-500 font-sans">Rp</span>
                 {cashBalance.toLocaleString('id-ID')}
               </div>
             </div>
           </div>
 
-          {/* Card 2: Inflow (Glass White) */}
-          <div className="relative overflow-hidden glass-card rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 group hover:-translate-y-1 transition-transform duration-500">
-            <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-emerald-100/50 rounded-full blur-[40px] md:blur-[60px] -mr-16 -mt-16 md:-mr-20 md:-mt-20 group-hover:scale-125 transition-transform duration-1000"></div>
+          {/* Card 2: Inflow (Glass Pill) */}
+          <div className="relative overflow-hidden premium-glass rounded-[2.5rem] p-8 group hover:-translate-y-1 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(52,211,153,0.15)] cursor-pointer">
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-300/20 rounded-full blur-[50px] group-hover:scale-125 transition-transform duration-1000"></div>
             
-            <div className="flex justify-between items-start relative z-10 mb-6 md:mb-8">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-emerald-50 rounded-[1rem] md:rounded-[1.2rem] flex items-center justify-center border border-emerald-100 group-hover:-rotate-6 transition-transform shrink-0">
-                <TrendingUp className="w-6 h-6 md:w-7 md:h-7 text-emerald-500" strokeWidth="2.5" />
+            <div className="flex justify-between items-start relative z-10 mb-8">
+              <div className="w-14 h-14 bg-white rounded-[1.2rem] flex items-center justify-center border border-emerald-100 shadow-sm group-hover:rotate-6 transition-transform">
+                <TrendingUp className="w-7 h-7 text-emerald-500" strokeWidth="2.5" />
               </div>
-              <span className="bg-emerald-50 px-3 py-1.5 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold text-emerald-600 tracking-widest uppercase font-outfit border border-emerald-100 whitespace-nowrap">Bulan Ini</span>
+              <span className="bg-emerald-50 px-4 py-1.5 rounded-full text-xs font-bold text-emerald-600 tracking-widest uppercase font-outfit border border-emerald-100">Bulan Ini</span>
             </div>
             
             <div className="relative z-10">
-              <span className="text-slate-500 font-medium text-xs md:text-sm">Pemasukan Ops</span>
-              <div className="font-space font-bold text-3xl lg:text-4xl xl:text-5xl mt-1 md:mt-2 tracking-tight text-[#0B0F19] truncate">
-                <span className="text-xl md:text-2xl text-slate-400 mr-1 font-sans">Rp</span>
+              <span className="text-slate-500 font-medium text-sm">Pemasukan Ops</span>
+              <div className="font-space font-bold text-4xl lg:text-5xl mt-2 tracking-tight text-slate-900 truncate flex items-baseline gap-1">
+                <span className="text-2xl text-slate-400 font-sans">Rp</span>
                 {totalInflowThisMonth.toLocaleString('id-ID')}
               </div>
             </div>
           </div>
 
-          {/* Card 3: Outflow (Glass White) */}
-          <div className="relative overflow-hidden glass-card rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 group hover:-translate-y-1 transition-transform duration-500 md:col-span-2 xl:col-span-1">
-            <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-rose-100/50 rounded-full blur-[40px] md:blur-[60px] -mr-16 -mt-16 md:-mr-20 md:-mt-20 group-hover:scale-125 transition-transform duration-1000"></div>
+          {/* Card 3: Outflow (Glass Pill) */}
+          <div className="relative overflow-hidden premium-glass rounded-[2.5rem] p-8 group hover:-translate-y-1 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(251,113,133,0.15)] cursor-pointer md:col-span-2 xl:col-span-1">
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-rose-300/20 rounded-full blur-[50px] group-hover:scale-125 transition-transform duration-1000"></div>
             
-            <div className="flex justify-between items-start relative z-10 mb-6 md:mb-8">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-rose-50 rounded-[1rem] md:rounded-[1.2rem] flex items-center justify-center border border-rose-100 group-hover:-rotate-6 transition-transform shrink-0">
-                <TrendingDown className="w-6 h-6 md:w-7 md:h-7 text-rose-500" strokeWidth="2.5" />
+            <div className="flex justify-between items-start relative z-10 mb-8">
+              <div className="w-14 h-14 bg-white rounded-[1.2rem] flex items-center justify-center border border-rose-100 shadow-sm group-hover:-rotate-6 transition-transform">
+                <TrendingDown className="w-7 h-7 text-rose-500" strokeWidth="2.5" />
               </div>
-              <span className="bg-rose-50 px-3 py-1.5 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold text-rose-600 tracking-widest uppercase font-outfit border border-rose-100 whitespace-nowrap">Burn Rate</span>
+              <span className="bg-rose-50 px-4 py-1.5 rounded-full text-xs font-bold text-rose-600 tracking-widest uppercase font-outfit border border-rose-100">Burn Rate</span>
             </div>
             
             <div className="relative z-10">
-              <span className="text-slate-500 font-medium text-xs md:text-sm">Pengeluaran & Klaim</span>
-              <div className="font-space font-bold text-3xl lg:text-4xl xl:text-5xl mt-1 md:mt-2 tracking-tight text-[#0B0F19] truncate">
-                <span className="text-xl md:text-2xl text-slate-400 mr-1 font-sans">Rp</span>
+              <span className="text-slate-500 font-medium text-sm">Pengeluaran & Klaim</span>
+              <div className="font-space font-bold text-4xl lg:text-5xl mt-2 tracking-tight text-slate-900 truncate flex items-baseline gap-1">
+                <span className="text-2xl text-slate-400 font-sans">Rp</span>
                 {totalOutflowThisMonth.toLocaleString('id-ID')}
               </div>
             </div>
           </div>
 
-        </div>
+        </motion.div>
 
         {/* --- MAIN GRAPHIC CHART & DONUT --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Main Chart */}
-          <div className="lg:col-span-2 glass-card rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 flex flex-col group overflow-hidden">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
+          <div className="lg:col-span-2 premium-glass rounded-[3rem] p-8 md:p-10 flex flex-col group overflow-hidden">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
               <div>
-                <h3 className="text-xl md:text-2xl font-outfit font-black text-[#0B0F19]">Arus Kas 6 Bulan</h3>
-                <p className="text-slate-500 text-xs md:text-sm mt-1">Tren pendapatan vs biaya operasional</p>
+                <h3 className="text-2xl md:text-3xl font-outfit font-black text-slate-900 tracking-tight">Arus Kas 6 Bulan</h3>
+                <p className="text-slate-500 text-sm mt-1">Tren pendapatan vs biaya operasional</p>
               </div>
-              <div className="flex flex-wrap items-center gap-2 md:gap-4 bg-white/50 px-4 py-2 md:px-5 md:py-3 rounded-full border border-white">
-                <div className="flex items-center gap-1.5 md:gap-2 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-600 font-outfit whitespace-nowrap">
-                  <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-indigo-500"></div> Pemasukan
+              <div className="flex items-center gap-4 bg-white/80 backdrop-blur-md px-5 py-3 rounded-full border border-slate-100 shadow-sm">
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-600 font-outfit">
+                  <div className="w-3 h-3 rounded-full bg-indigo-500"></div> Pemasukan
                 </div>
-                <div className="flex items-center gap-1.5 md:gap-2 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-600 font-outfit whitespace-nowrap">
-                  <div className="w-3 h-1 md:w-4 md:h-1.5 rounded-full bg-rose-400"></div> Pengeluaran
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-600 font-outfit">
+                  <div className="w-4 h-1.5 rounded-full bg-rose-400"></div> Pengeluaran
                 </div>
               </div>
             </div>
             
             {/* The SVG Graphic */}
-            <div className="w-full h-[220px] md:h-[300px] mt-auto relative">
+            <div className="w-full h-[250px] md:h-[320px] mt-auto relative">
               <svg viewBox="0 0 600 220" className="w-full h-full overflow-visible" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#6366f1" />
-                    <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.1" />
                   </linearGradient>
                   <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
                     <stop offset="0%" stopColor="#f43f5e" />
-                    <stop offset="100%" stopColor="#f87171" />
+                    <stop offset="100%" stopColor="#fb7185" />
                   </linearGradient>
                   <filter id="softGlow">
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
                     <feMerge>
                       <feMergeNode in="coloredBlur"/>
                       <feMergeNode in="SourceGraphic"/>
@@ -221,8 +244,8 @@ export default function OverviewScreen(props: WebScreenProps) {
                 {/* Aesthetic Grid */}
                 {[0, 60, 120, 180].map((y, i) => (
                   <g key={y}>
-                    <line x1="45" y1={y} x2="590" y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray={i === 3 ? "" : "5 5"} />
-                    <text x="35" y={y + 4} className="text-[10px] md:text-[11px] fill-slate-400 font-space font-medium" textAnchor="end">
+                    <line x1="45" y1={y} x2="590" y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray={i === 3 ? "" : "4 6"} />
+                    <text x="35" y={y + 4} className="text-[11px] fill-slate-400 font-space font-bold" textAnchor="end">
                       {i === 3 ? '0' : `${((chartData.maxVal * (180 - y) / 180) / 1000000).toFixed(0)}M`}
                     </text>
                   </g>
@@ -234,7 +257,7 @@ export default function OverviewScreen(props: WebScreenProps) {
                   const y = chartData.scaleY(m.inflow);
                   const h = Math.max(2, 180 - y);
                   return (
-                    <rect key={`bar-${i}`} x={x - 15} y={y} width="30" height={h} fill="url(#barGrad)" rx="15" className="hover:opacity-80 transition-opacity duration-300 cursor-pointer" />
+                    <rect key={`bar-${i}`} x={x - 16} y={y} width="32" height={h} fill="url(#barGrad)" rx="16" className="hover:opacity-80 transition-opacity duration-300 cursor-pointer" />
                   );
                 })}
 
@@ -243,7 +266,7 @@ export default function OverviewScreen(props: WebScreenProps) {
                   d={`M ${chartData.months.map((m, i) => `${90 + (i * 85)} ${chartData.scaleY(m.outflow)}`).join(' L ')}`}
                   fill="none" 
                   stroke="url(#lineGrad)" 
-                  strokeWidth="4" 
+                  strokeWidth="5" 
                   strokeLinecap="round" 
                   strokeLinejoin="round"
                   filter="url(#softGlow)"
@@ -251,157 +274,167 @@ export default function OverviewScreen(props: WebScreenProps) {
                 
                 {/* Dots */}
                 {chartData.months.map((m, i) => (
-                  <circle key={`pt-${i}`} cx={90 + (i * 85)} cy={chartData.scaleY(m.outflow)} r="5" md:r="6" fill="#fff" stroke="#f43f5e" strokeWidth="3" className="hover:r-8 transition-all duration-300 cursor-pointer" />
+                  <circle key={`pt-${i}`} cx={90 + (i * 85)} cy={chartData.scaleY(m.outflow)} r="6" fill="#fff" stroke="#f43f5e" strokeWidth="3" className="hover:r-8 hover:stroke-[4px] transition-all duration-300 cursor-pointer drop-shadow-md" />
                 ))}
 
                 {/* Axis Labels */}
                 {chartData.months.map((m, i) => (
-                  <text key={`lbl-${i}`} x={90 + (i * 85)} y="210" textAnchor="middle" className="text-[10px] md:text-[12px] font-outfit font-bold fill-slate-400 uppercase tracking-widest">{m.label}</text>
+                  <text key={`lbl-${i}`} x={90 + (i * 85)} y="212" textAnchor="middle" className="text-[11px] font-outfit font-bold fill-slate-500 uppercase tracking-widest">{m.label}</text>
                 ))}
               </svg>
             </div>
           </div>
 
           {/* Minimalist Donut Chart */}
-          <div className="glass-card rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 flex flex-col justify-between items-center group overflow-hidden">
-            <div className="w-full text-center sm:text-left lg:text-center">
-              <h3 className="text-xl md:text-2xl font-outfit font-black text-[#0B0F19]">Alokasi Biaya</h3>
-              <p className="text-slate-500 text-xs md:text-sm mt-1">Distribusi pengeluaran aktif</p>
+          <div className="premium-glass rounded-[3rem] p-8 md:p-10 flex flex-col justify-between items-center group overflow-hidden">
+            <div className="w-full text-center">
+              <h3 className="text-2xl font-outfit font-black text-slate-900 tracking-tight">Alokasi Biaya</h3>
+              <p className="text-slate-500 text-sm mt-1">Distribusi pengeluaran aktif</p>
             </div>
 
-            <div className="relative w-40 h-40 md:w-56 md:h-56 my-6 md:my-8 shrink-0">
-              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90 drop-shadow-2xl">
+            <div className="relative w-56 h-56 my-8 shrink-0 drop-shadow-2xl">
+              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                 {categoryEntries.length === 0 ? (
-                  <circle cx="50" cy="50" r="38" fill="none" stroke="#e2e8f0" strokeWidth="20" />
+                  <circle cx="50" cy="50" r="36" fill="none" stroke="#f1f5f9" strokeWidth="22" />
                 ) : (
                   categoryEntries.map(([cat, val], idx) => {
                     const percent = val / (totalExpenseAllocated || 1);
-                    const strokeDash = `${percent * 238.76} ${238.76}`;
+                    const strokeDash = `${percent * 226.19} ${226.19}`; // 2 * pi * 36
                     const strokeOffset = -accumulatedAngle;
-                    accumulatedAngle += percent * 238.76;
-                    const colors = ['#6366f1', '#38bdf8', '#f43f5e', '#a855f7', '#fcd34d'];
+                    accumulatedAngle += percent * 226.19;
+                    const colors = ['#6366f1', '#06b6d4', '#f43f5e', '#a855f7', '#fbbf24'];
                     return (
                       <circle 
-                        key={idx} cx="50" cy="50" r="38" fill="none" 
-                        stroke={colors[idx % colors.length]} strokeWidth="20" 
+                        key={idx} cx="50" cy="50" r="36" fill="none" 
+                        stroke={colors[idx % colors.length]} strokeWidth="22" 
                         strokeDasharray={strokeDash} strokeDashoffset={strokeOffset}
                         strokeLinecap="round"
-                        className="transition-all duration-700 hover:strokeWidth-[24px] cursor-pointer"
+                        className="transition-all duration-700 hover:strokeWidth-[26px] cursor-pointer"
                       />
                     );
                   })
                 )}
                 {/* Center Cutout for aesthetic */}
-                <circle cx="50" cy="50" r="28" fill="#f8fafc" opacity="0.5" />
+                <circle cx="50" cy="50" r="25" fill="#ffffff" opacity="0.8" />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center px-2">
-                <span className="text-[9px] md:text-[10px] font-outfit font-black text-slate-400 tracking-widest uppercase">Total</span>
-                <span className="font-space font-bold text-slate-900 text-base md:text-lg truncate max-w-[80px]">
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-[10px] font-outfit font-black text-slate-400 tracking-widest uppercase mb-1">Total</span>
+                <span className="font-space font-bold text-slate-900 text-xl truncate max-w-[90px]">
                   {totalOutflowThisMonth >= 1000000 ? `${(totalOutflowThisMonth/1000000).toFixed(1)}M` : '0'}
                 </span>
               </div>
             </div>
 
-            <div className="w-full space-y-2.5 md:space-y-3">
+            <div className="w-full space-y-3">
               {categoryEntries.slice(0, 3).map(([cat, val], idx) => {
-                const colors = ['bg-[#6366f1]', 'bg-[#38bdf8]', 'bg-[#f43f5e]'];
+                const colors = ['bg-[#6366f1]', 'bg-[#06b6d4]', 'bg-[#f43f5e]'];
                 return (
-                  <div key={cat} className="flex justify-between items-center bg-white/40 p-2 md:p-3 rounded-xl">
-                    <div className="flex items-center gap-2 md:gap-3 overflow-hidden">
-                      <div className={`w-2.5 h-2.5 md:w-3 md:h-3 rounded-full ${colors[idx % colors.length]} shrink-0`}></div>
-                      <span className="text-xs md:text-sm font-bold text-slate-700 truncate">{cat}</span>
+                  <div key={cat} className="flex justify-between items-center bg-white/60 p-3 rounded-2xl border border-white shadow-sm hover:scale-[1.02] transition-transform">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className={`w-3 h-3 rounded-full ${colors[idx % colors.length]} shrink-0 shadow-inner`}></div>
+                      <span className="text-sm font-bold text-slate-700 truncate">{cat}</span>
                     </div>
-                    <span className="text-xs md:text-sm font-space font-bold text-slate-900 ml-2 shrink-0">{(val/1000000).toFixed(1)}M</span>
+                    <span className="text-sm font-space font-bold text-slate-900 ml-2 shrink-0">{(val/1000000).toFixed(1)}M</span>
                   </div>
                 );
               })}
             </div>
           </div>
 
-        </div>
+        </motion.div>
 
         {/* --- LIST WIDGETS --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Aesthetic Pending Action List */}
-          <div className="glass-card rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 overflow-hidden">
-            <div className="flex justify-between items-center mb-6 md:mb-8">
+          <div className="premium-glass rounded-[3rem] p-8 md:p-10 overflow-hidden">
+            <div className="flex justify-between items-center mb-8">
               <div>
-                <h3 className="text-xl md:text-2xl font-outfit font-black text-[#0B0F19]">Antrian Verifikasi</h3>
-                <p className="text-slate-500 text-xs md:text-sm mt-1">Klaim staf yang butuh tinjauan</p>
+                <h3 className="text-2xl font-outfit font-black text-slate-900 tracking-tight">Antrian Verifikasi</h3>
+                <p className="text-slate-500 text-sm mt-1">Klaim staf yang butuh tinjauan</p>
               </div>
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-[1rem] md:rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center font-outfit font-black text-base md:text-lg shrink-0">
+              <div className="w-12 h-12 rounded-[1.2rem] bg-amber-100 text-amber-600 flex items-center justify-center font-outfit font-black text-lg shrink-0 border border-amber-200">
                 {pendingApprovals.length}
               </div>
             </div>
 
-            <div className="space-y-3 md:space-y-4">
+            <div className="space-y-4">
               {pendingApprovals.length === 0 ? (
-                <div className="py-10 md:py-12 flex flex-col items-center justify-center text-slate-400">
-                  <CheckCircle className="w-10 h-10 md:w-12 md:h-12 text-emerald-300 mb-3 md:mb-4" />
-                  <span className="font-bold text-sm md:text-base text-center">Semua antrian bersih.</span>
+                <div className="py-12 flex flex-col items-center justify-center text-slate-400 bg-white/40 rounded-[2rem] border border-dashed border-slate-200">
+                  <CheckCircle className="w-12 h-12 text-emerald-400 mb-4" />
+                  <span className="font-bold text-base text-center text-slate-600">Semua antrian bersih.</span>
                 </div>
               ) : (
-                pendingApprovals.slice(0, 4).map(tx => (
-                  <div key={tx.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 md:p-5 rounded-[1.2rem] md:rounded-[1.5rem] bg-white/60 border border-white hover:bg-white transition-all shadow-[0_5px_15px_rgba(0,0,0,0.02)] hover:shadow-[0_15px_30px_rgba(0,0,0,0.05)] gap-4 sm:gap-0">
-                    <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto overflow-hidden">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-100 text-slate-600 font-outfit font-black flex items-center justify-center text-xs md:text-sm shrink-0">
+                pendingApprovals.slice(0, 4).map((tx, i) => (
+                  <motion.div 
+                    key={tx.id} 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-[1.5rem] bg-white/80 border border-white hover:bg-white transition-all shadow-[0_5px_15px_rgba(0,0,0,0.02)] hover:shadow-[0_15px_30px_rgba(0,0,0,0.06)] gap-4 sm:gap-0 cursor-pointer group"
+                    onClick={() => setSplitViewTx(tx)}
+                  >
+                    <div className="flex items-center gap-4 w-full sm:w-auto overflow-hidden">
+                      <div className="w-12 h-12 rounded-[1.2rem] bg-indigo-50 border border-indigo-100 text-indigo-600 font-outfit font-black flex items-center justify-center text-sm shrink-0 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
                         {(employees.find(e => e.id === tx.employeeId)?.name || "U")[0]}
                       </div>
                       <div className="overflow-hidden">
-                        <span className="font-bold text-sm md:text-base text-slate-900 block truncate">{employees.find(e => e.id === tx.employeeId)?.name || "Unknown"}</span>
-                        <span className="text-[10px] md:text-xs text-slate-500 font-medium mt-0.5 block truncate">{tx.category} • {tx.merchant}</span>
+                        <span className="font-bold text-base text-slate-900 block truncate">{employees.find(e => e.id === tx.employeeId)?.name || "Unknown"}</span>
+                        <span className="text-xs text-slate-500 font-medium mt-1 block truncate">{tx.category} • {tx.merchant}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                      <span className="font-space font-bold text-slate-900 text-sm md:text-base shrink-0">Rp {tx.amount.toLocaleString('id-ID')}</span>
-                      <button 
-                        onClick={() => setSplitViewTx(tx)}
-                        className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-[#0B0F19] text-white hover:scale-110 transition-transform shrink-0"
-                      >
-                        <ArrowRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                      </button>
+                      <span className="font-space font-bold text-slate-900 text-base shrink-0">Rp {tx.amount.toLocaleString('id-ID')}</span>
+                      <div className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-900 text-white group-hover:bg-indigo-500 transition-colors shrink-0">
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))
               )}
             </div>
           </div>
 
           {/* Minimalist Top App List */}
-          <div className="glass-card rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 overflow-hidden">
-            <div className="flex justify-between items-center mb-6 md:mb-8">
+          <div className="premium-glass rounded-[3rem] p-8 md:p-10 overflow-hidden">
+            <div className="flex justify-between items-center mb-8">
               <div>
-                <h3 className="text-xl md:text-2xl font-outfit font-black text-[#0B0F19]">Performa Integrasi</h3>
-                <p className="text-slate-500 text-xs md:text-sm mt-1">Top revenue bulan ini</p>
+                <h3 className="text-2xl font-outfit font-black text-slate-900 tracking-tight">Performa Integrasi</h3>
+                <p className="text-slate-500 text-sm mt-1">Top revenue bulan ini</p>
               </div>
-              <button className="text-xs md:text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors shrink-0">Lihat Semua</button>
+              <button className="text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors shrink-0 bg-indigo-50 px-4 py-2 rounded-full">Lihat Semua</button>
             </div>
 
-            <div className="space-y-3 md:space-y-4">
+            <div className="space-y-4">
               {topApps.slice(0, 4).map((app, idx) => (
-                <div key={app.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 md:p-5 rounded-[1.2rem] md:rounded-[1.5rem] bg-white/60 border border-white hover:bg-white transition-all shadow-[0_5px_15px_rgba(0,0,0,0.02)] hover:shadow-[0_15px_30px_rgba(0,0,0,0.05)] gap-4 sm:gap-0">
-                  <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto overflow-hidden">
-                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-[1rem] md:rounded-[1.2rem] flex items-center justify-center text-lg md:text-xl bg-slate-50 border border-slate-100 shrink-0`}>
+                <motion.div 
+                  key={app.id} 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-[1.5rem] bg-white/80 border border-white hover:bg-white transition-all shadow-[0_5px_15px_rgba(0,0,0,0.02)] hover:shadow-[0_15px_30px_rgba(0,0,0,0.06)] gap-4 sm:gap-0"
+                >
+                  <div className="flex items-center gap-4 w-full sm:w-auto overflow-hidden">
+                    <div className={`w-12 h-12 rounded-[1.2rem] flex items-center justify-center text-xl bg-slate-50 border border-slate-100 shrink-0`}>
                       {idx === 0 ? '🏆' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '💎'}
                     </div>
                     <div className="overflow-hidden">
-                      <h6 className="font-bold text-sm md:text-base text-slate-900 truncate">{app.name}</h6>
-                      <span className="text-[10px] md:text-xs font-medium text-emerald-500 mt-0.5 block flex items-center gap-1 shrink-0">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Aktif
+                      <h6 className="font-bold text-base text-slate-900 truncate">{app.name}</h6>
+                      <span className="text-xs font-bold text-emerald-500 mt-1 block flex items-center gap-1.5 shrink-0">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> Aktif
                       </span>
                     </div>
                   </div>
-                  <span className="font-space font-bold text-sm md:text-base text-slate-900 shrink-0 self-end sm:self-auto">
+                  <span className="font-space font-bold text-base text-slate-900 shrink-0 self-end sm:self-auto bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
                     {app.monthlyRevenue > 0 ? `Rp ${(app.monthlyRevenue/1000000).toFixed(1)}M` : '-'}
                   </span>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
 
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

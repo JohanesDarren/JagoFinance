@@ -90,28 +90,6 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
     setSuccessMsg('');
 
     try {
-      if ((email === 'diormajorie@gmail.com' || email === 'studyaccdalpa@gmail.com' || email === 'jagoai.business@gmail.com' || email === 'superadmin@jagofinance.com') && password === 'password') {
-        setTimeout(() => {
-          if (onAuthSuccess) onAuthSuccess({}, { role: 'super_admin', full_name: email.split('@')[0] });
-          onSelectRole('super_admin');
-        }, 500);
-        return;
-      }
-      if (email === 'admincorp@jagofinance.com' && password === 'password') {
-         setTimeout(() => {
-          if (onAuthSuccess) onAuthSuccess({}, { role: 'admin_corp', full_name: 'Admin Corp' });
-          onSelectRole('admin_corp');
-        }, 500);
-        return;
-      }
-      if (email === 'karyawan@jagofinance.com' && password === 'password') {
-         setTimeout(() => {
-          if (onAuthSuccess) onAuthSuccess({}, { role: 'karyawan', full_name: 'Karyawan' });
-          onSelectRole('karyawan');
-        }, 500);
-        return;
-      }
-
       if (!isSupabase) {
         setTimeout(() => {
           if (email.includes('super')) {
@@ -137,7 +115,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
 
         const profileRole = 'karyawan'; 
         const { error: profileError } = await supabase.from('users').insert([
-          { id: user.id, full_name: fullName, surname: surname, role: profileRole }
+          { id: user.id, full_name: fullName, surname: surname, role: profileRole, company_id: '00000000-0000-0000-0000-000000000001' }
         ]);
 
         if (profileError) throw profileError;

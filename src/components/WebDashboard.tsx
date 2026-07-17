@@ -25,6 +25,7 @@ import SubscriptionsScreen from './web-screens/super-admin/SubscriptionsScreen';
 import BranchManagementScreen from './web-screens/super-admin/BranchManagementScreen';
 import BranchAdminManagementScreen from './web-screens/super-admin/BranchAdminManagementScreen';
 import BroadcastScreen from './web-screens/super-admin/BroadcastScreen';
+import EmployeeManagementScreen from './web-screens/super-admin/EmployeeManagementScreen';
 
 import ProfileScreen from './web-screens/shared/ProfileScreen';
 
@@ -53,6 +54,8 @@ interface WebDashboardProps {
   onInviteEmployee?: (email: string) => Promise<{success: boolean, message: string}>;
   userRole?: 'super_admin' | 'admin_corp' | null;
   onSaveBranch?: (branch: any) => Promise<boolean>;
+  onAddAdmin?: (adminData: any) => Promise<boolean>;
+  admins?: any[];
 }
 
 export default function WebDashboard({
@@ -73,11 +76,13 @@ export default function WebDashboard({
   onLogout,
   onInviteEmployee,
   userRole = 'admin_corp',
-  onSaveBranch
+  onSaveBranch,
+  onAddAdmin,
+  admins
 }: WebDashboardProps) {
 
   // Active Sub-Menu Route within web dashboard
-  const [activeTab, setActiveTab] = useState<'overview' | 'approvals' | 'inbound' | 'integrations' | 'ledger' | 'subscriptions' | 'payroll' | 'profile' | 'branches' | 'broadcast'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'approvals' | 'inbound' | 'integrations' | 'ledger' | 'subscriptions' | 'payroll' | 'employees' | 'profile' | 'branches' | 'broadcast'>('overview');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Search & Filter state variables
@@ -397,6 +402,7 @@ export default function WebDashboard({
                  activeTab === 'ledger' ? 'Buku Kas' :
                  activeTab === 'subscriptions' ? 'Langganan SaaS' :
                  activeTab === 'integrations' ? 'Integrasi Sistem' :
+                 activeTab === 'employees' ? 'Kelola Karyawan' :
                  activeTab === 'payroll' ? 'Manajemen Gaji' :
                  activeTab === 'profile' ? 'Profil Akun' : activeTab}
               </h1>
@@ -545,7 +551,28 @@ export default function WebDashboard({
                   setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
                   averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
                   handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
-                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals, onSaveBranch
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals, onSaveBranch,
+                  onAddAdmin, admins
+                }} />
+              )}
+              {userRole === 'super_admin' && activeTab === 'employees' && (
+                <EmployeeManagementScreen {...{
+                  transactions, cashBalance, employees, connectedApps, subscriptions, branches, onRefreshData,
+                  onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
+                  isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+                  categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
+                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
+                  approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
+                  approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
+                  isDragging, setIsDragging, webhookUrl, setWebhookUrl, webhookGateway, setWebhookGateway,
+                  manualMerchant, setManualMerchant, manualCategory, setManualCategory, manualType, setManualType,
+                  manualAmount, setManualAmount, manualNotes, setManualNotes, manualReceiptBase64, setManualReceiptBase64,
+                  isDraggingManual, setIsDraggingManual, payrollDivision, setPayrollDivision, payrollMessage,
+                  setPayrollMessage, errorMessage, setErrorMessage, totalInflowThisMonth, totalOutflowThisMonth,
+                  averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
+                  handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
+                  handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals
                 }} />
               )}
               {userRole === 'super_admin' && activeTab === 'broadcast' && (
@@ -698,20 +725,26 @@ export default function WebDashboard({
       </div>
 {/* MODAL 1: B-3.2 Persetujuan Split-View Modal */}
       {splitViewTx && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-4xl h-[680px] max-h-[92vh] rounded-3xl shadow-xl overflow-hidden flex flex-col relative animate-in fade-in zoom-in" style={{ animationDuration: '0.2s' }}>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="bg-white/90 backdrop-blur-2xl w-full max-w-5xl h-[720px] max-h-[92vh] rounded-[2.5rem] shadow-2xl shadow-indigo-900/20 overflow-hidden flex flex-col relative animate-in fade-in zoom-in-95" style={{ animationDuration: '0.3s' }}>
             
             {/* Split Modal Head */}
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <div>
-                <span className="text-[9px] uppercase font-bold tracking-widest text-indigo-600">Double-Entry Verification AI</span>
-                <h3 className="font-bold text-sm text-slate-850 font-display">Split-View Persetujuan Reimburse ΓÇó #{splitViewTx.id}</h3>
+            <div className="px-8 py-5 border-b border-slate-200/50 flex justify-between items-center bg-white/50 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-12 h-12 bg-indigo-50 rounded-[1.25rem] flex items-center justify-center border border-indigo-100 text-brand shadow-inner shadow-indigo-100/50">
+                  <ShieldAlert className="w-6 h-6" strokeWidth="2.5" />
+                </div>
+                <div>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand/80 block mb-0.5">Persetujuan Reimburse AI</span>
+                  <h3 className="font-black text-xl text-slate-900 font-display tracking-tight leading-none">Split-View Audit <span className="text-slate-400 font-mono text-lg font-bold ml-1">#{splitViewTx.id}</span></h3>
+                </div>
               </div>
               <button 
                 onClick={() => setSplitViewTx(null)}
-                className="p-1 px-1.5 bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-lg transition-all"
+                className="w-10 h-10 bg-white border border-slate-200 text-slate-400 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 rounded-full flex items-center justify-center transition-all shadow-sm relative z-10 hover:rotate-90"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" strokeWidth="2.5" />
               </button>
             </div>
 
@@ -719,171 +752,168 @@ export default function WebDashboard({
             <div className="flex-1 flex overflow-hidden">
               
               {/* Left Column: Receipt image zoomed */}
-              <div className="w-1/2 bg-slate-100 border-r border-slate-150 p-4 flex flex-col justify-between overflow-y-auto">
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-2 text-center">FOTO STRUK FISIK (DARI PILOT)</span>
+              <div className="w-1/2 bg-slate-50/50 border-r border-slate-200/50 p-6 flex flex-col justify-between overflow-y-auto">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dokumen Struk Fisik</span>
+                  <span className="text-[10px] bg-white border border-slate-200 shadow-sm text-slate-500 px-3 py-1 rounded-full font-black uppercase tracking-wider">Auto-Scanned</span>
+                </div>
                 
-                <div className="flex-1 bg-white rounded-2xl overflow-hidden shadow-2xs border border-slate-200 relative p-1">
+                <div className="flex-1 bg-white rounded-[2rem] overflow-hidden shadow-sm border border-slate-200 relative p-3 group flex items-center justify-center">
                   {splitViewTx.receiptUrl ? (
                     <img 
                       src={splitViewTx.receiptUrl} 
                       alt="Review receipt document" 
-                      className="w-full h-full object-contain rounded-xl"
+                      className="w-full h-full object-contain rounded-[1.5rem] group-hover:scale-[1.02] transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full flex flex-col justify-center items-center text-slate-400 gap-1.5">
-                      <XCircle className="w-8 h-8 opacity-40 text-rose-500" />
-                      <span className="text-[10px] font-semibold text-slate-500">Bukti struk tidak tersedia digital.</span>
+                    <div className="flex flex-col items-center justify-center text-slate-400 gap-3">
+                      <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shadow-inner">
+                        <XCircle className="w-8 h-8 text-slate-300" strokeWidth="2" />
+                      </div>
+                      <span className="text-xs font-black text-slate-500">Struk tidak tersedia</span>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Right Column: AI Extraction Results verification */}
-              <div className="w-1/2 p-6 flex flex-col justify-between overflow-y-auto space-y-4">
+              <div className="w-1/2 p-8 flex flex-col overflow-y-auto space-y-6 bg-white/40">
                 
-                <div className="space-y-3.5">
-                  <div className="p-2.5 bg-indigo-50/50 rounded-xl border border-indigo-100 flex items-start gap-2 text-[10px]">
-                    <Info className="w-4 h-4 text-brand shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold block">Status Scan jagoAI:</span>
+                <div className="space-y-5">
+                  <div className="p-4 bg-gradient-to-r from-indigo-50 to-brand/5 rounded-2xl border border-indigo-100/50 flex items-start gap-3 shadow-sm">
+                    <div className="w-8 h-8 rounded-[0.85rem] bg-white text-brand flex items-center justify-center shrink-0 border border-indigo-100 shadow-sm">
+                      <Info className="w-4 h-4" strokeWidth="2.5" />
+                    </div>
+                    <div className="text-xs text-indigo-900/80 leading-relaxed pt-0.5">
+                      <span className="font-black block text-indigo-950 mb-0.5 text-[13px]">Status Scan Hermes AI</span>
                       Kategori dan pengeluaran berhasil divalidasi keabsahannya tanpa selisih pajak.
                     </div>
                   </div>
 
-                  <div className="space-y-2.5 text-xs">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Merek Toko / Supplier</label>
-                      <span className="font-bold text-slate-850 text-sm block bg-slate-50 p-2 rounded-lg border border-slate-150">{splitViewTx.merchant}</span>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2 relative group">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Merek Toko / Supplier</label>
+                      <div className="font-black text-slate-800 text-sm bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm transition-colors group-hover:border-indigo-200">{splitViewTx.merchant}</div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Tanggal Invoice</label>
-                        <span className="font-bold text-slate-700 block bg-slate-50 p-2 rounded-lg border border-slate-150 font-mono text-[10px]">{splitViewTx.date}</span>
-                      </div>
-                      
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Kategori Pengeluaran</label>
-                        <span className="font-bold text-slate-700 block bg-slate-50 p-2 rounded-lg border border-slate-150">{splitViewTx.category}</span>
-                      </div>
+                    <div className="relative group">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Tanggal Transaksi</label>
+                      <div className="font-bold text-slate-700 bg-white p-3.5 rounded-2xl border border-slate-200 font-mono text-sm shadow-sm transition-colors group-hover:border-indigo-200">{splitViewTx.date}</div>
+                    </div>
+                    
+                    <div className="relative group">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Kategori</label>
+                      <div className="font-bold text-slate-700 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm text-sm truncate transition-colors group-hover:border-indigo-200">{splitViewTx.category}</div>
                     </div>
 
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Rincian Nominal Ganti Rugi (IDR)</label>
-                      <span className="font-bold text-brand font-mono text-base block bg-indigo-50/30 p-2 rounded-lg border border-indigo-20">{splitViewTx.amount.toLocaleString('id-ID')} IDR</span>
+                    <div className="col-span-2 relative">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Nominal Pengajuan (IDR)</label>
+                      <div className="font-black text-brand font-mono text-2xl bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 shadow-inner flex items-center justify-between">
+                        <span>Rp</span>
+                        <span>{splitViewTx.amount.toLocaleString('id-ID')}</span>
+                      </div>
                     </div>
 
                     {splitViewTx.notes && (
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Catatan Pengaju</label>
-                        <span className="block bg-slate-50 p-2 rounded-lg border border-slate-150 italic text-[11px] text-slate-650 leading-relaxed">"{splitViewTx.notes}"</span>
+                      <div className="col-span-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Catatan Pengaju</label>
+                        <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-600 italic leading-relaxed">"{splitViewTx.notes}"</div>
                       </div>
                     )}
                   </div>
-
                   {/* Rincian Rekening Penerima & Bukti Transfer Section */}
-                  <div className="border-t border-slate-150/80 pt-4 space-y-4">
-                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                      <Wallet className="w-4 h-4 text-brand" /> Informasi Rekening & Bukti Transfer
+                  <div className="border-t border-slate-200/60 pt-6 space-y-4">
+                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                        <Wallet className="w-3 h-3 text-slate-600" />
+                      </div>
+                      Transfer & Pencairan
                     </h4>
                     
                     {splitViewTx.status === 'Approved' ? (
-                      // Read-only / Success snapshot for already approved transactions
-                      <div className="space-y-3 text-xs">
-                        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 grid grid-cols-2 gap-3.5">
+                      <div className="space-y-4 text-xs">
+                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-2 gap-4">
                           <div className="col-span-2">
-                            <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Nama Penerima</span>
-                            <span className="font-extrabold text-slate-900 text-[13.5px]">{(employees.find(e => e.id === splitViewTx.employeeId)?.name || "Unknown")}</span>
+                            <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider mb-1">Nama Penerima</span>
+                            <span className="font-black text-slate-900 text-sm">{(employees.find(e => e.id === splitViewTx.employeeId)?.name || "Unknown")}</span>
                           </div>
                           <div>
-                            <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Bank</span>
-                            <span className="font-bold text-slate-800 text-[13px]">{splitViewTx.bankName || '-'}</span>
+                            <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider mb-1">Bank</span>
+                            <span className="font-bold text-slate-800">{splitViewTx.bankName || '-'}</span>
                           </div>
                           <div>
-                            <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Nomor Rekening</span>
-                            <span className="font-bold text-slate-800 font-mono text-[13px]">{splitViewTx.bankAccount || '-'}</span>
+                            <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider mb-1">Nomor Rekening</span>
+                            <span className="font-bold text-slate-800 font-mono text-sm">{splitViewTx.bankAccount || '-'}</span>
                           </div>
                         </div>
                         
                         <div>
-                          <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider mb-1.5">Bukti Transfer Resmi</span>
-                          {false ? (
-                            <div className="border border-slate-150 rounded-2xl overflow-hidden bg-slate-50 relative max-h-48 flex items-center justify-center p-1.5 shadow-3xs">
-                              <img 
-                                src={approveReceiptBase64} 
-                                alt="Transfer Proof" 
-                                className="max-h-40 object-contain rounded-xl hover:scale-[1.02] transition duration-200 cursor-pointer"
-                                onClick={() => {
-                                  const w = window.open();
-                                  if (w) {
-                                    w.document.write(`<img src="${approveReceiptBase64}" style="max-width:100%; height:auto;" />`);
-                                  }
-                                }}
-                              />
-                            </div>
-                          ) : (
-                            <span className="text-slate-450 italic text-[11.5px] block bg-slate-50 p-3 rounded-xl border border-slate-150">Bukti transfer tidak diunggah saat persetujuan ini.</span>
-                          )}
+                          <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider mb-2">Bukti Transfer Resmi</span>
+                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center text-slate-500 font-medium text-xs">
+                            Klaim ini telah disetujui dan dicairkan.
+                          </div>
                         </div>
                       </div>
                     ) : (
                       // Inputs for Pending status
-                      <div className="space-y-4 text-xs">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="col-span-2">
-                            <label className="text-[9px] font-black text-slate-450 uppercase tracking-widest block mb-1">Nama Penerima Rekening</label>
+                      <div className="space-y-5 text-xs">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="col-span-2 relative group">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Penerima Dana</label>
                             <input 
                               type="text"
                               value={approveRecipientName}
                               onChange={(e) => setApproveRecipientName(e.target.value)}
-                              placeholder="Masukkan nama penerima..."
-                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-400 font-bold text-slate-850 focus:bg-white transition-all text-xs"
+                              placeholder="Nama di rekening bank..."
+                              className="w-full p-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 font-bold text-slate-800 transition-all shadow-sm placeholder:text-slate-300"
                             />
                           </div>
-                          <div>
-                            <label className="text-[9px] font-black text-slate-450 uppercase tracking-widest block mb-1">Nama Bank</label>
+                          <div className="relative group">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Nama Bank</label>
                             <input 
                               type="text"
                               value={approveBankName}
                               onChange={(e) => setApproveBankName(e.target.value)}
-                              placeholder="Contoh: BCA, Mandiri"
-                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-400 font-bold text-slate-850 focus:bg-white transition-all text-xs"
+                              placeholder="Contoh: BCA"
+                              className="w-full p-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 font-bold text-slate-800 transition-all shadow-sm placeholder:text-slate-300"
                             />
                           </div>
-                          <div>
-                            <label className="text-[9px] font-black text-slate-450 uppercase tracking-widest block mb-1">Nomor Rekening</label>
+                          <div className="relative group">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">No. Rekening</label>
                             <input 
                               type="text"
                               value={approveBankAccount}
                               onChange={(e) => setApproveBankAccount(e.target.value)}
-                              placeholder="Contoh: 70123849"
-                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-400 font-bold text-slate-850 focus:bg-white transition-all text-xs font-mono"
+                              placeholder="Contoh: 70123"
+                              className="w-full p-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 font-bold text-slate-800 font-mono transition-all shadow-sm placeholder:text-slate-300"
                             />
                           </div>
                         </div>
 
                         {/* Upload Bukti Transfer Widget */}
                         <div className="space-y-2">
-                          <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest block">Unggah Bukti Transfer <span className="text-rose-500 font-medium">*Wajib</span></label>
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-between ml-1">
+                            <span>Unggah Bukti Transfer</span>
+                            <span className="text-[9px] text-rose-500 font-bold bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-full">*Wajib</span>
+                          </label>
                           
                           {approveReceiptBase64 ? (
-                            <div className="border border-indigo-150 bg-indigo-50/20 p-3 rounded-2xl flex items-center justify-between shadow-3xs animate-in fade-in">
+                            <div className="border border-brand bg-indigo-50/50 p-3 rounded-2xl flex items-center justify-between shadow-sm animate-in fade-in">
                               <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 border border-slate-200 rounded-xl bg-white overflow-hidden flex items-center justify-center p-0.5 shrink-0 shadow-3xs">
-                                  <img src={approveReceiptBase64} alt="Preview transfer" className="object-contain w-full h-full rounded" />
+                                <div className="w-12 h-12 bg-white rounded-xl overflow-hidden flex items-center justify-center p-0.5 shrink-0 shadow-sm border border-indigo-100">
+                                  <img src={approveReceiptBase64} alt="Preview transfer" className="object-cover w-full h-full rounded-lg" />
                                 </div>
-                                <div className="leading-snug">
-                                  <span className="font-black text-xs text-slate-800 block truncate max-w-[150px]">Bukti_Transfer_Reimburse.png</span>
-                                  <span className="text-[9px] text-emerald-600 block font-extrabold flex items-center gap-0.5 mt-0.5">
-                                    <Check className="w-3.5 h-3.5 text-emerald-500" /> Berhasil Diunggah
+                                <div>
+                                  <span className="font-black text-xs text-slate-900 block truncate max-w-[150px]">Bukti_Transfer_Reimburse.png</span>
+                                  <span className="text-[10px] text-emerald-600 block font-black flex items-center gap-1 mt-0.5">
+                                    <CheckCircle className="w-3.5 h-3.5" /> Berhasil Diunggah
                                   </span>
                                 </div>
                               </div>
-                              
                               <button 
                                 onClick={() => setApproveReceiptBase64('')}
-                                className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-xl transition-all"
-                                title="Remove File"
+                                className="w-9 h-9 rounded-full bg-white text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all shadow-sm border border-slate-200 hover:border-rose-200"
+                                title="Hapus File"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -893,10 +923,10 @@ export default function WebDashboard({
                               onDragOver={handleDragOver}
                               onDragLeave={handleDragLeave}
                               onDrop={handleDrop}
-                              className={`border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[90px] ${
+                              className={`border-2 border-dashed rounded-[1.5rem] p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-3 group ${
                                 isDragging 
-                                  ? 'border-brand bg-indigo-50/40 scale-[0.99]' 
-                                  : 'border-slate-250 bg-slate-50 hover:bg-slate-100/40 hover:border-slate-300'
+                                  ? 'border-brand bg-indigo-50/50 scale-[0.99]' 
+                                  : 'border-slate-300 bg-white hover:bg-slate-50 hover:border-brand shadow-sm'
                               }`}
                               onClick={() => document.getElementById('approve_transfer_file_input')?.click()}
                             >
@@ -911,11 +941,12 @@ export default function WebDashboard({
                                   }
                                 }}
                               />
-                              <Plus className="w-6 h-6 text-slate-400" />
-                              <div className="text-[10.5px] text-slate-600 font-extrabold leading-tight">
-                                Drag & Drop bukti transfer atau <span className="text-indigo-600 font-black underline">Cari File</span>
+                              <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 group-hover:bg-indigo-50 group-hover:border-indigo-100 group-hover:shadow-inner text-slate-400 group-hover:text-brand flex items-center justify-center transition-all shadow-sm">
+                                <Plus className="w-6 h-6" />
                               </div>
-                              <p className="text-[8.5px] text-slate-400 font-semibold tracking-wide">Mendukung format gambar JPEG, PNG, WEBP (Maksimal 5MB)</p>
+                              <div className="text-xs text-slate-600 font-bold mt-1 leading-snug">
+                                Drag & Drop bukti transfer atau <span className="text-brand block mt-0.5">Cari File dari Perangkat</span>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -925,96 +956,100 @@ export default function WebDashboard({
                 </div>
 
                 {/* Warning warning: safe balance deduction preview */}
-                <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-[10px] space-y-1">
-                  <span className="font-bold text-amber-800 block">ΓÜá∩╕Å Prakiraan Sisa Kas:</span>
-                  <div className="flex justify-between font-mono">
-                    <span>Kas Setelah Pengurangan:</span>
-                    <span className="font-bold">Rp {(cashBalance - splitViewTx.amount).toLocaleString('id-ID')}</span>
+                <div className="mt-4 pt-4 border-t border-slate-200/50">
+                  <div className="bg-amber-50 p-4 rounded-[1.25rem] border border-amber-200 text-xs mb-5 shadow-sm flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                        <AlertTriangle className="w-3.5 h-3.5" strokeWidth="2.5" />
+                      </div>
+                      <span className="font-bold text-amber-900">Sisa Kas Cabang Setelah Pencairan</span>
+                    </div>
+                    <span className="font-black font-mono text-amber-900 text-[13px] bg-white px-3 py-1.5 rounded-lg border border-amber-200 shadow-sm">
+                      Rp {(cashBalance - splitViewTx.amount).toLocaleString('id-ID')}
+                    </span>
+                  </div>
+
+                  {/* Actions area inside modal */}
+                  <div className="flex flex-col sm:flex-row gap-3 w-full">
+                    
+                    {showRejectForm ? (
+                      <div className="w-full bg-rose-50/50 p-4 rounded-2xl border border-rose-200 animate-in slide-in-from-bottom-2">
+                        <label className="text-[10px] font-black text-rose-800 uppercase tracking-widest block mb-2 ml-1">Alasan Penolakan</label>
+                        <input 
+                          type="text" 
+                          required
+                          value={rejectReasonText}
+                          onChange={(e) => setRejectReasonText(e.target.value)}
+                          placeholder="Jelaskan alasan klaim ini ditolak..."
+                          className="w-full p-3.5 text-sm bg-white border border-rose-200 rounded-[1.25rem] outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100 font-medium mb-3 shadow-sm text-slate-800"
+                          id="web_reject_reason_input"
+                        />
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => handleRejectAction(splitViewTx.id)}
+                            className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl transition-all shadow-lg shadow-rose-600/20"
+                            id="web_reject_confirm_btn"
+                          >
+                            Konfirmasi Tolak
+                          </button>
+                          <button 
+                            onClick={() => setShowRejectForm(false)}
+                            className="py-3 px-5 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded-xl text-xs font-black transition-colors shadow-sm"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {splitViewTx.status === 'Pending' ? (
+                          <>
+                            <button 
+                              disabled={!approveReceiptBase64 || isSubmittingApproval}
+                              onClick={() => {
+                                if (!approveReceiptBase64) {
+                                  alert("Harap unggah bukti transfer terlebih dahulu untuk memproses persetujuan.");
+                                  return;
+                                }
+                                handleApproveAction(
+                                  splitViewTx.id,
+                                  approveRecipientName,
+                                  approveBankName,
+                                  approveBankAccount,
+                                  approveReceiptBase64
+                                );
+                              }}
+                              className={`flex-1 py-3.5 text-white font-black text-sm rounded-[1.25rem] shadow-sm transition-all flex items-center justify-center gap-2 group ${
+                                approveReceiptBase64 && !isSubmittingApproval
+                                  ? 'bg-gradient-to-r from-brand to-indigo-600 hover:shadow-lg hover:shadow-indigo-600/20 hover:-translate-y-0.5 cursor-pointer' 
+                                  : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                              }`}
+                              id="web_approve_btn"
+                            >
+                              <CheckCircle className="w-5 h-5 shrink-0" strokeWidth="2.5" />
+                              {isSubmittingApproval ? "Memproses..." : "Approve & Cairkan"}
+                            </button>
+                            <button 
+                              disabled={isSubmittingApproval}
+                              onClick={() => setShowRejectForm(true)}
+                              className="py-3.5 px-6 bg-white border-2 border-slate-200 text-slate-500 font-black text-sm rounded-[1.25rem] hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 transition-all disabled:opacity-40"
+                              id="web_reject_btn"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        ) : (
+                          <div className="w-full text-center text-sm py-4 bg-slate-50 rounded-2xl text-slate-500 font-black border border-slate-200">
+                            Status Klaim: {splitViewTx.status}
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
 
-                {/* Actions area inside modal */}
-                <div className="pt-2 border-t border-slate-100 flex gap-3">
-                  
-                  {showRejectForm ? (
-                    <div className="w-full space-y-2">
-                      <input 
-                        type="text" 
-                        required
-                        value={rejectReasonText}
-                        onChange={(e) => setRejectReasonText(e.target.value)}
-                        placeholder="Tuliskan alasan penolakan secara jelas..."
-                        className="w-full p-2 text-xs bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-rose-400"
-                        id="web_reject_reason_input"
-                      />
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => handleRejectAction(splitViewTx.id)}
-                          className="flex-1 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] rounded-lg transition"
-                          id="web_reject_confirm_btn"
-                        >
-                          Konfirmasi Tolak
-                        </button>
-                        <button 
-                          onClick={() => setShowRejectForm(false)}
-                          className="py-1.5 px-3 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-bold"
-                        >
-                          Ubah Pikiran
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      {splitViewTx.status === 'Pending' ? (
-                        <>
-                          <button 
-                            disabled={!approveReceiptBase64 || isSubmittingApproval}
-                            onClick={() => {
-                              if (!approveReceiptBase64) {
-                                alert("Harap unggah bukti transfer (Bukti Transfer) terlebih dahulu untuk memproses persetujuan.");
-                                return;
-                              }
-                              handleApproveAction(
-                                splitViewTx.id,
-                                approveRecipientName,
-                                approveBankName,
-                                approveBankAccount,
-                                approveReceiptBase64
-                              );
-                            }}
-                            className={`flex-1 py-2.5 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 ${
-                              approveReceiptBase64 && !isSubmittingApproval
-                                ? 'bg-brand hover:opacity-95 hover:scale-[1.01] active:scale-[0.99] cursor-pointer' 
-                                : 'bg-slate-350 cursor-not-allowed opacity-60'
-                            }`}
-                            id="web_approve_btn"
-                          >
-                            <CheckCircle className="w-4 h-4 shrink-0" />
-                            {isSubmittingApproval ? "Memproses..." : "Approve & Cairkan Dana"}
-                          </button>
-                          <button 
-                            disabled={isSubmittingApproval}
-                            onClick={() => setShowRejectForm(true)}
-                            className="py-2.5 px-4 bg-rose-50 text-rose-700 font-extrabold text-xs sm:text-sm rounded-xl hover:bg-rose-100 hover:text-rose-800 transition disabled:opacity-40"
-                            id="web_reject_btn"
-                          >
-                            Reject
-                          </button>
-                        </>
-                      ) : (
-                        <div className="w-full text-center text-xs py-2 bg-slate-100 rounded-xl text-slate-500 font-bold block">
-                          Tindakan terkunci ΓÇó Status klaim ini adalah {splitViewTx.status}
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                </div>
-
               </div>
-
             </div>
-
           </div>
         </div>
       )}

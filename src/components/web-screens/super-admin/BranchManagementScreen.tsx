@@ -14,12 +14,12 @@ export default function BranchManagementScreen(props: WebScreenProps) {
 
   const [showModal, setShowModal] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
-  const [formData, setFormData] = useState({ name: '', location: '', managerName: '', status: 'active' });
+  const [formData, setFormData] = useState({ name: '', location: '', status: 'active' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const openCreateModal = () => {
     setEditingBranch(null);
-    setFormData({ name: '', location: '', managerName: '', status: 'active' });
+    setFormData({ name: '', location: '', status: 'active' });
     setShowModal(true);
   };
 
@@ -28,7 +28,6 @@ export default function BranchManagementScreen(props: WebScreenProps) {
     setFormData({ 
       name: branch.name, 
       location: branch.location, 
-      managerName: branch.managerName, 
       status: branch.status 
     });
     setShowModal(true);
@@ -107,9 +106,7 @@ export default function BranchManagementScreen(props: WebScreenProps) {
               </div>
               
               <h3 className="text-xl font-bold font-display text-slate-800 mb-1">{branch.name}</h3>
-              <p className="text-sm text-slate-500 font-medium mb-6 flex items-center gap-2">
-                <Briefcase className="w-4 h-4 text-slate-400" /> Manajer: {branch.managerName}
-              </p>
+              <p className="text-sm text-slate-500 font-medium mb-6">{branch.location}</p>
 
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
@@ -180,18 +177,6 @@ export default function BranchManagementScreen(props: WebScreenProps) {
                   onChange={e => setFormData({...formData, name: e.target.value})}
                   className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-[15px] font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition-all"
                   placeholder="Mis. Cabang Jakarta Pusat"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-2 block">Nama Manajer</label>
-                <input 
-                  type="text"
-                  required
-                  value={formData.managerName}
-                  onChange={e => setFormData({...formData, managerName: e.target.value})}
-                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-[15px] font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition-all"
-                  placeholder="Mis. John Doe"
                 />
               </div>
 

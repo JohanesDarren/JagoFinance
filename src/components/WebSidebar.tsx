@@ -129,7 +129,8 @@ export default function WebSidebar({
             {[
               { id: 'inbound', icon: TrendingUp, label: 'Uang Masuk (All)', color: 'text-[#1800ad]', activeBg: 'bg-emerald-500' },
               { id: 'ledger', icon: BookOpen, label: 'Buku Kas Lintas Cabang', color: 'text-[#1800ad]', activeBg: 'bg-indigo-500' },
-              { id: 'payroll', icon: Users, label: 'Karyawan Lintas Cabang', color: 'text-[#1800ad]', activeBg: 'bg-amber-500' },
+              { id: 'employees', icon: Users, label: 'Kelola Karyawan', color: 'text-[#1800ad]', activeBg: 'bg-blue-500' },
+              { id: 'payroll', icon: BookOpen, label: 'Payroll Massal', color: 'text-[#1800ad]', activeBg: 'bg-amber-500' },
               { id: 'broadcast', icon: MessageSquare, label: 'Broadcast Pengumuman', color: 'text-[#1800ad]', activeBg: 'bg-sky-500' },
             ].map((item) => (
               <button 

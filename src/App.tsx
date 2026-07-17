@@ -55,6 +55,7 @@ export default function App() {
   const [connectedApps, setConnectedApps] = useState<ConnectedApp[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [admins, setAdmins] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
@@ -146,7 +147,6 @@ export default function App() {
           const { data: brnchs } = await supabase
             .from('branches')
             .select('*');
-          
           if (brnchs && brnchs.length > 0) {
             setBranches(brnchs.map((b: any) => ({
               id: b.id,
@@ -158,6 +158,14 @@ export default function App() {
           } else {
             setBranches(DUMMY_BRANCHES);
           }
+
+          // Fetch admin_corp users
+          const { data: adminsData } = await supabase
+            .from('users')
+            .select('*')
+            .eq('role', 'admin_corp');
+          setAdmins(adminsData || []);
+
 
           setIsLoading(false);
           setIsRefreshing(false);
@@ -411,6 +419,48 @@ export default function App() {
     } catch (err: any) {
       console.error(err);
       return { success: false, error: 'Koneksi gagal', message: err.message };
+    }
+  };
+
+  const handleAddAdmin = async (adminData: any): Promise<boolean> => {
+    if (!isSupabaseConfigured()) return true;
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const { SERVICE_ROLE_KEY } = await import('./adminKey');
+      const serviceKey = SERVICE_ROLE_KEY;
+      if (!serviceKey) throw new Error("Service role key not configured");
+      
+      const supabaseAdmin = createClient(import.meta.env.VITE_SUPABASE_URL, serviceKey, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      });
+
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: adminData.email,
+        password: adminData.password,
+        email_confirm: true,
+      });
+
+      if (authError) throw authError;
+      const userId = authData.user?.id;
+      if (!userId) throw new Error("No user ID returned");
+
+      const { error: dbError } = await supabaseAdmin.from('users').insert([{
+        id: userId,
+        full_name: adminData.name,
+        email: adminData.email,
+        role: 'admin_corp',
+        company_id: profile?.company_id,
+        branch_id: adminData.branchId
+      }]);
+
+      if (dbError) throw dbError;
+      
+      // Refresh to update admin list
+      await fetchFinancialData(true);
+      return true;
+    } catch (e: any) {
+      console.error("Add Admin Error:", e.message);
+      return false;
     }
   };
 
@@ -722,6 +772,7 @@ export default function App() {
             connectedApps={connectedApps}
             subscriptions={subscriptions}
             branches={branches}
+            admins={admins}
             onRefreshData={() => fetchFinancialData(true)}
             onApprove={handleApproveReimbursement}
             onReject={handleRejectReimbursement}
@@ -733,6 +784,7 @@ export default function App() {
             isLoading={isLoading}
             onLogout={handleLogout}
             onInviteEmployee={handleInviteEmployee}
+            onAddAdmin={handleAddAdmin}
             userRole={profile?.role as 'super_admin' | 'admin_corp' | null}
           />
         </div>
