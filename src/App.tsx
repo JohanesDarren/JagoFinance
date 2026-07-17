@@ -798,18 +798,8 @@ export default function App() {
           />
         </div>
       ) : (
-        /* Render Mobile App inside Simulated iPhone Layout block frame centered full-view */
-        <div className="w-full h-screen flex flex-col items-center justify-center bg-slate-900 relative">
-          
-          {/* Elegant Floating Sign Out button */}
-          <button
-            onClick={handleLogout}
-            className="absolute top-6 left-6 z-40 flex items-center gap-2 bg-slate-800/80 hover:bg-slate-800 text-slate-100 hover:text-white text-xs font-bold p-3 px-5 rounded-2xl border border-slate-700 shadow-lg backdrop-blur-md transition-all active:scale-[0.98]"
-          >
-            <ArrowLeft className="w-4 h-4 shrink-0" />
-            <span>Kembali ke Pilihan Portal (Logout)</span>
-          </button>
-
+        /* Render Web App for Karyawan (formerly Mobile Simulator) */
+        <div className="w-full h-screen flex flex-col bg-slate-50 overflow-hidden">
           <MobileAppSimulator 
             transactions={transactions}
             cashBalance={cashBalance}

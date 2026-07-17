@@ -339,34 +339,14 @@ export default function MobileAppSimulator({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center py-6 px-2 lg:px-4">
+    <div className="flex flex-col items-center justify-center w-full h-full bg-slate-50">
       
-      {/* Smartphone frame container */}
-      <div className="relative w-[360px] h-[720px] bg-slate-900 rounded-[48px] iphone-bezel p-[11px] overflow-hidden select-none border-[3px] border-slate-800">
-        
-        {/* Notch simulation */}
-        <div className="absolute top-[16px] left-1/2 transform -translate-x-1/2 w-[110px] h-[25px] bg-slate-900 rounded-full z-50 flex items-center justify-between px-3">
-          <div className="w-2.5 h-2.5 rounded-full bg-slate-800"></div>
-          <div className="w-12 h-1 rounded-full bg-slate-800"></div>
-          <div className="w-1.5 h-1.5 rounded-full bg-blue-950"></div>
-        </div>
-
-        {/* Smartphone Shell Content */}
-        <div className="w-full h-full bg-[#f8f9fe] rounded-[38px] overflow-hidden flex flex-col relative text-slate-800 font-sans">
-          
-          {/* Top Status Bar (Time, Wifi, Battery) */}
-          <div className="h-10 pt-4 px-6 flex justify-between items-center text-[11px] font-semibold text-slate-600 bg-[#f8f9fe] z-40">
-            <span>15:09 GMT</span>
-            <div className="flex items-center gap-1.5">
-              <span>LTE</span>
-              <div className="w-4 h-2 border border-slate-600 rounded-sm p-0.5 flex items-center">
-                <div className="w-2 h-full bg-slate-600 rounded-2xs"></div>
-              </div>
-            </div>
-          </div>
+      {/* Main Web App container (responsive) */}
+      <div className="relative w-full max-w-7xl mx-auto h-full bg-[#f8f9fe] md:shadow-2xl overflow-hidden flex flex-col text-slate-800 font-sans md:border-x border-slate-200">
 
           {/* Screen Switcher */}
-          <div className="flex-1 overflow-y-auto pb-16 flex flex-col">
+          <div className="flex-1 overflow-y-auto pb-20 flex flex-col items-center">
+            <div className="w-full max-w-5xl mx-auto h-full flex flex-col">
             
             {/* SCREEN 1: LOGIN (AUTH) */}
             {currentScreen === 'auth' && (
@@ -559,11 +539,12 @@ export default function MobileAppSimulator({
                 </button>
               </div>
             )}
+            </div>
           </div>
 
-          {/* Bottom Native Smartphone App Bar Navigation (Only when logged) */}
+          {/* Bottom Native Web App Bar Navigation (Only when logged) */}
           {isLogged && currentScreen !== 'unassigned' && (
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-150 rounded-b-[38px] px-10 flex justify-between items-center z-40">
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-150 px-10 flex justify-between items-center z-40">
               <button 
                 onClick={() => {
                   setCurrentScreen('home');
@@ -571,14 +552,14 @@ export default function MobileAppSimulator({
                 }}
                 className={`flex flex-col items-center gap-0.5 ${currentScreen === 'home' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'}`}
               >
-                <CreditCard className="w-4 h-4" />
-                <span className="text-[8px] font-bold">Home</span>
+                <CreditCard className="w-5 h-5" />
+                <span className="text-[10px] font-bold mt-1">Home</span>
               </button>
 
               {/* Central Floating Camera quick action */}
               <button 
                 onClick={() => handleOpenScanner('reimburse')}
-                className="w-10 h-10 -mt-6 bg-brand text-white rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-md shadow-brand/40 z-50 border-2 border-white"
+                className="w-12 h-12 -mt-6 bg-brand text-white rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-lg shadow-brand/40 z-50 border-[3px] border-[#f8f9fe]"
               >
                 <Camera className="w-5 h-5" />
               </button>
@@ -590,56 +571,56 @@ export default function MobileAppSimulator({
                 }}
                 className={`flex flex-col items-center gap-0.5 ${currentScreen === 'profile' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'}`}
               >
-                <User className="w-4 h-4" />
-                <span className="text-[8px] font-bold">Profil</span>
+                <User className="w-5 h-5" />
+                <span className="text-[10px] font-bold mt-1">Profil</span>
               </button>
             </div>
           )}
 
-          {/* PAYWALL OVERLAY DI DALAM HP */}
+          {/* PAYWALL OVERLAY DI DALAM WEB APP */}
           {showPaywall && (
-            <div className="absolute inset-0 bg-slate-950 z-50 flex flex-col justify-between p-6 text-white select-none rounded-[38px]">
+            <div className="absolute inset-0 bg-slate-950 z-50 flex flex-col justify-between p-6 text-white select-none">
               <div className="flex justify-between items-center mt-4">
-                <span className="text-[9px] bg-amber-500/20 text-amber-400 font-extrabold tracking-widest px-2.5 py-1 rounded-md uppercase">PRO FEATURE</span>
+                <span className="text-[10px] bg-amber-500/20 text-amber-400 font-extrabold tracking-widest px-2.5 py-1 rounded-md uppercase">PRO FEATURE</span>
                 <button 
                   onClick={() => setShowPaywall(false)}
                   className="p-1.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="space-y-4 my-auto text-center">
                 <div className="inline-flex p-4 bg-indigo-600/20 text-indigo-400 rounded-3xl animate-pulse">
-                  <Sparkles className="w-9 h-9" />
+                  <Sparkles className="w-12 h-12" />
                 </div>
-                <h3 className="text-base font-black tracking-tight font-display text-white">Upgrade ke Jago Finance Pro</h3>
-                <p className="text-[10px] text-slate-400 leading-relaxed max-w-xs mx-auto">
+                <h3 className="text-xl font-black tracking-tight font-display text-white">Upgrade ke Jago Finance Pro</h3>
+                <p className="text-sm text-slate-400 leading-relaxed max-w-sm mx-auto">
                   Klaim pengeluaran instan dengan <strong>Hermes AI OCR Scanner</strong>. Foto struk belanjamu, AI akan mengisi nominal, merchant, dan kategori otomatis.
                 </p>
 
-                <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-2xl space-y-2 text-left text-[10px]">
+                <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-2xl space-y-3 text-left text-sm max-w-sm mx-auto">
                   <div className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>1,000 scans AI receipt per bulan</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>Kecepatan OCR &lt; 5 detik</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>Auto-kategori akuntansi pintar</span>
                   </div>
                 </div>
 
-                <div className="py-1">
-                  <span className="text-xl font-black font-mono">Rp 240.000</span>
-                  <span className="text-[9px] text-slate-400 font-bold"> / bulan</span>
+                <div className="py-2">
+                  <span className="text-2xl font-black font-mono">Rp 240.000</span>
+                  <span className="text-xs text-slate-400 font-bold"> / bulan</span>
                 </div>
               </div>
 
-              <div className="space-y-2 mb-4">
+              <div className="space-y-2 mb-4 max-w-sm mx-auto w-full">
                 <button 
                   onClick={async () => {
                     try {
@@ -662,23 +643,17 @@ export default function MobileAppSimulator({
                       alert("Gagal melakukan upgrade.");
                     }
                   }}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
+                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
                 >
                   <span>Upgrade ke Pro (Simulasi)</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-4 h-4" />
                 </button>
-                <p className="text-[8px] text-slate-500 text-center font-medium">Batal kapan saja • Uji coba bebas risiko 7 hari</p>
+                <p className="text-xs text-slate-500 text-center font-medium">Batal kapan saja • Uji coba bebas risiko 7 hari</p>
               </div>
             </div>
           )}
-
-          {/* Smartphone Bezel Bottom Handle overlay */}
-          <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-[110px] h-1.5 bg-slate-900 rounded-full z-50"></div>
-
         </div>
       </div>
-
-    </div>
   );
 }
 
