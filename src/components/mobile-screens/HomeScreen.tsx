@@ -1,5 +1,5 @@
-import React from 'react';
-import { Bell, Camera, CreditCard, AlertCircle } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Bell, Camera, CreditCard, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { Transaction } from '../../types';
 
 interface HomeScreenProps {
@@ -11,7 +11,9 @@ interface HomeScreenProps {
   staffTransactions: Transaction[];
   setCurrentScreen: (screen: any) => void;
   handleOpenScanner: (type: 'reimburse' | 'cash_advance') => void;
+  handleOpenForm?: (type: 'reimburse' | 'cash_advance', imageBase64?: string, imageName?: string) => void;
   handleOpenDetail: (tx: Transaction) => void;
+  avatarUrl?: string;
 }
 
 export default function HomeScreen({
@@ -23,8 +25,26 @@ export default function HomeScreen({
   staffTransactions,
   setCurrentScreen,
   handleOpenScanner,
-  handleOpenDetail
+  handleOpenForm,
+  handleOpenDetail,
+  avatarUrl
 }: HomeScreenProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64Data = reader.result as string;
+      if (handleOpenForm) {
+        handleOpenForm('reimburse', base64Data, file.name);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="p-4 md:p-8 space-y-6 pb-24 h-full overflow-y-auto bg-slate-50 relative w-full">
       
@@ -36,11 +56,13 @@ export default function HomeScreen({
         <div className="flex justify-between items-center relative z-10">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <img 
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" 
-                alt="Profile avatar" 
-                className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-white shadow-sm object-cover"
-              />
+              <button onClick={() => setCurrentScreen('profile')} className="rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden active:scale-95 transition-transform">
+                <img 
+                  src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"} 
+                  alt="Profile" 
+                  className="w-12 h-12 md:w-16 md:h-16 object-cover"
+                />
+              </button>
               <div className="absolute bottom-0 right-0 w-3.5 h-3.5 md:w-4 md:h-4 bg-emerald-500 rounded-full border-2 border-white"></div>
             </div>
             <div>
@@ -91,35 +113,30 @@ export default function HomeScreen({
             </div>
           </div>
 
-          {/* Quick Action Buttons (Reimburse & Cash Advance) */}
-          <div className="grid grid-cols-2 gap-4 relative z-10">
+          {/* Single Hero Action Button (Reimburse Only) */}
+          <div className="relative z-10 mt-6">
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={onFileChange} 
+              className="hidden" 
+              accept="image/*" 
+            />
             <button 
-              onClick={() => handleOpenScanner('reimburse')}
-              className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-lg hover:border-brand transition-all text-left flex flex-col justify-between h-full min-h-[140px] relative overflow-hidden group"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full bg-gradient-to-br from-white to-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-indigo-900/5 hover:shadow-2xl hover:shadow-indigo-900/10 hover:-translate-y-1 transition-all text-left flex items-center gap-6 group overflow-hidden"
               id="mobile_action_reimburse"
             >
-              <div className="absolute -right-4 -top-4 w-16 h-16 bg-indigo-50 rounded-full group-hover:bg-indigo-100 transition-colors"></div>
-              <div className="p-2 bg-indigo-50 text-brand rounded-xl w-max mb-1 relative z-10">
-                <Camera className="w-5 h-5 md:w-6 md:h-6" />
+              <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-indigo-50/80 to-transparent pointer-events-none"></div>
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all"></div>
+              
+              <div className="p-4 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-2xl shadow-lg shadow-indigo-600/30 relative z-10 group-hover:scale-110 transition-transform duration-300">
+                <ImageIcon className="w-8 h-8" />
               </div>
-              <div className="relative z-10">
-                <span className="font-black text-sm md:text-base text-slate-800 block leading-snug">Reimburse</span>
-                <span className="text-[10px] md:text-xs text-slate-500 font-medium mt-1 md:mt-2 block">Scan struk instan</span>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleOpenScanner('cash_advance')}
-              className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-lg hover:border-brand transition-all text-left flex flex-col justify-between h-full min-h-[140px] relative overflow-hidden group"
-              id="mobile_action_cashadvance"
-            >
-              <div className="absolute -right-4 -top-4 w-16 h-16 bg-violet-50 rounded-full group-hover:bg-violet-100 transition-colors"></div>
-              <div className="p-2 bg-violet-50 text-violet-700 rounded-xl w-max mb-1 relative z-10">
-                <CreditCard className="w-5 h-5 md:w-6 md:h-6" />
-              </div>
-              <div className="relative z-10">
-                <span className="font-black text-sm md:text-base text-slate-800 block leading-snug">Cash Advance</span>
-                <span className="text-[10px] md:text-xs text-slate-500 font-medium mt-1 md:mt-2 block">Pinjaman kas muka</span>
+              
+              <div className="relative z-10 flex-1">
+                <span className="font-black text-xl text-slate-800 block leading-tight mb-1">Ajukan Reimburse</span>
+                <span className="text-sm text-slate-500 font-medium">Upload bukti struk / nota</span>
               </div>
             </button>
           </div>
@@ -183,8 +200,8 @@ export default function HomeScreen({
         <div className="bg-indigo-50 border border-indigo-100 p-4 md:p-5 rounded-2xl text-xs md:text-sm text-brand flex items-start gap-3 mt-4">
           <div className="w-5 h-5 mt-0.5 shrink-0 bg-indigo-200 rounded-full flex items-center justify-center text-xs text-indigo-700 font-bold">i</div>
           <div className="leading-relaxed">
-            <span className="font-bold block mb-1">Integrasi Scanner AI</span>
-            Gunakan kamera untuk mengambil foto struk cetak. AI JagoFinance akan mendeteksi kategori dan total tagihan tanpa salah ketik secara otomatis.
+            <span className="font-bold block mb-1">Pengajuan Cepat</span>
+            Upload foto struk atau nota dari galeri Anda. Pastikan foto terlihat jelas agar proses verifikasi reimburse lebih cepat.
           </div>
         </div>
       </div>

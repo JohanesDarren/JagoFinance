@@ -38,8 +38,8 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
         number: /[0-9]/.test(invitePassword),
         noSpace: invitePassword.length > 0 && !/\s/.test(invitePassword),
         notNameEmail: invitePassword.length > 0 && 
-                      (!inviteEmail || !invitePassword.toLowerCase().includes(inviteEmail.split('@')[0].toLowerCase())) && 
-                      (!inviteName || !invitePassword.toLowerCase().includes(inviteName.split(' ')[0].toLowerCase()))
+                      (!inviteEmail || !invitePassword?.toLowerCase().includes(inviteEmail.split('@')[0]?.toLowerCase())) && 
+                      (!inviteName || !invitePassword?.toLowerCase().includes(inviteName.split(' ')[0]?.toLowerCase()))
       });
     }
   }, [invitePassword, inviteEmail, inviteName, showInviteModal]);

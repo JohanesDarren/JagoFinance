@@ -9,6 +9,8 @@ interface DetailScreenProps {
   setCurrentScreen: (screen: any) => void;
   zoomReceipt: boolean;
   setZoomReceipt: (zoom: boolean) => void;
+  onEditClick?: (tx: Transaction) => void;
+  onDeleteClick?: (tx: Transaction) => void;
 }
 
 export default function DetailScreen({
@@ -16,7 +18,9 @@ export default function DetailScreen({
   setSelectedTx,
   setCurrentScreen,
   zoomReceipt,
-  setZoomReceipt
+  setZoomReceipt,
+  onEditClick,
+  onDeleteClick
 }: DetailScreenProps) {
   return (
     <div className="p-4 space-y-4">
@@ -156,6 +160,29 @@ export default function DetailScreen({
           </div>
         </div>
       </div>
+
+      {/* ACTION BUTTONS (Ubah / Hapus) HANYA JIKA PENDING */}
+      {selectedTx.status === 'Pending' && (
+        <div className="flex gap-3 pt-2">
+          <button 
+            onClick={() => {
+              if (onEditClick) onEditClick(selectedTx);
+            }}
+            className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-xs hover:bg-slate-50 transition-all text-center flex items-center justify-center gap-1.5"
+          >
+            Ubah
+          </button>
+          
+          <button 
+            onClick={() => {
+              if (onDeleteClick) onDeleteClick(selectedTx);
+            }}
+            className="flex-1 py-3 bg-rose-50 border border-rose-100 text-rose-600 font-bold text-xs rounded-xl shadow-xs hover:bg-rose-100 transition-all text-center flex items-center justify-center gap-1.5"
+          >
+            Hapus
+          </button>
+        </div>
+      )}
 
     </div>
   );

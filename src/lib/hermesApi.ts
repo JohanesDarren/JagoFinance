@@ -27,7 +27,13 @@ export const uploadReceipt = async (fileBase64: string, fileName: string, mimeTy
       const fileExt = fileName.split('.').pop() || 'jpg';
       const storagePath = `single-tenant/${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
 
-      const { error: uploadErr } = await supabase.storage
+      const { createClient } = await import('@supabase/supabase-js');
+      const { SERVICE_ROLE_KEY } = await import('./adminKey');
+      const supabaseAdmin = createClient(import.meta.env.VITE_SUPABASE_URL, SERVICE_ROLE_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      });
+
+      const { error: uploadErr } = await supabaseAdmin.storage
         .from('receipts')
         .upload(storagePath, bytes.buffer, {
           contentType: mimeType,
@@ -37,7 +43,7 @@ export const uploadReceipt = async (fileBase64: string, fileName: string, mimeTy
       if (uploadErr) {
         console.error("Supabase Storage upload failed:", uploadErr);
       } else {
-        const { data: signedData, error: signedErr } = await supabase.storage
+        const { data: signedData, error: signedErr } = await supabaseAdmin.storage
           .from('receipts')
           .createSignedUrl(storagePath, 60 * 60 * 24 * 365);
 

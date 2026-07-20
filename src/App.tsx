@@ -44,7 +44,7 @@ export default function App() {
     status: dbTx.status === 'approved' ? 'Approved' : dbTx.status === 'rejected' ? 'Rejected' : 'Pending',
     receiptUrl: dbTx.receipt_url || '',
     type: dbTx.type,
-    employeeId: dbTx.employee_id || ''
+    employeeId: dbTx.created_by || ''
   });
 
   const mapEmployeeFromDb = (dbEmp: any): Employee => ({
@@ -56,6 +56,9 @@ export default function App() {
     salary: Number(dbEmp.base_salary || dbEmp.salary || 0),
     bankAccount: dbEmp.bank_account || '',
     bankName: dbEmp.bank_name || '',
+    bank_passbook_url: dbEmp.bank_passbook_url,
+    bank_account_holder: dbEmp.bank_account_holder,
+    bank_validated: dbEmp.bank_validated,
     companyId: dbEmp.company_id || null
   });
 
@@ -179,6 +182,12 @@ export default function App() {
 
     // Check initial auth session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      // If we are recovering password, don't auto-login to dashboard
+      if (window.location.hash === '#recovery') {
+        setIsLoading(false);
+        return;
+      }
+      
       setSession(session);
       if (session?.user) {
         fetchFinancialData();
@@ -189,6 +198,12 @@ export default function App() {
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Prevent redirecting to dashboard while verifying OTP for password recovery
+      if (window.location.hash === '#recovery' || event === 'PASSWORD_RECOVERY') {
+        window.location.hash = 'recovery';
+        return;
+      }
+
       setSession(session);
       if (session?.user) {
         fetchFinancialData(true);
@@ -472,26 +487,44 @@ export default function App() {
         auth: { persistSession: false, autoRefreshToken: false }
       });
 
+      let userId = '';
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: adminData.email,
         password: adminData.password,
         email_confirm: true,
       });
 
-      if (authError) throw authError;
-      const userId = authData.user?.id;
-      if (!userId) throw new Error("No user ID returned");
+      if (authError) {
+        if (authError.message.includes('already been registered') || authError.status === 422) {
+          const { data: existingUser, error: findError } = await supabaseAdmin.from('users').select('id').eq('email', adminData.email).single();
+          if (findError || !existingUser) throw new Error('Email sudah terdaftar tetapi tidak ditemukan di database profil.');
+          
+          userId = existingUser.id;
+          
+          const { error: updateError } = await supabaseAdmin.from('users').update({
+            role: 'admin_corp',
+            company_id: adminData.companyId || profile?.company_id,
+            full_name: adminData.name
+          }).eq('id', userId);
+          
+          if (updateError) throw updateError;
+        } else {
+          throw authError;
+        }
+      } else {
+        userId = authData.user?.id;
+        if (!userId) throw new Error("No user ID returned");
 
-      const { error: dbError } = await supabaseAdmin.from('users').insert([{
-        id: userId,
-        full_name: adminData.name,
-        email: adminData.email,
-        role: 'admin_corp',
-        company_id: adminData.companyId || profile?.company_id
-      }]);
+        const { error: dbError } = await supabaseAdmin.from('users').insert([{
+          id: userId,
+          full_name: adminData.name,
+          email: adminData.email,
+          role: 'admin_corp',
+          company_id: adminData.companyId || profile?.company_id
+        }]);
+        if (dbError) throw dbError;
+      }
 
-      if (dbError) throw dbError;
-      
       // Refresh to update admin list
       await fetchFinancialData(true);
       return true;

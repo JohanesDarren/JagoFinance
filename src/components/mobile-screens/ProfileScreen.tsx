@@ -9,6 +9,7 @@ interface ProfileScreenProps {
   setSelectedTx: (tx: Transaction | null) => void;
   onLogout?: () => void;
   setIsLogged: (logged: boolean) => void;
+  avatarUrl?: string;
 }
 
 export default function ProfileScreen({
@@ -17,7 +18,8 @@ export default function ProfileScreen({
   setCurrentScreen,
   setSelectedTx,
   onLogout,
-  setIsLogged
+  setIsLogged,
+  avatarUrl
 }: ProfileScreenProps) {
   return (
     <div className="p-4 space-y-4 pb-24 h-full overflow-y-auto bg-slate-50/50">
@@ -32,7 +34,7 @@ export default function ProfileScreen({
         
         <div className="relative z-10 pt-2">
           <img 
-            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" 
+            src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"} 
             alt="Avatar profile large" 
             className="w-20 h-20 rounded-full border-[3px] border-white shadow-md object-cover"
           />

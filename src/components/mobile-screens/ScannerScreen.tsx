@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Camera, Image } from 'lucide-react';
+import { ArrowLeft, Camera, Image, RefreshCcw, Circle } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ScannerScreenProps {
@@ -61,16 +61,16 @@ export default function ScannerScreen({
       </div>
 
       {/* Camera Controller buttons */}
-      <div className="p-4 bg-slate-950 space-y-3 z-20 text-white border-t border-slate-900">
-
-        {/* Manual file upload & Capture triggers */}
-        <div className="flex gap-3 pt-2">
+      <div className="p-8 bg-slate-950/90 backdrop-blur-xl z-20 text-white border-t border-slate-900 pb-12">
+        <div className="flex items-center justify-between max-w-sm mx-auto">
+          
+          {/* Gallery Button */}
           <button 
             onClick={() => fileInputRef.current?.click()}
-            className="flex-1 py-2 bg-slate-900 border border-slate-800 text-[10px] text-slate-300 rounded-xl hover:bg-slate-800 font-semibold flex items-center justify-center gap-1.5"
+            className="w-12 h-12 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-full flex items-center justify-center transition-all shadow-lg backdrop-blur-md"
+            title="Unggah dari Galeri"
           >
-            <Image className="w-3.5 h-3.5" />
-            <span>Unggah dari Galeri</span>
+            <Image className="w-5 h-5" />
           </button>
           
           <input 
@@ -80,6 +80,28 @@ export default function ScannerScreen({
             className="hidden" 
             onChange={handleFileUpload}
           />
+
+          {/* Shutter Button (Mock Capture) */}
+          <button 
+            onClick={() => {
+              // Simulasi jepret -> Buka file picker karena kita di browser
+              fileInputRef.current?.click();
+            }}
+            className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center p-1 border-4 border-slate-700/50 hover:border-slate-500 transition-all active:scale-95"
+            title="Jepret Foto"
+          >
+            <div className="w-full h-full bg-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.4)]">
+              {/* Optional inner icon or empty */}
+            </div>
+          </button>
+
+          {/* Flip Camera Button */}
+          <button 
+            className="w-12 h-12 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-full flex items-center justify-center transition-all shadow-lg backdrop-blur-md"
+            title="Putar Kamera"
+          >
+            <RefreshCcw className="w-5 h-5" />
+          </button>
         </div>
       </div>
 

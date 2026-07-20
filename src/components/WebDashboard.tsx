@@ -28,6 +28,7 @@ import EmployeeManagementScreen from './web-screens/super-admin/EmployeeManageme
 import CompanyManagementScreen from './web-screens/super-admin/CompanyManagementScreen';
 
 import ProfileScreen from './web-screens/shared/ProfileScreen';
+import NotificationsScreen from './web-screens/shared/NotificationsScreen';
 
 interface WebDashboardProps {
   transactions: Transaction[];
@@ -88,9 +89,44 @@ export default function WebDashboard({
 }: WebDashboardProps) {
 
   // Active Sub-Menu Route within web dashboard
-  const [activeTab, setActiveTab] = useState<'overview' | 'approvals' | 'inbound' | 'integrations' | 'ledger' | 'subscriptions' | 'payroll' | 'employees' | 'profile' | 'companies' | 'broadcast'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'approvals' | 'inbound' | 'integrations' | 'ledger' | 'subscriptions' | 'payroll' | 'employees' | 'profile' | 'companies' | 'broadcast' | 'notifications'>('overview');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Derived Notifications Data
+  const notificationItems = React.useMemo(() => {
+    const items: any[] = [];
+    
+    // 1. Pending Reimbursements / Cash Advance
+    const pendingTransactions = transactions.filter(t => t.status === 'Pending' && (t.type === 'reimburse' || t.type === 'cash_advance'));
+    pendingTransactions.forEach(t => {
+      const empName = employees.find(e => e.id === t.employeeId)?.name || 'Karyawan';
+      items.push({
+        id: `tx-${t.id}`,
+        type: 'reimburse',
+        title: t.type === 'reimburse' ? 'Pengajuan Reimburse' : 'Pengajuan Cash Advance',
+        message: `${empName} mengajukan klaim sebesar Rp ${(t.amount || 0).toLocaleString('id-ID')}`,
+        date: new Date(t.date),
+        action: () => { setActiveTab('approvals'); setShowNotifications(false); }
+      });
+    });
+
+    // 2. Pending Bank Info Verifications
+    const pendingBankEmployees = employees.filter(e => e.bank_passbook_url && e.bank_validated === false);
+    pendingBankEmployees.forEach(e => {
+      items.push({
+        id: `bank-${e.id}`,
+        type: 'bank_update',
+        title: 'Verifikasi Rekening Bank',
+        message: `${e.name} memperbarui informasi rekening dan butuh verifikasi.`,
+        date: new Date(), 
+        action: () => { setActiveTab('employees'); setShowNotifications(false); }
+      });
+    });
+
+    return items.sort((a, b) => b.date.getTime() - a.date.getTime());
+  }, [transactions, employees]);
 
   // Search & Filter state variables
   const [searchTerm, setSearchTerm] = useState('');
@@ -116,8 +152,8 @@ export default function WebDashboard({
     if (splitViewTx) {
       // Find matching employee by email or name
       const matchedEmp = employees.find(
-        emp => emp.email.toLowerCase() === splitViewTx.employeeId.toLowerCase() ||
-               emp.name.toLowerCase() === (employees.find(e => e.id === splitViewTx.employeeId)?.name || "Unknown").toLowerCase()
+        emp => (emp.email && splitViewTx.employeeId && emp.email.toLowerCase() === splitViewTx.employeeId.toLowerCase()) ||
+               (emp.name && emp.name.toLowerCase() === (employees.find(e => e.id === splitViewTx.employeeId)?.name || "Unknown").toLowerCase())
       );
 
       if (splitViewTx.status === 'Approved') {
@@ -213,11 +249,11 @@ export default function WebDashboard({
     .reduce((sum, t) => sum + t.amount, 0);
 
   const totalOutflowThisMonth = transactions
-    .filter(t => (t.type === 'reimburse' || t.type === 'expense_manual') && t.status === 'Approved')
+    .filter(t => (t.type === 'reimburse' || (t.type as string) === 'reimbursement' || t.type === 'expense_manual') && t.status === 'Approved')
     .reduce((sum, t) => sum + t.amount, 0);
 
   // Net burn estimation and Runway computation (Safe Division)
-  const averageMonthlyBurn = totalOutflowThisMonth || 95000000;
+  const averageMonthlyBurn = totalOutflowThisMonth > 0 ? totalOutflowThisMonth : 1;
   const runwayMonths = Math.min(99, Math.max(1, Math.round(cashBalance / averageMonthlyBurn)));
 
   // Calculated categories breakdown for Pie Chart representation
@@ -362,7 +398,7 @@ export default function WebDashboard({
     setWebhookGateway(app.paymentGateway || 'Xendit');
   };
 
-  const pendingApprovals = transactions.filter(t => t.status === 'Pending' && t.type === 'reimburse');
+  const pendingApprovals = transactions.filter(t => t.status === 'Pending' && (t.type === 'reimburse' || (t.type as string) === 'reimbursement' || t.type === 'cash_advance'));
 
   return (
     <div className="flex flex-col h-full bg-slate-50 text-slate-800 font-sans select-none">
@@ -411,21 +447,81 @@ export default function WebDashboard({
                  activeTab === 'integrations' ? 'Integrasi Sistem' :
                  activeTab === 'employees' ? 'Kelola Karyawan' :
                  activeTab === 'payroll' ? 'Manajemen Gaji' :
+                 activeTab === 'notifications' ? 'Pusat Notifikasi' :
                  activeTab === 'profile' ? 'Profil Akun' : activeTab}
               </h1>
             </div>
 
             <div className="flex items-center gap-4">
               {/* Notifications */}
-              <button className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:bg-slate-50 transition-all relative">
-                <Bell className="w-5 h-5 text-slate-600" />
-                <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => { setShowNotifications(!showNotifications); setShowProfileMenu(false); }}
+                  className={`w-12 h-12 flex items-center justify-center rounded-2xl border transition-all relative ${showNotifications ? 'bg-indigo-50 border-indigo-200 shadow-inner' : 'bg-white border-slate-100 shadow-sm hover:shadow-md hover:bg-slate-50'}`}
+                >
+                  <Bell className={`w-5 h-5 ${showNotifications ? 'text-brand' : 'text-slate-600'}`} />
+                  {notificationItems.length > 0 && (
+                    <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
+                  )}
+                </button>
+
+                {showNotifications && (
+                  <div className="absolute right-0 mt-3 w-[380px] bg-white border border-slate-100 shadow-2xl rounded-[1.5rem] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 origin-top-right">
+                    <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                      <h3 className="font-black text-slate-800 font-display text-lg tracking-tight">Notifikasi</h3>
+                      {notificationItems.length > 0 && (
+                        <span className="px-2 py-1 bg-indigo-100 text-brand text-xs font-bold rounded-lg">{notificationItems.length} Baru</span>
+                      )}
+                    </div>
+                    
+                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                      {notificationItems.length > 0 ? (
+                        <div className="flex flex-col">
+                          {notificationItems.map(item => (
+                            <button 
+                              key={item.id}
+                              onClick={item.action}
+                              className="w-full text-left p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors flex gap-4 items-start group"
+                            >
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm border ${
+                                item.type === 'reimburse' ? 'bg-amber-50 border-amber-100 text-amber-500 group-hover:bg-amber-100' : 'bg-emerald-50 border-emerald-100 text-emerald-500 group-hover:bg-emerald-100'
+                              }`}>
+                                {item.type === 'reimburse' ? <FileText className="w-5 h-5" /> : <Wallet className="w-5 h-5" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-sm font-bold text-slate-800 truncate mb-1">{item.title}</h4>
+                                <p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2">{item.message}</p>
+                                <span className="text-[10px] text-slate-400 font-bold mt-2 block">{item.date.toLocaleDateString('id-ID', {day:'numeric', month:'short'})}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-8 text-center flex flex-col items-center">
+                          <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                            <CheckCircle className="w-8 h-8 text-slate-300" />
+                          </div>
+                          <p className="text-sm font-bold text-slate-800 mb-1">Semua Selesai!</p>
+                          <p className="text-xs text-slate-500 font-medium">Belum ada notifikasi atau pekerjaan baru saat ini.</p>
+                        </div>
+                      )}
+                    </div>
+<div className="p-2 border-t border-slate-100">
+  <button
+    onClick={() => { setActiveTab('notifications'); setShowNotifications(false); }}
+    className="w-full text-left px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-b-[1.5rem]"
+  >
+    Lihat seluruh notifikasi
+  </button>
+</div>
+                  </div>
+                )}
+              </div>
 
               {/* Profile Dropdown Trigger */}
               <div className="relative">
                 <button 
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  onClick={() => { setShowProfileMenu(!showProfileMenu); setShowNotifications(false); }}
                   className="flex items-center gap-3 p-1.5 pr-4 bg-white border border-slate-100 rounded-full shadow-sm hover:shadow-md hover:bg-slate-50 transition-all"
                 >
                   <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-100 bg-indigo-50 flex items-center justify-center">
@@ -589,7 +685,7 @@ export default function WebDashboard({
                   companies, onSaveCompany, onDeleteCompany
                 }} />
               )}
-              {userRole === 'super_admin' && activeTab === 'employees' && (
+              {(userRole === 'super_admin' || userRole === 'admin_corp') && activeTab === 'employees' && (
                 <EmployeeManagementScreen {...{
                   transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,
                   onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
@@ -607,7 +703,8 @@ export default function WebDashboard({
                   averageMonthlyBurn, runwayMonths, categorySummary, categoryEntries, totalExpenseAllocated,
                   handleExportCSV, isSubmittingApproval, handleApproveAction, handleRejectAction, handleManualPost,
                   handleSaveWebhook, handleMassPayroll, openWebhookSetup, pendingApprovals,
-                  companies, onSaveCompany, onDeleteCompany
+                  companies, onSaveCompany, onDeleteCompany,
+                  userRole, userProfile
                 }} />
               )}
               {userRole === 'super_admin' && activeTab === 'broadcast' && (
@@ -632,6 +729,14 @@ export default function WebDashboard({
               )}
 
               {/* === ADMIN CABANG SCREENS === */}
+              {activeTab === 'notifications' && (
+                <NotificationsScreen 
+                  transactions={transactions} 
+                  employees={employees} 
+                  onNavigate={(tab) => setActiveTab(tab)}
+                />
+              )}
+
               {userRole !== 'super_admin' && activeTab === 'overview' && (
                 <OverviewScreenAdmin {...{
                   transactions, cashBalance, employees, connectedApps, subscriptions, onRefreshData,

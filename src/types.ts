@@ -57,6 +57,10 @@ export interface Employee {
   salary: number;
   bankAccount: string;
   bankName: string;
+  bank_passbook_url?: string;
+  bank_account_holder?: string;
+  bank_validated?: boolean;
+  bank_rejection_reason?: string;
   companyId?: string | null;
   status?: 'active' | 'unassigned';
 }

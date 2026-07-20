@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
+import LegalPage from './LegalPage';
 
 interface LoginPageProps {
   onSelectRole: (role: 'super_admin' | 'admin_corp' | 'karyawan' | any) => void;
@@ -27,9 +28,12 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
   const [forgotPasswordState, setForgotPasswordState] = useState<'none' | 'email' | 'code' | 'new_password'>('none');
   const [otpCode, setOtpCode] = useState('');
   
+  const [legalView, setLegalView] = useState<'none' | 'privacy' | 'terms'>('none');
+  
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
   // Password requirements state
   const [pwdReqs, setPwdReqs] = useState({
@@ -45,7 +49,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
 
   // Validate password continuously
   useEffect(() => {
-    if (isSignUp) {
+    if (isSignUp || forgotPasswordState === 'new_password') {
       setPwdReqs({
         length: password.length >= 8,
         upper: /[A-Z]/.test(password),
@@ -53,11 +57,11 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
         number: /[0-9]/.test(password),
         noSpace: password.length > 0 && !/\s/.test(password),
         notNameEmail: password.length > 0 && 
-                      (!email || !password.toLowerCase().includes(email.split('@')[0].toLowerCase())) && 
-                      (!fullName || !password.toLowerCase().includes(fullName.split(' ')[0].toLowerCase()))
+                      (!email || !password?.toLowerCase().includes(email.split('@')[0]?.toLowerCase())) && 
+                      (!fullName || !password?.toLowerCase().includes(fullName.split(' ')[0]?.toLowerCase()))
       });
     }
-  }, [password, email, fullName, isSignUp]);
+  }, [password, email, fullName, isSignUp, forgotPasswordState]);
 
   const getStrengthLabel = () => {
     if (!password) return { label: 'Belum ada', color: 'text-slate-400', bg: 'bg-slate-100', bar: 'w-0' };
@@ -79,6 +83,10 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
     }
 
     if (isSignUp) {
+      if (!agreeTerms) {
+        setErrorMsg('Anda harus menyetujui Kebijakan Privasi dan Syarat & Ketentuan.');
+        return;
+      }
       if (!allReqsMet) {
         setErrorMsg('Harap penuhi semua persyaratan kata sandi sebelum mendaftar.');
         return;
@@ -119,7 +127,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
 
         const profileRole = 'karyawan'; 
         const { error: profileError } = await supabase.from('users').insert([
-          { id: user.id, full_name: fullName, surname: surname, email: email, role: profileRole, company_id: '00000000-0000-0000-0000-000000000001' }
+          { id: user.id, full_name: fullName, surname: surname, email: email, role: profileRole, company_id: null }
         ]);
 
         if (profileError) throw profileError;
@@ -169,7 +177,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
         setSuccessMsg('Kode verifikasi telah dikirim ke email Anda.');
         setForgotPasswordState('code');
       } else if (forgotPasswordState === 'code') {
-        if (!otpCode || otpCode.length !== 6) throw new Error('Masukkan 6 digit kode dengan benar.');
+        if (!otpCode || otpCode.length < 6) throw new Error('Masukkan kode OTP dengan benar.');
         if (!isSupabase) {
           setTimeout(() => {
             setSuccessMsg('Kode valid! Silakan masukkan kata sandi baru Anda. (MOCK)');
@@ -178,12 +186,17 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
           }, 1000);
           return;
         }
+        window.location.hash = 'recovery';
         const { error } = await supabase.auth.verifyOtp({ email, token: otpCode, type: 'recovery' });
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
         setSuccessMsg('Kode valid! Silakan masukkan kata sandi baru Anda.');
+        setPassword('');
+        setConfirmPassword('');
         setForgotPasswordState('new_password');
       } else if (forgotPasswordState === 'new_password') {
-        if (!password || password.length < 8) throw new Error('Kata sandi baru minimal 8 karakter.');
+        if (!allReqsMet) throw new Error('Harap penuhi semua persyaratan kata sandi baru.');
         if (password !== confirmPassword) throw new Error('Konfirmasi kata sandi tidak cocok.');
         
         if (!isSupabase) {
@@ -200,12 +213,11 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
         const { error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
 
-        setSuccessMsg('Kata sandi berhasil diubah! Silakan login kembali.');
+        setSuccessMsg('Kata sandi berhasil diubah! Memuat dashboard...');
         setTimeout(() => {
-          setForgotPasswordState('none');
-          setPassword('');
-          setConfirmPassword('');
-        }, 3000);
+          window.location.hash = '';
+          window.location.reload();
+        }, 2000);
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Terjadi kesalahan sistem.');
@@ -222,6 +234,10 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
       <span className={met ? 'line-through opacity-60 font-medium' : 'font-medium'}>{text}</span>
     </div>
   );
+
+  if (legalView !== 'none') {
+    return <LegalPage type={legalView} onBack={() => setLegalView('none')} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#eff6ff] via-white to-[#f0fdfa] flex font-sans selection:bg-indigo-100 selection:text-indigo-900 overflow-hidden relative">
@@ -352,7 +368,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
             </h2>
             <p className="text-[15px] text-slate-500 font-jakarta">
               {forgotPasswordState !== 'none' 
-                ? (forgotPasswordState === 'email' ? 'Masukkan email terdaftar Anda' : forgotPasswordState === 'code' ? 'Masukkan 6 digit kode dari email' : 'Masukkan kata sandi baru Anda')
+                ? (forgotPasswordState === 'email' ? 'Masukkan email terdaftar Anda' : forgotPasswordState === 'code' ? 'Masukkan 8 digit kode dari email' : 'Masukkan kata sandi baru Anda')
                 : (isSignUp ? 'Daftarkan diri Anda untuk akses penuh' : 'Masuk menggunakan kredensial perusahaan Anda')}
             </p>
           </motion.div>
@@ -392,9 +408,9 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
                   <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                   <input 
                     type="text" 
-                    placeholder="Kode 6 Digit" 
+                    placeholder="Kode OTP" 
                     value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 8))}
                     className="w-full pl-12 pr-5 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[20px] tracking-[0.5em] text-center text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 transition-all font-jakarta font-medium uppercase"
                     required
                   />
@@ -412,12 +428,42 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full pl-12 pr-14 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 transition-all font-jakarta font-medium"
                       required
+                      autoComplete="new-password"
                     />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 p-1 hover:text-indigo-600 transition-colors">
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </motion.div>
                   
+                  {/* Password Requirements UI for Reset Password */}
+                  <AnimatePresence>
+                    {password.length > 0 && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0, y: -20 }} 
+                        animate={{ opacity: 1, height: 'auto', y: 0 }} 
+                        exit={{ opacity: 0, height: 0, y: -10 }}
+                        transition={{ type: "spring", bounce: 0.4, duration: 0.6 }}
+                        className="p-5 mt-5 bg-white border border-slate-100 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Kekuatan Sandi</span>
+                          <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${strength.color} ${strength.bg}`}>{strength.label}</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-4">
+                          <div className={`h-full ${strength.bar} transition-all duration-500 ease-out`}></div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-y-3 gap-x-2">
+                          <ReqItem met={pwdReqs.length} text="Min. 8 karakter" />
+                          <ReqItem met={pwdReqs.upper} text="1 huruf besar (A-Z)" />
+                          <ReqItem met={pwdReqs.lower} text="1 huruf kecil (a-z)" />
+                          <ReqItem met={pwdReqs.number} text="1 angka (0-9)" />
+                          <ReqItem met={pwdReqs.noSpace} text="Tanpa spasi" />
+                          <ReqItem met={pwdReqs.notNameEmail} text="Bukan nama/email" />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative group mt-5">
                     <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                     <input 
@@ -425,9 +471,30 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
                       placeholder="Konfirmasi Kata Sandi Baru" 
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full pl-12 pr-14 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 transition-all font-jakarta font-medium"
+                      className={`w-full pl-12 pr-24 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none transition-all font-jakarta font-medium ${
+                        confirmPassword.length > 0 
+                          ? passwordsMatch 
+                            ? 'border-emerald-200 focus:bg-white focus:border-emerald-300 focus:shadow-[0_4px_25px_rgba(16,185,129,0.15)] bg-white' 
+                            : 'border-rose-200 focus:bg-white focus:border-rose-300 focus:shadow-[0_4px_25px_rgba(244,63,94,0.15)] bg-white'
+                          : 'border-transparent focus:bg-white focus:border-indigo-200 focus:shadow-[0_4px_25px_rgba(99,102,241,0.12)] hover:bg-slate-200/80'
+                      }`}
                       required
+                      autoComplete="new-password"
                     />
+                    <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                      {confirmPassword.length > 0 && (
+                        <div className={`p-1 rounded-full shadow-sm ${passwordsMatch ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                          {passwordsMatch ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : <XCircle className="w-3.5 h-3.5" strokeWidth={2.5} />}
+                        </div>
+                      )}
+                      <button 
+                        type="button" 
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="text-slate-400 hover:text-indigo-600 transition-colors p-1"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
                   </motion.div>
                 </>
               )}
@@ -596,12 +663,34 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
               )}
             </AnimatePresence>
 
+            <AnimatePresence>
+              {isSignUp && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }} 
+                  animate={{ opacity: 1, height: 'auto' }} 
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-4 flex items-start gap-3 px-1"
+                >
+                  <input 
+                    type="checkbox" 
+                    id="terms"
+                    checked={agreeTerms}
+                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                    className="mt-1 w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  />
+                  <label htmlFor="terms" className="text-sm text-slate-600 font-jakarta leading-relaxed cursor-pointer select-none">
+                    Saya telah membaca dan menyetujui <a href="#" onClick={(e) => { e.preventDefault(); setLegalView('privacy'); }} className="text-indigo-600 font-bold hover:underline">Kebijakan Privasi</a> dan <a href="#" onClick={(e) => { e.preventDefault(); setLegalView('terms'); }} className="text-indigo-600 font-bold hover:underline">Syarat & Ketentuan</a>
+                  </label>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
               <button 
                 type="submit" 
-                disabled={loading || (isSignUp && (!allReqsMet || !passwordsMatch))}
+                disabled={loading || (isSignUp && (!allReqsMet || !passwordsMatch || !agreeTerms))}
                 className={`w-full py-4 mt-6 text-white font-bold text-[15px] rounded-full flex items-center justify-center gap-3 transition-all duration-300 ${
-                  loading || (isSignUp && (!allReqsMet || !passwordsMatch))
+                  loading || (isSignUp && (!allReqsMet || !passwordsMatch || !agreeTerms))
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' 
                     : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-[0_10px_30px_rgba(79,70,229,0.3)] hover:-translate-y-0.5 active:scale-[0.98]'
                 }`}

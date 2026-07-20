@@ -1,5 +1,6 @@
 import React from 'react';
-import { ArrowLeft, X, Loader2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, X, Loader2, CheckCircle, Receipt, PlusCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface FormScreenProps {
   setCurrentScreen: (screen: any) => void;
@@ -65,77 +66,88 @@ export default function FormScreen({
 
       {/* Mini Receipt Preview */}
       {scanImage && (
-        <div className="bg-slate-100 rounded-xl relative overflow-hidden h-24 border border-dashed border-slate-200">
-          <img src={scanImage} alt="Scanned file preview" className="w-full h-full object-cover blur-[0.5px] opacity-85" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2.5">
-            <div className="text-white">
-              <span className="text-[8px] uppercase tracking-wider bg-indigo-600 px-1.5 py-0.5 rounded-full inline-block font-semibold">Tipe: {formType === 'reimburse' ? 'Reimburse' : 'Cash Advance'}</span>
-              <h6 className="text-[9px] font-mono mt-1 opacity-90 truncate w-[250px]">{scanImageName || 'reimburse_invoice.png'}</h6>
+        <div className="bg-slate-900 rounded-2xl relative overflow-hidden h-28 border border-slate-800 shadow-xl">
+          <img src={scanImage} alt="Scanned file preview" className="w-full h-full object-cover opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent flex items-end p-4">
+            <div className="text-white w-full">
+              <div className="flex justify-between items-end">
+                <div>
+                  <span className="text-[9px] uppercase tracking-widest text-indigo-300 font-bold mb-1 block">Tipe Pengajuan</span>
+                  <h6 className="text-sm font-semibold truncate w-[200px]">{formType === 'reimburse' ? 'Reimbursement' : 'Cash Advance'}</h6>
+                </div>
+                <Receipt className="w-5 h-5 text-indigo-400 opacity-80" />
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {/* Review Form */}
-      <form onSubmit={handleFormSubmit} className="space-y-3 bg-white p-3 rounded-2xl border border-slate-100 shadow-3xs">
+      <form onSubmit={handleFormSubmit} className="space-y-4 bg-white p-4 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden">
         
+        {/* Decorative background glow */}
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-50 rounded-full blur-3xl pointer-events-none"></div>
+
         {formError && (
-          <div className="p-2.5 bg-rose-50 text-rose-800 text-[10px] rounded-lg border border-rose-100">
-            <span className="font-semibold block mb-0.5">Penyerahan Gagal</span>
-            {formError}
+          <div className="p-3 bg-rose-50 text-rose-800 text-xs rounded-xl border border-rose-100 flex items-start gap-2">
+            <X className="w-4 h-4 mt-0.5 shrink-0 text-rose-600" />
+            <div>
+              <span className="font-bold block mb-0.5">Penyerahan Gagal</span>
+              <span>{formError}</span>
+            </div>
           </div>
         )}
 
-        <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Nama Merchant / Toko</label>
+        <div className="relative z-10">
+          <label className="block text-[10px] font-bold text-indigo-900/60 uppercase tracking-widest mb-1.5">Nama Merchant / Toko</label>
           <input 
             type="text" 
             value={formMerchant}
             onChange={(e) => setFormMerchant(e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-250 rounded-xl focus:border-brand focus:ring-1 focus:ring-brand outline-none font-semibold text-slate-850"
+            className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/10 outline-none font-semibold text-slate-800 transition-all"
             placeholder="Masukkan nama merchant"
             required
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 relative z-10">
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Tanggal Nota</label>
+            <label className="block text-[10px] font-bold text-indigo-900/60 uppercase tracking-widest mb-1.5">Tanggal Nota</label>
             <input 
               type="date" 
               value={formDate}
               onChange={(e) => setFormDate(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-250 rounded-xl focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+              className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/10 outline-none font-medium text-slate-700 transition-all"
               required
             />
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Pilih Kategori</label>
+            <label className="block text-[10px] font-bold text-indigo-900/60 uppercase tracking-widest mb-1.5">Pilih Kategori</label>
             <select 
               value={formCategory}
               onChange={(e) => setFormCategory(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-250 rounded-xl focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+              className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/10 outline-none font-medium text-slate-700 transition-all appearance-none"
             >
-              <option value="Operasional">Operasional</option>
-              <option value="Transportasi">Transportasi</option>
-              <option value="Server">Server</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Utilitas & Kantor">Utilitas & Kantor</option>
-              <option value="Lainnya">Lainnya</option>
+              <option value="Infrastruktur & Cloud">Infrastruktur & Cloud</option>
+              <option value="Operasional & Alat">Operasional & Alat</option>
+              <option value="Pemasaran & Branding">Pemasaran & Branding</option>
+              <option value="Konsumsi">Konsumsi</option>
+              <option value="Transportasi & Logistik">Transportasi & Logistik</option>
+              <option value="Lain-lain / Darurat">Lain-lain / Darurat</option>
             </select>
           </div>
         </div>
 
-        <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Total Nominal Tagihan (IDR)</label>
+        <div className="relative z-10">
+          <label className="block text-[10px] font-bold text-indigo-900/60 uppercase tracking-widest mb-1.5">Total Nominal Tagihan (IDR)</label>
           <div className="relative">
-            <span className="absolute left-3 top-2 text-xs font-bold text-slate-500">Rp</span>
+            <span className="absolute left-4 top-3 text-sm font-bold text-slate-400">Rp</span>
             <input 
               type="number" 
               value={formAmount || ''}
-              onChange={(e) => setFormAmount(Number(e.target.value))}
-              className="w-full pl-8 pr-4 py-2 text-xs bg-slate-50 border border-slate-250 rounded-xl focus:border-brand focus:ring-1 focus:ring-brand outline-none font-mono font-bold text-slate-800"
+              readOnly
+              className="w-full pl-10 pr-4 py-2.5 text-base bg-slate-100 border border-slate-200 rounded-xl outline-none font-mono font-bold text-slate-500 cursor-not-allowed transition-all"
               placeholder="0"
               required
             />
@@ -143,95 +155,108 @@ export default function FormScreen({
         </div>
 
         {/* Line Items Section */}
-        <div className="pt-2 border-t border-slate-100">
-          <div className="flex justify-between items-center mb-2">
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Produk Terdeteksi</label>
+        <div className="pt-4 mt-2 border-t border-slate-100 relative z-10">
+          <div className="flex justify-between items-center mb-3">
+            <label className="block text-[10px] font-bold text-indigo-900/60 uppercase tracking-widest">Produk Terdeteksi</label>
             <button 
               type="button" 
               onClick={addManualItem}
-              className="text-[9px] font-bold text-brand bg-indigo-50 px-2 py-1 rounded-md"
+              className="text-[10px] font-bold text-brand bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
             >
-              + Tambah Manual
+              <PlusCircle className="w-3.5 h-3.5" /> Manual
             </button>
           </div>
 
-          <div className="space-y-2">
-            {formItems.map((item, idx) => (
-              <div key={item.id || idx} className="p-2 bg-slate-50 rounded-xl border border-slate-200 flex gap-2 items-center relative">
-                <button 
-                  type="button" 
-                  onClick={() => removeItem(idx)}
-                  className="absolute -top-1.5 -right-1.5 bg-rose-100 text-rose-600 rounded-full p-0.5"
+          <div className="space-y-3">
+            <AnimatePresence>
+              {formItems.map((item, idx) => (
+                <motion.div 
+                  key={item.id || idx}
+                  initial={{ opacity: 0, y: -10, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: 'auto' }}
+                  exit={{ opacity: 0, scale: 0.9, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm flex gap-3 items-center relative group hover:border-brand/30 hover:shadow-md transition-all"
                 >
-                  <X className="w-3 h-3" />
-                </button>
-                <div className="flex-1 space-y-1">
-                  <input 
-                    type="text" 
-                    value={item.name}
-                    onChange={(e) => handleItemChange(idx, 'name', e.target.value)}
-                    className="w-full text-[10px] bg-white border border-slate-200 rounded px-2 py-1 font-semibold"
-                    placeholder="Nama Produk"
-                  />
-                  <div className="flex gap-2">
-                    <div className="flex-1 relative">
-                      <span className="absolute left-1.5 top-1 text-[9px] font-bold text-slate-500">Rp</span>
-                      <input 
-                        type="number" 
-                        value={item.price}
-                        onChange={(e) => handleItemChange(idx, 'price', Number(e.target.value))}
-                        className="w-full pl-6 pr-2 py-1 text-[10px] bg-white border border-slate-200 rounded font-mono"
-                        placeholder="Harga"
-                      />
-                    </div>
-                    <div className="w-16 relative">
-                      <span className="absolute left-1.5 top-1 text-[9px] font-bold text-slate-500">x</span>
-                      <input 
-                        type="number" 
-                        value={item.quantity}
-                        onChange={(e) => handleItemChange(idx, 'quantity', Number(e.target.value))}
-                        className="w-full pl-5 pr-2 py-1 text-[10px] bg-white border border-slate-200 rounded text-center"
-                        placeholder="Qty"
-                      />
+                  <button 
+                    type="button" 
+                    onClick={() => removeItem(idx)}
+                    className="absolute -top-2 -right-2 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                  <div className="flex-1 space-y-2">
+                    <input 
+                      type="text" 
+                      value={item.name}
+                      onChange={(e) => handleItemChange(idx, 'name', e.target.value)}
+                      className="w-full text-xs bg-slate-50 focus:bg-white border border-transparent focus:border-slate-200 rounded-lg px-3 py-1.5 font-semibold text-slate-700 outline-none transition-all"
+                      placeholder="Nama Produk"
+                    />
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <span className="absolute left-2.5 top-1.5 text-[10px] font-bold text-slate-400">Rp</span>
+                        <input 
+                          type="number" 
+                          value={item.price}
+                          onChange={(e) => handleItemChange(idx, 'price', Number(e.target.value))}
+                          className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 focus:bg-white border border-transparent focus:border-slate-200 rounded-lg font-mono outline-none transition-all"
+                          placeholder="Harga"
+                        />
+                      </div>
+                      <div className="w-20 relative">
+                        <span className="absolute left-2.5 top-1.5 text-[10px] font-bold text-slate-400">x</span>
+                        <input 
+                          type="number" 
+                          value={item.quantity}
+                          onChange={(e) => handleItemChange(idx, 'quantity', Number(e.target.value))}
+                          className="w-full pl-6 pr-3 py-1.5 text-xs bg-slate-50 focus:bg-white border border-transparent focus:border-slate-200 rounded-lg text-center font-bold outline-none transition-all"
+                          placeholder="Qty"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                </motion.div>
+              ))}
+            </AnimatePresence>
             {formItems.length === 0 && (
-              <div className="text-[9px] text-slate-400 italic text-center py-2">Belum ada item produk terdeteksi.</div>
+              <div className="text-xs text-slate-400 italic text-center py-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                Belum ada item produk terdeteksi.
+              </div>
             )}
           </div>
         </div>
 
-        <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Catatan Tambahan (Opsional)</label>
+        <div className="relative z-10 pt-2">
+          <label className="block text-[10px] font-bold text-indigo-900/60 uppercase tracking-widest mb-1.5">Catatan Tambahan (Opsional)</label>
           <textarea 
             value={formNotes}
             onChange={(e) => setFormNotes(e.target.value)}
             rows={2}
-            className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-250 rounded-xl focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+            className="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/10 outline-none transition-all resize-none"
             placeholder="Contoh: Beli kopi untuk meeting klien PT Sentosa..."
           />
         </div>
 
-        <button 
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full py-2.5 bg-brand text-white font-semibold text-xs rounded-xl shadow-xs hover:bg-opacity-95 transition-all text-center flex items-center justify-center gap-1.5"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Mengirim Data...</span>
-            </>
-          ) : (
-            <>
-              <CheckCircle className="w-3.5 h-3.5" />
-              <span>Kirim ke Tim Keuangan</span>
-            </>
-          )}
-        </button>
+        <div className="pt-4 relative z-10">
+          <button 
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-sm rounded-2xl shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:hover:translate-y-0 transition-all text-center flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Memproses Data...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                <span>Simpan Pengajuan Reimburse</span>
+              </>
+            )}
+          </button>
+        </div>
       </form>
 
     </div>

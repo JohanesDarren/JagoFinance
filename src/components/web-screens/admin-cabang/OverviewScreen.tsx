@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   TrendingUp, TrendingDown, DollarSign, Calendar, Sparkles, 
   Eye, CheckCircle, SlidersHorizontal, ArrowUpRight
@@ -7,12 +7,59 @@ import { WebScreenProps } from '../shared/WebScreenProps';
 
 export default function OverviewScreen(props: WebScreenProps) {
   const {
-    cashBalance, connectedApps, totalInflowThisMonth, totalOutflowThisMonth,
+    transactions, cashBalance, connectedApps, totalInflowThisMonth, totalOutflowThisMonth,
     averageMonthlyBurn, runwayMonths, categoryEntries, totalExpenseAllocated,
     employees, setSplitViewTx, pendingApprovals
   } = props;
 
+  const [hoveredCategory, setHoveredCategory] = useState<{name: string, value: number, color: string} | null>(null);
+  const [mousePos, setMousePos] = useState<{x: number, y: number}>({ x: 0, y: 0 });
+
   let accumulatedAngle = 0;
+
+  // Dynamic Chart Data logic
+  const now = new Date();
+  const chartMonths = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    chartMonths.push({ 
+      label: d.toLocaleString('id-ID', { month: 'short' }), 
+      month: d.getMonth(), 
+      year: d.getFullYear(), 
+      inflow: 0, 
+      outflow: 0 
+    });
+  }
+
+  transactions.forEach(t => {
+    if (t.status !== 'Approved') return;
+    const tDate = new Date(t.date);
+    const m = chartMonths.find(m => m.month === tDate.getMonth() && m.year === tDate.getFullYear());
+    if (m) {
+      if (t.type === 'income') m.inflow += t.amount;
+      else if (t.type === 'reimburse' || (t.type as string) === 'reimbursement' || t.type === 'expense_manual' || t.type === 'cash_advance') m.outflow += t.amount;
+    }
+  });
+
+  const maxVal = Math.max(...chartMonths.map(m => Math.max(m.inflow, m.outflow)), 10000000); // min scale 10jt
+  
+  // Y goes from 170 (0) to 20 (maxVal) => height = 150
+  const getY = (val: number) => 170 - ((val / maxVal) * 150);
+  const getHeight = (val: number) => (val / maxVal) * 150;
+
+  const formatYAxis = (val: number) => {
+    if (val >= 1000000000) return (val/1000000000).toFixed(1) + 'M';
+    if (val >= 1000000) return (val/1000000).toFixed(0) + 'jt';
+    if (val >= 1000) return (val/1000).toFixed(0) + 'rb';
+    return val.toString();
+  };
+
+  // Generate path for the line chart
+  const pathD = chartMonths.map((m, i) => {
+    const cx = 109 + (i * 85);
+    const cy = getY(m.outflow);
+    return `${i === 0 ? 'M' : 'L'} ${cx} ${cy}`;
+  }).join(' ');
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -152,9 +199,9 @@ export default function OverviewScreen(props: WebScreenProps) {
               <line x1="50" y1="170" x2="580" y2="170" stroke="#f1f5f9" strokeWidth="1.5" />
               <line x1="50" y1="200" x2="580" y2="200" stroke="#e2e8f0" strokeWidth="1.5" />
 
-              <text x="35" y="24" className="text-[11px] fill-slate-400 font-mono font-bold" textAnchor="end">500jt</text>
-              <text x="35" y="74" className="text-[11px] fill-slate-400 font-mono font-bold" textAnchor="end">300jt</text>
-              <text x="35" y="124" className="text-[11px] fill-slate-400 font-mono font-bold" textAnchor="end">100jt</text>
+              <text x="35" y="24" className="text-[11px] fill-slate-400 font-mono font-bold" textAnchor="end">{formatYAxis(maxVal)}</text>
+              <text x="35" y="74" className="text-[11px] fill-slate-400 font-mono font-bold" textAnchor="end">{formatYAxis(maxVal * 0.66)}</text>
+              <text x="35" y="124" className="text-[11px] fill-slate-400 font-mono font-bold" textAnchor="end">{formatYAxis(maxVal * 0.33)}</text>
               <text x="35" y="174" className="text-[11px] fill-slate-400 font-mono font-bold" textAnchor="end">0</text>
 
               <defs>
@@ -164,15 +211,19 @@ export default function OverviewScreen(props: WebScreenProps) {
                 </linearGradient>
               </defs>
 
-              <rect x="90" y="60" width="38" height="140" fill="url(#barGradient)" rx="10" className="hover:opacity-85 transition-opacity cursor-pointer" />
-              <rect x="175" y="80" width="38" height="120" fill="url(#barGradient)" rx="10" className="hover:opacity-85 transition-opacity cursor-pointer" />
-              <rect x="260" y="50" width="38" height="150" fill="url(#barGradient)" rx="10" className="hover:opacity-85 transition-opacity cursor-pointer" />
-              <rect x="345" y="45" width="38" height="155" fill="url(#barGradient)" rx="10" className="hover:opacity-85 transition-opacity cursor-pointer" />
-              <rect x="430" y="75" width="38" height="125" fill="url(#barGradient)" rx="10" className="hover:opacity-85 transition-opacity cursor-pointer" />
-              <rect x="515" y="65" width="38" height="135" fill="url(#barGradient)" rx="10" opacity="0.4" strokeDasharray="4" stroke="#4338ca" strokeWidth="2" className="hover:opacity-60 transition-opacity cursor-pointer" />
+              {chartMonths.map((m, i) => {
+                const barHeight = getHeight(m.inflow) || 2; // Min height for visibility
+                const yPos = getY(m.inflow) === 170 ? 168 : getY(m.inflow);
+                const xPos = 90 + (i * 85);
+                const isCurrentMonth = m.month === now.getMonth() && m.year === now.getFullYear();
+                
+                return (
+                  <rect key={`bar-${i}`} x={xPos} y={yPos} width="38" height={barHeight} fill="url(#barGradient)" rx="4" opacity={isCurrentMonth ? "0.4" : "1"} strokeDasharray={isCurrentMonth ? "4" : "0"} stroke={isCurrentMonth ? "#4338ca" : "none"} strokeWidth={isCurrentMonth ? "2" : "0"} className="hover:opacity-60 transition-opacity cursor-pointer" />
+                );
+              })}
 
               <path 
-                d="M 109 140 L 194 150 L 279 120 L 364 135 L 449 160 L 534 145" 
+                d={pathD} 
                 fill="none" 
                 stroke="#f43f5e" 
                 strokeWidth="5" 
@@ -181,30 +232,34 @@ export default function OverviewScreen(props: WebScreenProps) {
                 className="drop-shadow-md"
               />
               
-              {[109, 194, 279, 364, 449, 534].map((cx, i) => (
-                <circle key={i} cx={cx} cy={[140, 150, 120, 135, 160, 145][i]} r="6" fill="#fff" stroke="#f43f5e" strokeWidth="3" className="hover:r-8 transition-all cursor-pointer shadow-sm" />
-              ))}
+              {chartMonths.map((m, i) => {
+                const cx = 109 + (i * 85);
+                const cy = getY(m.outflow);
+                return (
+                  <circle key={`dot-${i}`} cx={cx} cy={cy} r="6" fill="#fff" stroke="#f43f5e" strokeWidth="3" className="hover:r-8 transition-all cursor-pointer shadow-sm" />
+                );
+              })}
 
-              {['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'].map((m, i) => (
-                <text key={i} x={109 + (i * 85)} y="225" textAnchor="middle" className="text-[13px] font-black text-slate-500 fill-slate-500 uppercase tracking-widest">{m}</text>
+              {chartMonths.map((m, i) => (
+                <text key={`label-${i}`} x={109 + (i * 85)} y="225" textAnchor="middle" className="text-[13px] font-black text-slate-500 fill-slate-500 uppercase tracking-widest">{m.label}</text>
               ))}
             </svg>
           </div>
         </div>
 
         {/* Expense Breakdown SVG Pie Donut Chart */}
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-8 rounded-[3rem] shadow-xl shadow-slate-900/30 space-y-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-brand/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
+        <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 space-y-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20"></div>
           <div className="relative z-10">
-            <h4 className="text-2xl font-black font-display tracking-tight">Alokasi Biaya</h4>
-            <p className="text-sm text-slate-400 mt-1.5 font-medium">Distribusi pengeluaran riil.</p>
+            <h4 className="text-2xl font-black text-slate-900 font-display tracking-tight">Alokasi Biaya</h4>
+            <p className="text-sm text-slate-500 mt-1.5 font-medium">Distribusi pengeluaran riil.</p>
           </div>
 
           <div className="flex flex-col items-center justify-center space-y-8 relative z-10 py-2">
-            <div className="relative w-48 h-48 drop-shadow-2xl">
+            <div className="relative w-48 h-48 drop-shadow-xl">
               <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                 {categoryEntries.length === 0 ? (
-                   <circle cx="50" cy="50" r="36" fill="none" stroke="#334155" strokeWidth="26" />
+                   <circle cx="50" cy="50" r="36" fill="none" stroke="#f1f5f9" strokeWidth="26" />
                 ) : (
                   categoryEntries.map(([cat, val], idx) => {
                     const percent = val / totalExpenseAllocated;
@@ -227,15 +282,20 @@ export default function OverviewScreen(props: WebScreenProps) {
                         strokeDasharray={strokeDash}
                         strokeDashoffset={strokeOffset}
                         className="transition-all hover:strokeWidth-[32px] cursor-pointer"
+                        onMouseEnter={() => setHoveredCategory({ name: cat, value: val, color: activeColor })}
+                        onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
+                        onMouseLeave={() => setHoveredCategory(null)}
                       />
                     );
                   })
                 )}
-                <circle cx="50" cy="50" r="22" fill="#1e293b" />
+                <circle cx="50" cy="50" r="22" fill="#ffffff" />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-[9px] text-slate-400 uppercase tracking-widest font-black mb-0.5">TOTAL</span>
-                <span className="text-sm font-black font-mono text-white">Rp {(totalOutflowThisMonth/1000000).toFixed(1)}M</span>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 pointer-events-none">
+                <span className="text-[10px] text-slate-400 uppercase tracking-widest font-black mb-0.5">TOTAL</span>
+                <span className="text-[10px] font-black font-mono text-slate-900 leading-tight">
+                  Rp {totalOutflowThisMonth.toLocaleString('id-ID')}
+                </span>
               </div>
             </div>
 
@@ -246,12 +306,12 @@ export default function OverviewScreen(props: WebScreenProps) {
                 categoryEntries.slice(0, 3).map(([cat, val], idx) => {
                   const colors = ['bg-indigo-500', 'bg-blue-500', 'bg-rose-500', 'bg-purple-500', 'bg-amber-500'];
                   return (
-                    <div key={cat} className="flex justify-between items-center text-slate-300 bg-slate-800/50 px-4 py-3 rounded-2xl border border-slate-700/50 hover:bg-slate-700 transition-colors">
+                    <div key={cat} className="flex justify-between items-center text-slate-600 bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-sm transition-all">
                       <div className="flex items-center gap-3 font-bold">
                         <span className={`w-4 h-4 rounded-full shadow-md ${colors[idx % colors.length]}`}></span>
-                        <span>{cat}</span>
+                        <span className="text-slate-800">{cat}</span>
                       </div>
-                      <span className="font-black font-mono text-white">Rp {val.toLocaleString('id-ID')}</span>
+                      <span className="font-black font-mono text-slate-900">Rp {val.toLocaleString('id-ID')}</span>
                     </div>
                   );
                 })
@@ -369,6 +429,23 @@ export default function OverviewScreen(props: WebScreenProps) {
         </div>
 
       </div>
+
+      {/* Floating Tooltip for Pie Chart */}
+      {hoveredCategory && (
+        <div 
+          className="fixed z-50 bg-white p-3.5 rounded-2xl shadow-2xl shadow-slate-200/50 border border-slate-100 pointer-events-none transform -translate-x-1/2 -translate-y-[120%]"
+          style={{ left: mousePos.x, top: mousePos.y }}
+        >
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: hoveredCategory.color }}></span>
+            <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">{hoveredCategory.name}</span>
+          </div>
+          <div className="font-mono font-black text-sm text-slate-900">
+            Rp {hoveredCategory.value.toLocaleString('id-ID')}
+          </div>
+          <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-t-[8px] border-t-white border-r-[6px] border-r-transparent drop-shadow-sm"></div>
+        </div>
+      )}
 
     </div>
   );

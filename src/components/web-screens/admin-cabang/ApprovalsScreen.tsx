@@ -84,10 +84,12 @@ export default function ApprovalsScreen(props: WebScreenProps) {
               className="px-6 py-4.5 text-[14px] bg-slate-50/50 hover:bg-slate-50 border-2 border-transparent rounded-[2rem] focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50/50 outline-none cursor-pointer w-full font-bold text-slate-700 transition-all appearance-none"
             >
               <option value="Semua">Semua Kategori</option>
-              <option value="Operasional">Operasional</option>
-              <option value="Transportasi">Transportasi</option>
-              <option value="Server">Server</option>
-              <option value="Gaji Karyawan">Gaji Gaji</option>
+              <option value="Infrastruktur & Cloud">Infrastruktur & Cloud</option>
+              <option value="Operasional & Alat">Operasional & Alat</option>
+              <option value="Pemasaran & Branding">Pemasaran & Branding</option>
+              <option value="Konsumsi">Konsumsi</option>
+              <option value="Transportasi & Logistik">Transportasi & Logistik</option>
+              <option value="Lain-lain / Darurat">Lain-lain / Darurat</option>
             </select>
           </div>
         </div>
@@ -98,8 +100,8 @@ export default function ApprovalsScreen(props: WebScreenProps) {
         const filtered = transactions.filter(t => {
           if (t.type === 'income') return false;
 
-          const matchSearch = t.merchant.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                              (employees.find(e => e.id === t.employeeId)?.name || "Unknown").toLowerCase().includes(searchTerm.toLowerCase());
+          const matchSearch = t.merchant?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                              (employees.find(e => e.id === t.employeeId)?.name || "Unknown")?.toLowerCase().includes(searchTerm.toLowerCase());
           const matchStatus = statusFilter === 'Semua' ? true : t.status === statusFilter;
           const matchCategory = categoryFilter === 'Semua' ? true : t.category === categoryFilter;
 

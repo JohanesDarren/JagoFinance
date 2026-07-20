@@ -10,6 +10,7 @@ export interface WebScreenProps {
   companies?: Company[];
   admins?: any[];
   userProfile?: any;
+  userRole?: string;
   onSaveCompany?: (company: Partial<Company>) => Promise<boolean>;
   onDeleteCompany?: (id: string) => Promise<boolean>;
   onRefreshData: () => void;

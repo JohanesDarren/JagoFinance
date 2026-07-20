@@ -88,6 +88,7 @@ export default function MobileAppSimulator({
   const [formType, setFormType] = useState<'reimburse' | 'cash_advance'>('reimburse');
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
 
   // History / Filter States
   const [historyTab, setHistoryTab] = useState<'Semua' | 'Pending' | 'Selesai'>('Semua');
@@ -98,14 +99,76 @@ export default function MobileAppSimulator({
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [editProfileData, setEditProfileData] = useState({
     avatarImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-    fullName: currentUserProfile?.full_name || '',
+    fullName: [currentUserProfile?.full_name, currentUserProfile?.surname].filter(Boolean).join(' ') || '',
     phone: '',
     email: currentUserProfile?.email || '',
-    bankName: 'Mandiri',
-    bankAccount: '5540982738',
-    accountHolder: currentUserProfile?.full_name || ''
+    bankName: '',
+    bankAccount: '',
+    accountHolder: '',
+    bankPassbookUrl: '',
+    bankValidated: false,
+    bank_rejection_reason: ''
   });
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  useEffect(() => {
+    if (currentUserProfile) {
+      setEditProfileData(prev => ({
+        ...prev,
+        fullName: [currentUserProfile.full_name, currentUserProfile.surname].filter(Boolean).join(' ') || prev.fullName,
+        email: currentUserProfile.email || prev.email,
+        phone: currentUserProfile.phone || prev.phone,
+        bankName: currentUserProfile.bank_name || prev.bankName,
+        bankAccount: currentUserProfile.bank_account || prev.bankAccount,
+        accountHolder: currentUserProfile.bank_account_holder || prev.accountHolder,
+        avatarImage: currentUserProfile.avatar_url || prev.avatarImage,
+        bankPassbookUrl: currentUserProfile.bank_passbook_url || prev.bankPassbookUrl,
+        bankValidated: currentUserProfile.bank_validated || false,
+        bank_rejection_reason: currentUserProfile.bank_rejection_reason || ''
+      }));
+    }
+  }, [currentUserProfile]);
+
+  const handleSaveProfile = async () => {
+    if (!currentUserProfile || !isSupabaseConfigured()) {
+      setCurrentScreen('profile');
+      return;
+    }
+    
+    setIsSavingProfile(true);
+    try {
+      const names = editProfileData.fullName.trim().split(' ');
+      const firstName = names[0] || '';
+      const lastName = names.slice(1).join(' ') || '';
+
+      const { error } = await supabase
+        .from('users')
+        .update({
+          full_name: firstName,
+          surname: lastName,
+          email: editProfileData.email,
+          phone: editProfileData.phone,
+          bank_name: editProfileData.bankName,
+          bank_account: editProfileData.bankAccount,
+          bank_account_holder: editProfileData.accountHolder,
+          bank_passbook_url: editProfileData.bankPassbookUrl,
+          bank_validated: false, // Reset validation when updated
+          avatar_url: editProfileData.avatarImage,
+        })
+        .eq('id', currentUserProfile.id);
+
+      if (error) throw error;
+      
+      if (onRefreshData) onRefreshData();
+      
+      setCurrentScreen('profile');
+    } catch (err: any) {
+      alert('Gagal menyimpan profil: ' + err.message);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
 
   // Remaining list calculations for specific employee
   const employeeEmail = (currentUserProfile?.email || email).trim();
@@ -197,7 +260,69 @@ export default function MobileAppSimulator({
     setScanImage(null);
     setScanImageName('');
     setScannedData(null);
+    setEditingTx(null);
+    // Reset form
+    setFormMerchant('');
+    setFormAmount(0);
+    setFormCategory('Infrastruktur & Cloud');
+    setFormDate(new Date().toISOString().split('T')[0]);
+    setFormNotes('');
+    setFormItems([]);
     setCurrentScreen('scanner');
+  };
+
+  const handleOpenForm = (typeOption: 'reimburse' | 'cash_advance', imageBase64?: string, imageName?: string) => {
+    setFormType(typeOption);
+    setScanImage(imageBase64 || null);
+    setScanImageName(imageName || '');
+    setScannedData(null);
+    setEditingTx(null);
+    // Reset form
+    setFormMerchant('');
+    setFormAmount(0);
+    setFormCategory('Infrastruktur & Cloud');
+    setFormDate(new Date().toISOString().split('T')[0]);
+    setFormNotes('');
+    setFormItems([]);
+    setCurrentScreen('form');
+  };
+
+  const handleEditClick = (tx: Transaction) => {
+    setEditingTx(tx);
+    setFormType(tx.type as 'reimburse' | 'cash_advance');
+    setScanImage(tx.receiptUrl || null);
+    setScanImageName(tx.receiptUrl ? 'struk_terlampir.png' : '');
+    setFormMerchant(tx.merchant);
+    setFormAmount(tx.amount);
+    setFormCategory(tx.category || 'Infrastruktur & Cloud');
+    
+    // Konversi format tanggal YYYY-MM-DD
+    setFormDate(tx.date && tx.date.includes('-') && tx.date.split('-').length === 3 ? tx.date : new Date().toISOString().split('T')[0]);
+    
+    setFormNotes(tx.notes || '');
+    setFormItems([]);
+    
+    setCurrentScreen('form');
+  };
+
+  const handleDeleteTransaction = async (tx: Transaction) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus pengajuan reimburse ini?')) {
+      return;
+    }
+    
+    try {
+      if (isSupabaseConfigured()) {
+        const res = await fetch(`/api/transactions/employee/${tx.id}`, { method: 'DELETE' });
+        const resData = await res.json();
+        if (!res.ok || !resData.success) throw new Error(resData.error || 'Gagal menghapus');
+      }
+      
+      setCurrentScreen('history');
+      onRefreshData();
+      alert('Pengajuan berhasil dihapus.');
+    } catch (err: any) {
+      alert('Gagal menghapus pengajuan: ' + err.message);
+    }
   };
 
   const triggerOcrScan = async (base64Data: string, fileName: string, fileType: string) => {
@@ -282,30 +407,51 @@ export default function MobileAppSimulator({
       }
 
       if (isSupabaseConfigured() && currentUserProfile) {
-        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
-        const { error } = await supabase
-          .from('transactions')
-          .insert([{
-            employee_id: currentUserProfile.id,
-            merchant: formMerchant,
-            category: formCategory,
-            amount: Number(formAmount),
-            notes: formNotes,
-            status: 'pending',
-            receipt_url: finalReceiptUrl,
-            type: formType
-          }]);
-
-        if (error) throw error;
+        if (editingTx) {
+          const res = await fetch(`/api/transactions/employee/${editingTx.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              merchant: formMerchant,
+              category: formCategory,
+              amount: Number(formAmount),
+              notes: formNotes,
+              receipt_url: finalReceiptUrl,
+              type: formType === 'reimburse' ? 'reimbursement' : formType
+            })
+          });
+          const resData = await res.json();
+          if (!res.ok || !resData.success) throw new Error(resData.error || 'Gagal mengubah data');
+        } else {
+          const res = await fetch(`/api/transactions/employee`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              created_by: currentUserProfile.id,
+              company_id: currentUserProfile.company_id,
+              merchant: formMerchant,
+              category: formCategory,
+              amount: Number(formAmount),
+              notes: formNotes,
+              status: 'pending',
+              receipt_url: finalReceiptUrl,
+              type: formType === 'reimburse' ? 'reimbursement' : formType
+            })
+          });
+          const resData = await res.json();
+          if (!res.ok || !resData.success) throw new Error(resData.error || 'Gagal menyimpan data');
+        }
         
         setIsSubmitting(false);
+        setEditingTx(null);
         setCurrentScreen('success');
         onRefreshData();
       } else {
-        const response = await fetch('/api/reimburse/submit', {
-          method: 'POST',
+        const response = await fetch(editingTx ? '/api/reimburse/update' : '/api/reimburse/submit', {
+          method: editingTx ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            id: editingTx?.id,
             merchant: formMerchant,
             date: formDate,
             category: formCategory,
@@ -318,14 +464,15 @@ export default function MobileAppSimulator({
         });
         
         const data = await response.json();
-        if (data.success) {
-          setIsSubmitting(false);
-          setCurrentScreen('success');
-          onRefreshData();
-        } else {
-          setFormError(data.error || 'Gagal mengirim pengajuan.');
-          setIsSubmitting(false);
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Gagal menyimpan data.');
         }
+
+        setIsSubmitting(false);
+        setEditingTx(null);
+        setCurrentScreen('success');
+        onRefreshData();
       }
     } catch (err: any) {
       setFormError(err.message || 'Hubungan ke server terputus. Coba lagi.');
@@ -382,9 +529,11 @@ export default function MobileAppSimulator({
                 totalApproved={totalApproved}
                 limitMax={limitMax}
                 handleOpenScanner={handleOpenScanner}
+                handleOpenForm={handleOpenForm}
                 setCurrentScreen={setCurrentScreen}
                 staffTransactions={staffTransactions}
                 handleOpenDetail={handleOpenDetail}
+                avatarUrl={currentUserProfile?.avatar_url}
               />
             )}
 
@@ -450,12 +599,14 @@ export default function MobileAppSimulator({
 
             {/* SCREEN 9: DETAIL VIEW */}
             {currentScreen === 'detail' && selectedTx && (
-              <DetailScreen
-                selectedTx={selectedTx}
-                setSelectedTx={setSelectedTx}
+              <DetailScreen 
+                selectedTx={selectedTx} 
+                setSelectedTx={setSelectedTx} 
                 setCurrentScreen={setCurrentScreen}
                 zoomReceipt={zoomReceipt}
                 setZoomReceipt={setZoomReceipt}
+                onEditClick={handleEditClick}
+                onDeleteClick={handleDeleteTransaction}
               />
             )}
 
@@ -468,6 +619,7 @@ export default function MobileAppSimulator({
                 setSelectedTx={setSelectedTx}
                 onLogout={onLogout}
                 setIsLogged={setIsLogged}
+                avatarUrl={currentUserProfile?.avatar_url}
               />
             )}
 
@@ -479,6 +631,8 @@ export default function MobileAppSimulator({
                 showAvatarPicker={showAvatarPicker}
                 setShowAvatarPicker={setShowAvatarPicker}
                 setCurrentScreen={setCurrentScreen}
+                handleSaveProfile={handleSaveProfile}
+                isSaving={isSavingProfile}
               />
             )}
 

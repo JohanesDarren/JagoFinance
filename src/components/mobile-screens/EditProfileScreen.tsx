@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowLeft, Camera, X, Image, CheckCircle } from 'lucide-react';
+import React, { useRef } from 'react';
+import { ArrowLeft, Camera, X, Image, CheckCircle, Loader2, UploadCloud, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface EditProfileScreenProps {
@@ -8,6 +8,8 @@ interface EditProfileScreenProps {
   showAvatarPicker: boolean;
   setShowAvatarPicker: (show: boolean) => void;
   setCurrentScreen: (screen: any) => void;
+  handleSaveProfile?: () => void;
+  isSaving?: boolean;
 }
 
 export default function EditProfileScreen({
@@ -15,8 +17,36 @@ export default function EditProfileScreen({
   setEditProfileData,
   showAvatarPicker,
   setShowAvatarPicker,
-  setCurrentScreen
+  setCurrentScreen,
+  handleSaveProfile,
+  isSaving
 }: EditProfileScreenProps) {
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const passbookInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setEditProfileData({ ...editProfileData, avatarImage: reader.result as string });
+      setShowAvatarPicker(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePassbookChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setEditProfileData({ ...editProfileData, bankPassbookUrl: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="p-4 space-y-4 pb-24 h-full overflow-y-auto">
       <div className="flex justify-between items-center mb-4">
@@ -71,6 +101,13 @@ export default function EditProfileScreen({
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    ref={galleryInputRef} 
+                    className="hidden" 
+                    onChange={handleAvatarChange} 
+                  />
                   <button 
                     onClick={() => {
                       setShowAvatarPicker(false);
@@ -82,10 +119,7 @@ export default function EditProfileScreen({
                     <span className="text-[10px] font-bold">Kamera</span>
                   </button>
                   <button 
-                    onClick={() => {
-                      setShowAvatarPicker(false);
-                      setCurrentScreen('avatar-gallery');
-                    }}
+                    onClick={() => galleryInputRef.current?.click()}
                     className="flex flex-col items-center justify-center p-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 space-y-2 active:bg-slate-100 transition-colors"
                   >
                     <Image className="w-6 h-6" />
@@ -131,9 +165,24 @@ export default function EditProfileScreen({
           </div>
 
           <div className="pt-3 border-t border-slate-100">
-            <h6 className="text-[10px] font-bold text-slate-700 mb-3 uppercase tracking-wider">Informasi Rekening</h6>
+            <div className="flex items-center justify-between mb-3">
+              <h6 className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Informasi Rekening</h6>
+              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-bold ${editProfileData.bankValidated ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                {editProfileData.bankValidated ? <ShieldCheck className="w-2.5 h-2.5" /> : <ShieldAlert className="w-2.5 h-2.5" />}
+                {editProfileData.bankValidated ? 'Sudah divalidasi' : 'Belum tervalidasi'}
+              </div>
+            </div>
             
             <div className="space-y-3">
+              {editProfileData.bank_rejection_reason && (
+                <div className="bg-rose-50 border border-rose-100 p-2.5 rounded-xl flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+                  <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                  <div>
+                    <h6 className="text-[10px] font-bold text-rose-700 block">Validasi Rekening Ditolak</h6>
+                    <p className="text-[10px] text-rose-600 mt-0.5 leading-tight">{editProfileData.bank_rejection_reason}</p>
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 mb-1">Nama Bank</label>
                 <input 
@@ -163,19 +212,56 @@ export default function EditProfileScreen({
                   className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-250 rounded-xl focus:border-brand focus:ring-1 focus:ring-brand outline-none"
                 />
               </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 mb-1">Scan/Foto Buku Rekening</label>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  ref={passbookInputRef}
+                  onChange={handlePassbookChange}
+                  className="hidden"
+                />
+                <div 
+                  onClick={() => passbookInputRef.current?.click()}
+                  className={`w-full relative aspect-video border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-colors ${editProfileData.bankPassbookUrl ? 'border-brand/30 bg-brand/5' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}
+                >
+                  {editProfileData.bankPassbookUrl ? (
+                    <>
+                      <img src={editProfileData.bankPassbookUrl} alt="Buku Rekening" className="absolute inset-0 w-full h-full object-cover opacity-60" />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                        <span className="text-white text-[10px] font-bold bg-black/50 px-3 py-1 rounded-full">Ganti Foto</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud className="w-6 h-6 text-slate-400 mb-1" />
+                      <span className="text-[9px] font-semibold text-slate-500">Tap untuk upload foto</span>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <button 
           onClick={() => {
-            // Simulasikan penyimpanan
-            setCurrentScreen('profile');
+            if (handleSaveProfile) {
+              handleSaveProfile();
+            } else {
+              setCurrentScreen('profile');
+            }
           }}
-          className="w-full py-2.5 bg-brand text-white font-semibold text-xs rounded-xl shadow-xs mt-4 flex justify-center items-center gap-1.5"
+          disabled={isSaving}
+          className={`w-full py-2.5 ${isSaving ? 'bg-slate-400' : 'bg-brand'} text-white font-semibold text-xs rounded-xl shadow-xs mt-4 flex justify-center items-center gap-1.5`}
         >
-          <CheckCircle className="w-4 h-4" />
-          Simpan Perubahan
+          {isSaving ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <CheckCircle className="w-4 h-4" />
+          )}
+          {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
         </button>
       </div>
     </div>

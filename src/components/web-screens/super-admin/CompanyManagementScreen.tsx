@@ -74,7 +74,7 @@ export default function CompanyManagementScreen(props: WebScreenProps) {
   };
 
   const filteredCompanies = companies.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase())
+    c.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (

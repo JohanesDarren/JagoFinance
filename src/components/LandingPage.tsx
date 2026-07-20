@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Building2, ArrowRight, Sparkles, LayoutGrid, 
+import {
+  Building2, ArrowRight, Sparkles, LayoutGrid,
   Cpu, CloudCog, Banknote, BookMarked, User,
   Globe, ArrowUpRight, PlayCircle, ShieldCheck, Zap, ChevronRight
 } from 'lucide-react';
@@ -121,9 +121,10 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-slate-600 font-sans selection:bg-cyan-100 selection:text-cyan-900 relative overflow-hidden">
-      
+
       {/* INJECT CUSTOM PREMIUM FONTS & CSS */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
         
         .font-outfit { font-family: 'Outfit', sans-serif; }
@@ -194,9 +195,9 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
         <div className="aurora-blob bg-violet-200/50 w-[800px] h-[800px] top-[20%] right-[-20%]" style={{ animationDelay: '-5s' }}></div>
         <div className="aurora-blob bg-blue-200/40 w-[500px] h-[500px] bottom-[-20%] left-[20%]" style={{ animationDelay: '-10s' }}></div>
       </div>
-      
+
       {/* Noise Overlay for texture */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.02] z-[-15] mix-blend-multiply" style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }}></div>
+      <div className="fixed inset-0 pointer-events-none opacity-[0.02] z-[-15] mix-blend-multiply"></div>
 
       {/* Modern Floating Header */}
       <header className={`fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-300 w-[92%] max-w-6xl rounded-full ${scrolled ? 'top-4 bg-white/80 backdrop-blur-xl border border-slate-200 py-3 px-6 shadow-[0_8px_30px_rgba(0,0,0,0.08)]' : 'top-6 bg-transparent border-transparent py-3 px-6'}`}>
@@ -209,15 +210,16 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
               Jago<span className="text-gradient-accent">Finance</span>
             </span>
           </motion.div>
-          
+
           <motion.nav initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="hidden md:flex items-center gap-8 text-[14px] font-bold text-slate-500 font-jakarta">
             <a href="#platform" className="hover:text-slate-900 transition-colors">Platform</a>
             <a href="#workflow" className="hover:text-slate-900 transition-colors">Workflow</a>
-            <a href="#features" className="hover:text-slate-900 transition-colors">Features</a>
+            <a href="#pricing" className="hover:text-slate-900 transition-colors">Harga</a>
+            <a href="#features" className="hover:text-slate-900 transition-colors">Fitur</a>
           </motion.nav>
 
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <button 
+            <button
               onClick={onLoginClick}
               className="relative overflow-hidden group flex items-center gap-2 bg-slate-900 text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-all hover:scale-[1.02] active:scale-95 font-jakarta shadow-md hover:shadow-lg hover:shadow-slate-900/20"
             >
@@ -231,7 +233,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 flex flex-col items-center justify-center text-center z-10">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -240,39 +242,39 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
           <div className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-600">
             <Zap className="w-3 h-3" />
           </div>
-          <span>JagoFinance OS 2.0 Telah Hadir</span>
+          <span>JagoFinance Telah Hadir</span>
           <ArrowRight className="w-3 h-3 text-slate-400" />
         </motion.div>
 
-        <motion.h1 
+        <motion.h1
           initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           className="text-5xl sm:text-7xl lg:text-[7.5rem] font-black tracking-tighter leading-[0.9] font-outfit max-w-5xl"
         >
-          <span className="text-slate-900">Otomasi Keuangan.</span><br/>
+          <span className="text-slate-900">Otomasi Keuangan.</span><br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400">Kini Digerakkan AI.</span>
         </motion.h1>
 
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="mt-10 text-lg sm:text-xl text-slate-500 font-medium max-w-3xl leading-relaxed font-jakarta"
         >
           Tinggalkan entri manual. Kelola arus kas, rekonsiliasi seketika, dan lakukan payroll massal dengan infrastruktur finansial yang didesain khusus untuk enterprise modern.
         </motion.p>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
           className="mt-12 flex flex-col sm:flex-row items-center gap-5 w-full sm:w-auto"
         >
-          <button 
+          <button
             onClick={onLoginClick}
             className="w-full sm:w-auto group relative flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white px-10 py-4 rounded-full font-bold text-[15px] transition-all hover:scale-[1.02] active:scale-95 shadow-[0_8px_30px_rgba(0,0,0,0.12)] font-jakarta overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-cyan-500/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
             <span className="relative z-10 flex items-center gap-2">Mulai Eksplorasi <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></span>
           </button>
-          
+
           <button className="w-full sm:w-auto group flex items-center justify-center gap-3 bg-white/60 border border-slate-200/80 hover:bg-white text-slate-700 px-10 py-4 rounded-full font-bold text-[15px] transition-all hover:scale-[1.02] active:scale-95 shadow-[0_4px_20px_rgba(0,0,0,0.03)] backdrop-blur-md font-jakarta">
-            <PlayCircle className="w-5 h-5 text-indigo-500 group-hover:scale-110 transition-transform" /> 
+            <PlayCircle className="w-5 h-5 text-indigo-500 group-hover:scale-110 transition-transform" />
             <span>Lihat Demo Interaktif</span>
           </button>
         </motion.div>
@@ -280,7 +282,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
 
       {/* Dashboard Preview UI - Ultra Premium Light Mode */}
       <section className="relative z-20 px-6 max-w-[1400px] mx-auto pb-32">
-        <motion.div 
+        <motion.div
           style={{ scale: scaleProgress }}
           initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.4, type: 'spring', damping: 25 }}
           className="rounded-[2.5rem] sm:rounded-[3rem] p-3 sm:p-5 overflow-hidden bg-white/40 backdrop-blur-3xl border border-white/60 shadow-[0_20px_80px_rgba(0,0,0,0.04)]"
@@ -300,7 +302,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
             <div className="p-8 sm:p-14 grid grid-cols-1 lg:grid-cols-12 gap-10 relative overflow-hidden">
               {/* Animated Glow in Light Card */}
               <div className="absolute -top-1/2 left-1/4 w-[800px] h-[800px] bg-cyan-100/40 rounded-full blur-[100px] pointer-events-none animate-pulse duration-[8s]"></div>
-              
+
               <div className="col-span-1 lg:col-span-7 space-y-10 relative z-10">
                 <div>
                   <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-[0.2em] font-jakarta mb-4">Live Consolidated Balance</h3>
@@ -318,7 +320,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
                       <motion.div initial={{ width: 0 }} whileInView={{ width: '75%' }} transition={{ duration: 1.5, ease: "easeOut" }} className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400"></motion.div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-white border border-slate-100 rounded-[2rem] p-7 relative overflow-hidden group hover:shadow-[0_8px_30px_rgba(251,113,133,0.12)] transition-shadow cursor-pointer shadow-sm">
                     <div className="absolute top-0 right-0 p-6"><ArrowRight className="w-6 h-6 text-rose-500 opacity-30 group-hover:opacity-100 transition-opacity" /></div>
                     <div className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-jakarta">Outbound Expenses</div>
@@ -338,14 +340,14 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
                   </span>
                   AI Agents Activity
                 </div>
-                
+
                 <AnimatePresence mode="wait">
                   {[
                     { id: 1, icon: Zap, title: "Hermes AI Engine", desc: "Processed 128 receipts instantly.", color: "text-amber-500", bg: "bg-white", border: "border-slate-100", iconBg: "bg-amber-50" },
                     { id: 2, icon: Globe, title: "Webhook Sync", desc: "Midtrans gateway synced 12s ago.", color: "text-cyan-500", bg: "bg-white", border: "border-slate-100", iconBg: "bg-cyan-50" },
                     { id: 3, icon: ShieldCheck, title: "Automated Payroll", desc: "45 employees disbursed safely.", color: "text-emerald-500", bg: "bg-white", border: "border-slate-100", iconBg: "bg-emerald-50" }
                   ].map((item, idx) => (
-                    <motion.div 
+                    <motion.div
                       key={`${item.id}-${activeFeature}`}
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -375,7 +377,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       <section id="features" className="py-32 px-6 relative z-10 max-w-7xl mx-auto">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight mb-6 font-outfit">
-            Dibangun untuk <span className="text-gradient-primary">Kecepatan.</span><br/> 
+            Dibangun untuk <span className="text-gradient-primary">Kecepatan.</span><br />
             Didesain untuk <span className="text-gradient-accent">Skala.</span>
           </h2>
           <p className="text-slate-500 text-xl max-w-2xl mx-auto font-jakarta">
@@ -403,7 +405,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-20 items-start">
           <div className="lg:w-1/2 lg:sticky top-32 space-y-8">
             <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1] font-outfit">
-              Sistem yang bekerja<br/> <span className="text-slate-400">di balik layar.</span>
+              Sistem yang bekerja<br /> <span className="text-slate-400">di balik layar.</span>
             </h2>
             <p className="text-slate-500 text-lg leading-relaxed font-jakarta">
               Workflow JagoFinance tidak membutuhkan intervensi manual. Hubungkan API, tetapkan rules, dan biarkan sistem memproses ribuan mutasi secara real-time.
@@ -412,7 +414,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
               Lihat Dokumentasi API <ArrowRight className="w-4 h-4" />
             </button>
           </div>
-          
+
           <div className="lg:w-1/2 space-y-8">
             {[
               { num: '01', title: 'Koneksikan Gateway', desc: 'Integrasi webhook instan hanya dengan 1 klik ke sistem pembayaran Anda.' },
@@ -432,18 +434,149 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="py-32 px-6 relative z-10 bg-slate-50 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto space-y-20">
+          <div className="text-center space-y-6">
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight font-outfit">
+              Investasi cerdas untuk <br /> <span className="text-gradient-accent">pertumbuhan bisnis.</span>
+            </h2>
+            <p className="text-slate-500 text-lg max-w-2xl mx-auto font-jakarta">
+              Pilih paket yang sesuai dengan skala perusahaan Anda. Tanpa biaya tersembunyi.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Free Tier */}
+            <SpotlightCard className="bg-white border-slate-200 flex flex-col justify-between hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+              <div>
+                <h3 className="text-2xl font-black text-slate-900 mb-2 font-outfit">Free</h3>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-black text-slate-900 tracking-tight">Gratis</span>
+                </div>
+                <div className="space-y-4 mb-8 font-jakarta">
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-2 h-2 rounded-full bg-slate-600"></div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-400 block mb-1">Fitur yang Diakses</span>
+                      <p className="text-[14px] font-bold text-slate-700 leading-snug">Fitur dasar kas, Reimburse manual</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-rose-50 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-2 h-2 rounded-full bg-rose-500"></div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-black uppercase tracking-widest text-rose-400 block mb-1">Batasan</span>
+                      <p className="text-[14px] font-bold text-slate-700 leading-snug">Max 1 Admin, 3 Staff<br />Max 50 transaksi/bulan</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={onLoginClick}
+                className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors font-jakarta text-[14px]"
+              >
+                Mulai Gratis
+              </button>
+            </SpotlightCard>
+
+            {/* Starter Tier */}
+            <SpotlightCard className="bg-white border-indigo-200 shadow-xl shadow-indigo-900/5 flex flex-col justify-between relative transform scale-100 md:scale-105 z-10">
+              <div className="absolute -top-4 inset-x-0 flex justify-center">
+                <span className="bg-gradient-to-r from-indigo-500 to-cyan-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-md">
+                  Paling Populer
+                </span>
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-indigo-900 mb-2 font-outfit mt-2">Starter</h3>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-black text-slate-900 tracking-tight">Rp 29.000</span>
+                  <span className="text-slate-500 font-medium font-jakarta">/bulan</span>
+                </div>
+                <div className="space-y-4 mb-8 font-jakarta">
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-indigo-50 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-black uppercase tracking-widest text-indigo-400 block mb-1">Fitur yang Diakses</span>
+                      <p className="text-[14px] font-bold text-slate-700 leading-snug">Semua fitur Free +<br />Payroll Generator</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-rose-50 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-2 h-2 rounded-full bg-rose-500"></div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-black uppercase tracking-widest text-rose-400 block mb-1">Batasan</span>
+                      <p className="text-[14px] font-bold text-slate-700 leading-snug">Max 3 Admin<br />Max 15 Staff</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={onLoginClick}
+                className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors font-jakarta text-[14px] shadow-md hover:shadow-lg hover:shadow-indigo-500/20"
+              >
+                Pilih Starter
+              </button>
+            </SpotlightCard>
+
+            {/* Pro Tier */}
+            <SpotlightCard className="bg-slate-900 border-slate-800 flex flex-col justify-between hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div>
+                <h3 className="text-2xl font-black text-white mb-2 font-outfit">Pro</h3>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-black text-white tracking-tight">Rp 59.000</span>
+                  <span className="text-slate-400 font-medium font-jakarta">/bulan</span>
+                </div>
+                <div className="space-y-4 mb-8 font-jakarta">
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-black uppercase tracking-widest text-cyan-400 block mb-1">Fitur yang Diakses</span>
+                      <p className="text-[14px] font-bold text-slate-200 leading-snug">Semua fitur Starter +<br />App Integrations, Priority Support</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-black uppercase tracking-widest text-emerald-400 block mb-1">Batasan</span>
+                      <p className="text-[14px] font-bold text-slate-200 leading-snug">Unlimited Users<br />Unlimited Transactions</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={onLoginClick}
+                className="w-full py-3.5 bg-white text-slate-900 hover:bg-slate-100 font-bold rounded-xl transition-colors font-jakarta text-[14px]"
+              >
+                Go Pro
+              </button>
+            </SpotlightCard>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-32 px-6 relative z-10 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-50 to-white pointer-events-none"></div>
         <div className="max-w-4xl mx-auto text-center space-y-10 relative z-10">
           <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-[1.05] font-outfit">
-            Masa depan finance <br/> dimulai hari ini.
+            Masa depan finance <br /> dimulai hari ini.
           </h2>
           <p className="text-slate-500 text-xl max-w-2xl mx-auto leading-relaxed font-jakarta">
             Berhenti menghabiskan waktu pada entri manual. Bergabung dengan startup elit yang menggunakan JagoFinance.
           </p>
           <div className="pt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
-            <button 
+            <button
               onClick={onLoginClick}
               className="w-full sm:w-auto bg-slate-900 text-white px-10 py-4 rounded-full font-bold text-[16px] shadow-xl shadow-slate-900/20 transition-all hover:scale-105 flex items-center justify-center gap-2 font-jakarta"
             >
@@ -452,7 +585,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
           </div>
         </div>
       </section>
-      
+
       {/* Footer */}
       <footer className="bg-white pt-10 pb-10 px-6 border-t border-slate-200 font-jakarta relative z-10">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
@@ -469,7 +602,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
             <a href="#" className="hover:text-slate-900 transition-colors">Terms</a>
           </div>
           <div className="text-[13px] text-slate-400 font-medium">
-            © 2026 PT JagoAI School Indonesia.
+            © 2026 <a href="https://jagoai.dev/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 transition-colors font-bold">JagoAI</a>.
           </div>
         </div>
       </footer>
