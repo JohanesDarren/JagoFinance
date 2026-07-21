@@ -33,6 +33,7 @@ export interface WebScreenProps {
   
   splitViewTx: Transaction | null;
   setSplitViewTx: (tx: Transaction | null) => void;
+  setActiveTab?: (tab: any) => void;
   
   rejectReasonText: string;
   setRejectReasonText: (val: string) => void;

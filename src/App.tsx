@@ -24,6 +24,7 @@ export default function App() {
   const [connectedApps, setConnectedApps] = useState<ConnectedApp[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   const [admins, setAdmins] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -34,18 +35,31 @@ export default function App() {
   const [profile, setProfile] = useState<any>(null);
 
   // --- Database Column Mappers (Postgres snake_case <-> Frontend camelCase) ---
-  const mapTxFromDb = (dbTx: any): Transaction => ({
-    id: dbTx.id,
-    date: dbTx.created_at ? dbTx.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
-    merchant: dbTx.merchant,
-    category: dbTx.category,
-    amount: Number(dbTx.amount),
-    notes: dbTx.notes || '',
-    status: dbTx.status === 'approved' ? 'Approved' : dbTx.status === 'rejected' ? 'Rejected' : 'Pending',
-    receiptUrl: dbTx.receipt_url || '',
-    type: dbTx.type,
-    employeeId: dbTx.created_by || ''
-  });
+  const mapTxFromDb = (dbTx: any): Transaction => {
+    let finalNotes = dbTx.notes || '';
+    let rejectReason = '';
+    
+    if (finalNotes.includes('REJECT_REASON: ')) {
+       const parts = finalNotes.split('REJECT_REASON: ');
+       finalNotes = parts[0].replace(' | ', '').trim();
+       rejectReason = parts[1].trim();
+    }
+
+    return {
+      id: dbTx.id,
+      date: dbTx.created_at ? dbTx.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+      merchant: dbTx.merchant,
+      category: dbTx.category,
+      amount: Number(dbTx.amount),
+      notes: finalNotes,
+      status: dbTx.status === 'approved' ? 'Approved' : dbTx.status === 'rejected' ? 'Rejected' : 'Pending',
+      receiptUrl: dbTx.receipt_url || '',
+      rejectReason: rejectReason,
+      type: dbTx.type,
+      employeeId: dbTx.created_by || '',
+      createdAt: dbTx.created_at ? dbTx.created_at.replace('T', ' ').substring(0, 16) : ''
+    };
+  };
 
   const mapEmployeeFromDb = (dbEmp: any): Employee => ({
     id: dbEmp.id,
@@ -150,27 +164,50 @@ export default function App() {
             .eq('role', 'admin_corp');
           setAdmins(adminsData || []);
 
+          if (profileData && profileData.email) {
+            try {
+              const nRes = await fetch(`/api/notifications/${profileData.email}`);
+              if (nRes.ok) {
+                const nData = await nRes.json();
+                setNotifications(nData.notifications || []);
+              }
+            } catch (e) { console.error('Failed to fetch notifications', e); }
+          }
+
           setIsLoading(false);
           setIsRefreshing(false);
           return;
         }
       } else {
-        const response = await fetch('/api/financial-data');
-        if (response.ok) {
-          const data = await response.json();
-          setCashBalance(data.cashBalance || 0);
-          setTransactions(data.transactions || []);
-          setEmployees(data.employees || []);
-          setConnectedApps(data.connectedApps || []);
-          setSubscriptions(data.subscriptions || []);
-
-        }
+        const res = await fetch('/api/financial-data');
+        const data = await res.json();
+        setCashBalance(data.cashBalance);
+        setEmployees(data.employees);
+        setConnectedApps(data.connectedApps);
+        setSubscriptions(data.subscriptions);
+        setTransactions(data.transactions);
       }
     } catch (error) {
-      console.error('Error fetching backend session data:', error);
+      console.error('Error fetching financial data:', error);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
+    }
+  };
+
+  const sendNotification = async (targetEmail: string, title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: targetEmail, title, message, type })
+      });
+      // Refresh notifications if it's for the current user
+      if (profile && profile.email === targetEmail) {
+        fetchFinancialData(true);
+      }
+    } catch (err) {
+      console.error('Failed to send notification', err);
     }
   };
 
@@ -291,6 +328,12 @@ export default function App() {
           .eq('id', transactionId);
         if (txErr) throw txErr;
 
+        // Send notification
+        const emp = employees.find(e => e.id === tx.employeeId);
+        if (emp && emp.email) {
+          await sendNotification(emp.email, 'Reimburse Disetujui', `Pengajuan Rp ${tx.amount.toLocaleString('id-ID')} (${tx.merchant}) telah disetujui dan ditransfer.`, 'success');
+        }
+
         setCashBalance(newBalance);
         await fetchFinancialData(true);
         return true;
@@ -322,13 +365,26 @@ export default function App() {
         const tx = transactions.find(t => t.id === transactionId);
         if (!tx) throw new Error('Transaksi tidak ditemukan.');
         const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
+        
+        // Append REJECT_REASON to notes to avoid schema changes
+        const updatedNotes = tx.notes 
+          ? `${tx.notes} | REJECT_REASON: ${rejectReason}`
+          : `REJECT_REASON: ${rejectReason}`;
+
         const { error: txErr } = await supabase
           .from('transactions')
           .update({
-            status: 'rejected'
+            status: 'rejected',
+            notes: updatedNotes
           })
           .eq('id', transactionId);
         if (txErr) throw txErr;
+
+        // Send notification
+        const emp = employees.find(e => e.id === tx.employeeId);
+        if (emp && emp.email) {
+          await sendNotification(emp.email, 'Reimburse Ditolak', `Pengajuan Rp ${tx.amount.toLocaleString('id-ID')} (${tx.merchant}) ditolak. Alasan: ${rejectReason}`, 'error');
+        }
 
         await fetchFinancialData(true);
         return true;
@@ -832,13 +888,14 @@ export default function App() {
         </div>
       ) : (
         /* Render Web App for Karyawan (formerly Mobile Simulator) */
-        <div className="w-full h-screen flex flex-col bg-slate-50 overflow-hidden">
+        <div className="w-full h-[100dvh] lg:h-auto lg:w-[400px] lg:h-[800px] lg:rounded-[3rem] lg:border-8 border-slate-800 bg-white shadow-2xl relative overflow-hidden flex flex-col shrink-0">
           <MobileAppSimulator 
-            transactions={transactions}
-            cashBalance={cashBalance}
-            onRefreshData={forceRefresh}
+            transactions={transactions} 
+            cashBalance={cashBalance} 
+            onRefreshData={() => fetchFinancialData(true)}
             currentUserProfile={profile}
             onLogout={handleLogout}
+            notifications={notifications}
           />
         </div>
       )}
@@ -846,4 +903,3 @@ export default function App() {
     </div>
   );
 }
-

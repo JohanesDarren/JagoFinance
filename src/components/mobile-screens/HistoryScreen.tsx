@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowLeft, AlertCircle } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ArrowLeft, AlertCircle, Filter } from 'lucide-react';
 import { Transaction } from '../../types';
 
 interface HistoryScreenProps {
@@ -17,6 +17,36 @@ export default function HistoryScreen({
   staffTransactions,
   handleOpenDetail
 }: HistoryScreenProps) {
+  const [selectedMonth, setSelectedMonth] = useState<string>('Semua');
+
+  // Extract unique months from transactions
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>();
+    staffTransactions.forEach(t => {
+      if (t.date) {
+        // Date format is YYYY-MM-DD or MM/DD/YYYY, we can just grab YYYY-MM
+        let yearMonth = '';
+        if (t.date.includes('-')) {
+          yearMonth = t.date.substring(0, 7); // YYYY-MM
+        } else if (t.date.includes('/')) {
+          const parts = t.date.split('/');
+          if (parts.length === 3) {
+            yearMonth = `${parts[2]}-${parts[0].padStart(2, '0')}`; // YYYY-MM
+          }
+        }
+        if (yearMonth) months.add(yearMonth);
+      }
+    });
+    return Array.from(months).sort().reverse(); // Newest first
+  }, [staffTransactions]);
+
+  // Helper to format YYYY-MM to readable month
+  const formatMonth = (ym: string) => {
+    const [y, m] = ym.split('-');
+    const date = new Date(parseInt(y), parseInt(m) - 1);
+    return date.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+  };
+
   return (
     <div className="p-4 space-y-3">
       <div className="flex items-center justify-between">
@@ -30,29 +60,62 @@ export default function HistoryScreen({
         <div className="w-8"></div>
       </div>
 
-      {/* Tab Controller Filter Tab Bar Navigation */}
-      <div className="bg-slate-100 p-1 rounded-xl flex gap-1 text-[10px] font-bold">
-        {(['Semua', 'Pending', 'Selesai'] as const).map((tab) => (
-          <button 
-            key={tab}
-            onClick={() => setHistoryTab(tab)}
-            className={`flex-1 py-1.5 rounded-lg text-center transition-all ${
-              historyTab === tab 
-                ? 'bg-white text-brand shadow-3xs' 
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
+      <div className="flex gap-2 items-center">
+        {/* Tab Controller Filter Tab Bar Navigation */}
+        <div className="bg-slate-100 p-1 rounded-xl flex gap-1 text-[10px] font-bold flex-1">
+          {(['Semua', 'Pending', 'Selesai'] as const).map((tab) => (
+            <button 
+              key={tab}
+              onClick={() => setHistoryTab(tab)}
+              className={`flex-1 py-1.5 rounded-lg text-center transition-all ${
+                historyTab === tab 
+                  ? 'bg-white text-brand shadow-3xs' 
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Month Filter Dropdown */}
+        <div className="relative">
+          <select 
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="appearance-none bg-white border border-slate-200 text-slate-700 text-[10px] font-bold py-1.5 pl-2.5 pr-6 rounded-xl outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 shadow-3xs transition-all"
           >
-            {tab}
-          </button>
-        ))}
+            <option value="Semua">Bulan (Semua)</option>
+            {availableMonths.map(ym => (
+              <option key={ym} value={ym}>{formatMonth(ym)}</option>
+            ))}
+          </select>
+          <Filter className="w-3 h-3 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+        </div>
       </div>
 
       {/* Filter list */}
       {(() => {
         const filtered = staffTransactions.filter(t => {
-          if (historyTab === 'Semua') return true;
-          if (historyTab === 'Pending') return t.status === 'Pending';
-          return t.status === 'Approved' || t.status === 'Rejected';
+          // Status filter
+          let statusMatch = false;
+          if (historyTab === 'Semua') statusMatch = true;
+          else if (historyTab === 'Pending') statusMatch = t.status === 'Pending';
+          else statusMatch = t.status === 'Approved' || t.status === 'Rejected';
+
+          if (!statusMatch) return false;
+
+          // Month filter
+          if (selectedMonth === 'Semua') return true;
+          
+          let yearMonth = '';
+          if (t.date.includes('-')) yearMonth = t.date.substring(0, 7);
+          else if (t.date.includes('/')) {
+            const parts = t.date.split('/');
+            if (parts.length === 3) yearMonth = `${parts[2]}-${parts[0].padStart(2, '0')}`;
+          }
+          
+          return yearMonth === selectedMonth;
         });
 
         return filtered.length === 0 ? (

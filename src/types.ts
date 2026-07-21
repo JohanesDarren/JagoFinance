@@ -35,6 +35,7 @@ export interface Transaction {
   rejectReason?: string;
   type: TransactionType;
   employeeId: string;
+  createdAt?: string;
   items?: LineItem[];
 }
 

@@ -49,14 +49,40 @@ const SpotlightCard = ({ children, className = "", ...props }: SpotlightCardProp
 
 export default function LandingPage({ onLoginClick }: LandingPageProps) {
   const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('');
   const [activeFeature, setActiveFeature] = useState(0);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const { scrollY, scrollYProgress } = useScroll();
   const scaleProgress = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+      
+      const sections = ['platform', 'features', 'workflow', 'pricing'];
+      let current = '';
+      
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          // Adjust threshold based on typical header heights and offsets
+          if (rect.top <= 300 && rect.bottom >= 300) {
+            current = section;
+            break;
+          }
+        }
+      }
+      
+      if (window.scrollY < 100) current = '';
+      setActiveSection(current);
+    };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
+    // Trigger once on mount
+    handleScroll();
+    
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -66,6 +92,15 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       setActiveFeature((prev) => (prev + 1) % 3);
     }, 4000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Global mouse follower
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   const features = [
@@ -120,7 +155,15 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-slate-600 font-sans selection:bg-cyan-100 selection:text-cyan-900 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-500 selection:text-white relative overflow-hidden">
+      {/* Global Mouse Follower */}
+      <motion.div
+        className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
+        animate={{
+          background: `radial-gradient(800px circle at ${mousePos.x}px ${mousePos.y}px, rgba(99, 102, 241, 0.08), transparent 40%)`
+        }}
+        transition={{ type: 'tween', ease: 'linear', duration: 0 }}
+      />
 
       {/* INJECT CUSTOM PREMIUM FONTS & CSS */}
       <style dangerouslySetInnerHTML={{
@@ -211,11 +254,11 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
             </span>
           </motion.div>
 
-          <motion.nav initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="hidden md:flex items-center gap-8 text-[14px] font-bold text-slate-500 font-jakarta">
-            <a href="#platform" className="hover:text-slate-900 transition-colors">Platform</a>
-            <a href="#workflow" className="hover:text-slate-900 transition-colors">Workflow</a>
-            <a href="#pricing" className="hover:text-slate-900 transition-colors">Harga</a>
-            <a href="#features" className="hover:text-slate-900 transition-colors">Fitur</a>
+          <motion.nav initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="hidden md:flex items-center gap-8 text-[14px] font-bold font-jakarta">
+            <a href="#platform" className={`transition-colors ${activeSection === 'platform' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900'}`}>Platform</a>
+            <a href="#features" className={`transition-colors ${activeSection === 'features' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900'}`}>Fitur</a>
+            <a href="#workflow" className={`transition-colors ${activeSection === 'workflow' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900'}`}>Workflow</a>
+            <a href="#pricing" className={`transition-colors ${activeSection === 'pricing' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900'}`}>Harga</a>
           </motion.nav>
 
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
@@ -281,7 +324,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       </section>
 
       {/* Dashboard Preview UI - Ultra Premium Light Mode */}
-      <section className="relative z-20 px-6 max-w-[1400px] mx-auto pb-32">
+      <section id="platform" className="relative z-20 px-6 max-w-[1400px] mx-auto pb-32">
         <motion.div
           style={{ scale: scaleProgress }}
           initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.4, type: 'spring', damping: 25 }}
@@ -341,7 +384,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
                   AI Agents Activity
                 </div>
 
-                <AnimatePresence mode="wait">
+                <AnimatePresence>
                   {[
                     { id: 1, icon: Zap, title: "Hermes AI Engine", desc: "Processed 128 receipts instantly.", color: "text-amber-500", bg: "bg-white", border: "border-slate-100", iconBg: "bg-amber-50" },
                     { id: 2, icon: Globe, title: "Webhook Sync", desc: "Midtrans gateway synced 12s ago.", color: "text-cyan-500", bg: "bg-white", border: "border-slate-100", iconBg: "bg-cyan-50" },
@@ -448,119 +491,142 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Free Tier */}
-            <SpotlightCard className="bg-white border-slate-200 flex flex-col justify-between hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
-              <div>
-                <h3 className="text-2xl font-black text-slate-900 mb-2 font-outfit">Free</h3>
-                <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-4xl font-black text-slate-900 tracking-tight">Gratis</span>
+            <div className="relative group h-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-100 rounded-[2rem] blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-700"></div>
+              <div className="bg-white/80 backdrop-blur-xl border border-slate-200 shadow-xl shadow-slate-200/50 rounded-[2rem] p-8 lg:p-10 flex flex-col justify-between h-full hover:-translate-y-2 transition-transform duration-500 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-white via-transparent to-slate-50/50 opacity-100"></div>
+                <div className="relative z-10 flex-1">
+                  <h3 className="text-2xl font-black text-slate-800 mb-2 font-outfit tracking-tight">Free</h3>
+                  <div className="flex items-baseline gap-2 mb-8">
+                    <span className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">Gratis</span>
+                  </div>
+                  <div className="space-y-6 mb-8 font-jakarta">
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 shadow-inner border border-slate-200">
+                        <div className="w-2.5 h-2.5 rounded-full bg-slate-400"></div>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">Fitur yang Diakses</span>
+                        <p className="text-[14px] font-bold text-slate-700 leading-relaxed">Fitur dasar kas,<br/>Reimburse manual</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center shrink-0 shadow-inner border border-rose-100">
+                        <div className="w-2.5 h-2.5 rounded-full bg-rose-400"></div>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-rose-400 block mb-1">Batasan</span>
+                        <p className="text-[14px] font-bold text-slate-700 leading-relaxed">Max 1 Admin, 3 Staff<br />Max 50 transaksi/bulan</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-4 mb-8 font-jakarta">
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
-                      <div className="w-2 h-2 rounded-full bg-slate-600"></div>
-                    </div>
-                    <div>
-                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-400 block mb-1">Fitur yang Diakses</span>
-                      <p className="text-[14px] font-bold text-slate-700 leading-snug">Fitur dasar kas, Reimburse manual</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-rose-50 flex items-center justify-center shrink-0 mt-0.5">
-                      <div className="w-2 h-2 rounded-full bg-rose-500"></div>
-                    </div>
-                    <div>
-                      <span className="text-[11px] font-black uppercase tracking-widest text-rose-400 block mb-1">Batasan</span>
-                      <p className="text-[14px] font-bold text-slate-700 leading-snug">Max 1 Admin, 3 Staff<br />Max 50 transaksi/bulan</p>
-                    </div>
-                  </div>
+                <div className="relative z-10 mt-8">
+                  <button 
+                    onClick={onLoginClick}
+                    className="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-all duration-300 font-jakarta text-[14px] border border-slate-200/50 hover:shadow-md"
+                  >
+                    Mulai Gratis
+                  </button>
                 </div>
               </div>
-              <button 
-                onClick={onLoginClick}
-                className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors font-jakarta text-[14px]"
-              >
-                Mulai Gratis
-              </button>
-            </SpotlightCard>
+            </div>
 
             {/* Starter Tier */}
-            <SpotlightCard className="bg-white border-indigo-200 shadow-xl shadow-indigo-900/5 flex flex-col justify-between relative transform scale-100 md:scale-105 z-10">
-              <div className="absolute -top-4 inset-x-0 flex justify-center">
-                <span className="bg-gradient-to-r from-indigo-500 to-cyan-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-md">
-                  Paling Populer
-                </span>
-              </div>
-              <div>
-                <h3 className="text-2xl font-black text-indigo-900 mb-2 font-outfit mt-2">Starter</h3>
-                <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-4xl font-black text-slate-900 tracking-tight">Rp 29.000</span>
-                  <span className="text-slate-500 font-medium font-jakarta">/bulan</span>
+            <div className="relative group h-full md:-mt-4 md:mb-4 z-20">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-cyan-500 rounded-[2rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-700 animate-pulse"></div>
+              <div className="bg-white border-2 border-indigo-100 shadow-2xl shadow-indigo-900/10 rounded-[2rem] p-8 lg:p-10 flex flex-col justify-between h-full hover:-translate-y-3 transition-transform duration-500 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white to-cyan-50/50 opacity-100"></div>
+                <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-100 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 group-hover:bg-indigo-200 transition-colors duration-500"></div>
+                
+                <div className="absolute top-0 inset-x-0 flex justify-center -mt-0.5">
+                  <span className="bg-gradient-to-r from-indigo-600 to-cyan-500 text-white text-[10px] font-black uppercase tracking-widest px-5 py-2 rounded-b-xl shadow-md">
+                    Paling Populer
+                  </span>
                 </div>
-                <div className="space-y-4 mb-8 font-jakarta">
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-indigo-50 flex items-center justify-center shrink-0 mt-0.5">
-                      <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                
+                <div className="relative z-10 flex-1 mt-6">
+                  <h3 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-cyan-600 mb-2 font-outfit tracking-tight">Starter</h3>
+                  <div className="flex items-baseline gap-2 mb-8">
+                    <span className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">Rp 29k</span>
+                    <span className="text-slate-500 font-medium font-jakarta">/bulan</span>
+                  </div>
+                  <div className="space-y-6 mb-8 font-jakarta">
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center shrink-0 shadow-inner border border-indigo-100">
+                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500"></div>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 block mb-1">Fitur yang Diakses</span>
+                        <p className="text-[14px] font-bold text-slate-700 leading-relaxed">Semua fitur Free +<br />Payroll Generator</p>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-[11px] font-black uppercase tracking-widest text-indigo-400 block mb-1">Fitur yang Diakses</span>
-                      <p className="text-[14px] font-bold text-slate-700 leading-snug">Semua fitur Free +<br />Payroll Generator</p>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center shrink-0 shadow-inner border border-rose-100">
+                        <div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-rose-500 block mb-1">Batasan</span>
+                        <p className="text-[14px] font-bold text-slate-700 leading-relaxed">Max 3 Admin<br />Max 15 Staff</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-rose-50 flex items-center justify-center shrink-0 mt-0.5">
-                      <div className="w-2 h-2 rounded-full bg-rose-500"></div>
-                    </div>
-                    <div>
-                      <span className="text-[11px] font-black uppercase tracking-widest text-rose-400 block mb-1">Batasan</span>
-                      <p className="text-[14px] font-bold text-slate-700 leading-snug">Max 3 Admin<br />Max 15 Staff</p>
-                    </div>
-                  </div>
+                </div>
+                <div className="relative z-10 mt-8">
+                  <button 
+                    onClick={onLoginClick}
+                    className="w-full py-4 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold rounded-2xl transition-all duration-300 font-jakarta text-[14px] shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/40 border border-indigo-400/50 group-hover:scale-[1.02]"
+                  >
+                    Pilih Starter
+                  </button>
                 </div>
               </div>
-              <button 
-                onClick={onLoginClick}
-                className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors font-jakarta text-[14px] shadow-md hover:shadow-lg hover:shadow-indigo-500/20"
-              >
-                Pilih Starter
-              </button>
-            </SpotlightCard>
+            </div>
 
-            {/* Pro Tier */}
-            <SpotlightCard className="bg-slate-900 border-slate-800 flex flex-col justify-between hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-              <div>
-                <h3 className="text-2xl font-black text-white mb-2 font-outfit">Pro</h3>
-                <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-4xl font-black text-white tracking-tight">Rp 59.000</span>
-                  <span className="text-slate-400 font-medium font-jakarta">/bulan</span>
+            {/* Pro Tier (Light Theme) */}
+            <div className="relative group h-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-200 to-teal-100 rounded-[2rem] blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-700"></div>
+              <div className="bg-white border border-emerald-100 shadow-xl shadow-emerald-900/5 rounded-[2rem] p-8 lg:p-10 flex flex-col justify-between h-full hover:-translate-y-2 transition-transform duration-500 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 via-white to-teal-50/50 opacity-100"></div>
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-50 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2 group-hover:bg-emerald-100 transition-colors duration-500"></div>
+
+                <div className="relative z-10 flex-1">
+                  <h3 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-600 mb-2 font-outfit tracking-tight">Pro</h3>
+                  <div className="flex items-baseline gap-2 mb-8">
+                    <span className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">Rp 59k</span>
+                    <span className="text-slate-500 font-medium font-jakarta">/bulan</span>
+                  </div>
+                  <div className="space-y-6 mb-8 font-jakarta">
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 shadow-inner border border-emerald-100">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 block mb-1">Fitur yang Diakses</span>
+                        <p className="text-[14px] font-bold text-slate-700 leading-relaxed">Semua fitur Starter +<br />App Integrations, Priority Support</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100/50 flex items-center justify-center shrink-0 shadow-inner border border-emerald-200">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-sm"></div>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 block mb-1">Batasan</span>
+                        <p className="text-[14px] font-bold text-slate-700 leading-relaxed">Unlimited Users<br />Unlimited Transactions</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-4 mb-8 font-jakarta">
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
-                    </div>
-                    <div>
-                      <span className="text-[11px] font-black uppercase tracking-widest text-cyan-400 block mb-1">Fitur yang Diakses</span>
-                      <p className="text-[14px] font-bold text-slate-200 leading-snug">Semua fitur Starter +<br />App Integrations, Priority Support</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                    </div>
-                    <div>
-                      <span className="text-[11px] font-black uppercase tracking-widest text-emerald-400 block mb-1">Batasan</span>
-                      <p className="text-[14px] font-bold text-slate-200 leading-snug">Unlimited Users<br />Unlimited Transactions</p>
-                    </div>
-                  </div>
+                <div className="relative z-10 mt-8">
+                  <button 
+                    onClick={onLoginClick}
+                    className="w-full py-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-2xl transition-all duration-300 font-jakarta text-[14px] border border-emerald-200 hover:shadow-md"
+                  >
+                    Go Pro
+                  </button>
                 </div>
               </div>
-              <button 
-                onClick={onLoginClick}
-                className="w-full py-3.5 bg-white text-slate-900 hover:bg-slate-100 font-bold rounded-xl transition-colors font-jakarta text-[14px]"
-              >
-                Go Pro
-              </button>
-            </SpotlightCard>
+            </div>
           </div>
         </div>
       </section>

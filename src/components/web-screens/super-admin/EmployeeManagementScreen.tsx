@@ -29,6 +29,22 @@ export default function EmployeeManagementScreen(props: WebScreenProps) {
       
       if (error) throw error;
       
+      // Send notification if we are validating (true)
+      if (!currentStatus && selectedEmployee && selectedEmployee.email) {
+        try {
+          await fetch('/api/notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: selectedEmployee.email,
+              title: 'Informasi Rekening Valid',
+              message: 'Informasi rekening bank Anda telah divalidasi oleh Admin. Anda kini siap menerima pencairan dana reimburse.',
+              type: 'success'
+            })
+          });
+        } catch (e) { console.error(e); }
+      }
+
       if (selectedEmployee) {
         setSelectedEmployee({ ...selectedEmployee, bank_validated: !currentStatus, bank_rejection_reason: null as any });
       }
@@ -61,6 +77,20 @@ export default function EmployeeManagementScreen(props: WebScreenProps) {
         .eq('id', selectedEmployee.id);
       
       if (error) throw error;
+
+      try {
+        await fetch('/api/notifications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: selectedEmployee.email,
+            title: 'Validasi Rekening Ditolak',
+            message: `Informasi rekening bank Anda ditolak. Alasan: ${rejectBankReason}`,
+            type: 'error'
+          })
+        });
+      } catch (e) { console.error(e); }
+
       
       setSelectedEmployee({ ...selectedEmployee, bank_validated: false, bank_rejection_reason: rejectBankReason });
       setShowRejectBankModal(false);

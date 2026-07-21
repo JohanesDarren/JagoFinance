@@ -77,6 +77,17 @@ export default function OverviewScreen(props: WebScreenProps) {
           <h2 className="text-4xl lg:text-5xl font-black font-display text-slate-900 tracking-tight">Executive Cockpit</h2>
           <p className="text-base text-slate-500 mt-2 font-medium max-w-xl">Status finansial real-time perusahaan Anda. Pantau metrik kunci, runway, dan profitabilitas dalam satu pandangan.</p>
         </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          {props.setActiveTab && (
+            <button 
+              onClick={() => props.setActiveTab && props.setActiveTab('inbound')}
+              className="w-full md:w-auto px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black text-sm rounded-[1.25rem] shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-1 transition-all flex items-center justify-center gap-2"
+            >
+              <DollarSign className="w-5 h-5" />
+              Catat Uang Masuk
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 4 Hero Stats Metrics Grid */}

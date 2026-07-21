@@ -134,6 +134,22 @@ export default function DetailScreen({
         <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Status Transaksi</span>
         
         <div className="space-y-4 relative pl-5 border-l border-indigo-100 ml-1.5 py-1">
+          {/* Step 1: Pengajuan */}
+          <div className="relative text-[10px]">
+            <div className="absolute -left-[25px] top-0.5 w-3 h-3 rounded-full border-2 bg-indigo-500 border-indigo-500 flex items-center justify-center">
+              <Check className="w-2 h-2 text-white stroke-[3]" />
+            </div>
+            <div className="leading-snug">
+              <span className="font-bold block text-indigo-700">
+                Pengajuan Terkirim
+              </span>
+              <span className="text-[8px] text-slate-400 block mt-0.5">
+                {selectedTx.createdAt || selectedTx.date}
+              </span>
+            </div>
+          </div>
+
+          {/* Step 2: Status Akhir */}
           <div className="relative text-[10px]">
             <div className={`absolute -left-[25px] top-0.5 w-3 h-3 rounded-full border-2 flex items-center justify-center ${
               selectedTx.status === 'Approved' ? 'bg-emerald-500 border-emerald-500' : 
@@ -153,8 +169,9 @@ export default function DetailScreen({
                  selectedTx.status === 'Rejected' ? 'Ditolak' :
                  'Sedang Direview'}
               </span>
-              <span className="text-[8px] text-slate-400">
-                {selectedTx.date}
+              {/* If pending, we can just say "Menunggu persetujuan", if resolved, we can just omit date or use a resolved date if we had one. Since we don't track resolved_at, we can just omit the date here or use something descriptive */}
+              <span className="text-[8px] text-slate-400 block mt-0.5">
+                {selectedTx.status === 'Pending' ? 'Menunggu persetujuan Finance' : 'Diproses oleh Finance'}
               </span>
             </div>
           </div>

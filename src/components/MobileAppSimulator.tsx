@@ -21,6 +21,7 @@ import EditProfileScreen from './mobile-screens/EditProfileScreen';
 import AvatarCameraScreen from './mobile-screens/AvatarCameraScreen';
 import AvatarGalleryScreen from './mobile-screens/AvatarGalleryScreen';
 import NotificationsScreen from './mobile-screens/NotificationsScreen';
+import PayslipHistoryScreen from './mobile-screens/PayslipHistoryScreen';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { scanReceiptAndUpload } from '../lib/hermesApi';
 
@@ -30,6 +31,7 @@ interface MobileAppSimulatorProps {
   onRefreshData: () => void;
   currentUserProfile?: any;
   onLogout?: () => void;
+  notifications?: any[];
 }
 
 export default function MobileAppSimulator({ 
@@ -37,11 +39,12 @@ export default function MobileAppSimulator({
   cashBalance, 
   onRefreshData,
   currentUserProfile,
-  onLogout
+  onLogout,
+  notifications = []
 }: MobileAppSimulatorProps) {
   
   // Mobile Router/State
-  const [currentScreen, setCurrentScreen] = useState<'auth' | 'forgot' | 'home' | 'scanner' | 'ai-loading' | 'form' | 'success' | 'history' | 'detail' | 'profile' | 'edit-profile' | 'avatar-camera' | 'avatar-gallery' | 'notifications'>('auth');
+  const [currentScreen, setCurrentScreen] = useState<'auth' | 'forgot' | 'home' | 'scanner' | 'ai-loading' | 'form' | 'success' | 'history' | 'detail' | 'profile' | 'edit-profile' | 'avatar-camera' | 'avatar-gallery' | 'notifications' | 'payslip-history'>(currentUserProfile ? 'home' : 'auth');
   
   // Authentication credentials
   const [email, setEmail] = useState(currentUserProfile?.email || '');
@@ -57,7 +60,6 @@ export default function MobileAppSimulator({
     if (currentUserProfile) {
       setEmail(currentUserProfile.email || '');
       setIsLogged(true);
-      setCurrentScreen('home');
       setSubTier('pro'); // default to pro for single tenant
     } else {
       setIsLogged(false);
@@ -182,7 +184,7 @@ export default function MobileAppSimulator({
   
   // Calculate approved and pending payments
   const totalApproved = staffTransactions
-    .filter(t => t.status === 'Approved' && t.type === 'reimburse')
+    .filter(t => t.status === 'Approved' && (t.type === 'reimburse' || t.type === 'reimbursement'))
     .reduce((sum, t) => sum + t.amount, 0);
   const sisaLimit = Math.max(0, limitMax - totalApproved);
   const limitPercentage = (sisaLimit / limitMax) * 100;
@@ -347,11 +349,17 @@ export default function MobileAppSimulator({
       setFormNotes(extracted.notes || '');
       setFormItems(extracted.items || []);
       
+      if (resData.warning) {
+        setFormError(resData.warning);
+      } else {
+        setFormError('');
+      }
+
       setCurrentScreen('form');
     } catch (err: any) {
       console.error(err);
       setFormError(err.message || 'Gagal memproses struk.');
-      setCurrentScreen('dashboard');
+      setCurrentScreen('form');
     }
   };
 
@@ -657,6 +665,14 @@ export default function MobileAppSimulator({
             {/* SCREEN 14: NOTIFICATIONS */}
             {currentScreen === 'notifications' && (
               <NotificationsScreen
+                setCurrentScreen={setCurrentScreen}
+                notifications={notifications}
+              />
+            )}
+            
+            {/* SCREEN 15: PAYSLIP HISTORY */}
+            {currentScreen === 'payslip-history' && (
+              <PayslipHistoryScreen
                 setCurrentScreen={setCurrentScreen}
               />
             )}

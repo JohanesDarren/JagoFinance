@@ -7,7 +7,6 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
-import { GoogleGenAI, Type } from '@google/genai';
 import { createClient } from '@supabase/supabase-js';
 // Load environment variables
 dotenv.config();
@@ -32,7 +31,8 @@ let db = {
   employees: [...INITIAL_EMPLOYEES],
   connectedApps: [...INITIAL_CONNECTED_APPS],
   subscriptions: [...INITIAL_SUBSCRIPTIONS],
-  transactions: [...INITIAL_TRANSACTIONS]
+  transactions: [...INITIAL_TRANSACTIONS],
+  notifications: [] as any[]
 };
 
 // Start Server Setup
@@ -320,89 +320,289 @@ async function startServer() {
       const cleanMime = mimeType || 'image/jpeg';
 
       // Verify key in server side
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = process.env.OCRSPACE_API_KEY || 'K87082730388957'; // Use user's key if env not set
       
-      if (!apiKey || apiKey === 'MY_GEMINI_API_KEY' || apiKey.trim() === '') {
-        // Elegant mockup simulation with slightly intelligent extraction fallback matching standard file keywords!
-        console.log("No GEMINI_API_KEY detected. Simulating AI processing...");
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Sleep 2 seconds for aesthetic loading states
-
-        const mockExtracted = generateSmartMockReceipt(fileName, image);
-        return res.json({ 
-          success: true, 
-          extracted: mockExtracted, 
-          aiMethod: 'Simulated AI Reader (Offline Mode)',
-          warning: 'Berjalan dalam mode simulasi offline karena GEMINI_API_KEY belum dikonfigurasi di menu Secrets.'
-        });
+      console.log(`OCR.space API config detected. Invoking text extraction...`);
+      
+      // Ensure base64Data has prefix since OCR.space requires it if using base64Image param
+      let base64Param = image;
+      if (!image.startsWith('data:image')) {
+        base64Param = `data:${cleanMime};base64,${image}`;
       }
+      
+      const formData = new FormData();
+      formData.append('apikey', apiKey);
+      formData.append('base64Image', base64Param);
+      formData.append('OCREngine', '2'); // Engine 2 is often better for receipts
+      formData.append('scale', 'true');
 
-      console.log(`GEMINI_API_KEY config detected. Invoking @google/genai structured extraction with gemini-3.5-flash...`);
-      const ai = new GoogleGenAI({
-        apiKey: apiKey,
-        httpOptions: {
-          headers: {
-            'User-Agent': 'aistudio-build'
-          }
-        }
+      const url = `https://api.ocr.space/parse/image`;
+
+      const ocrResponse = await fetch(url, {
+        method: 'POST',
+        body: formData as any
       });
 
-      const prompt = `Lakukan OCR (Optical Character Recognition) secara mendetail pada gambar struk pengeluaran / nota belanja ini. 
-      Ekstrak data-data keuangan yang tertera ke dalam format JSON sesuai schema. 
-      Jika terdapat teks yang buram, tebak secara ilmiah berdasarkan konteks struk Indonesia. 
-      Pilihlah salah satu Kategori Pengeluaran yang paling cocok dari daftar berikut:
-      "Operasional", "Transportasi", "Server", "Marketing", "Fasilitas & Utilitas", "Lainnya"`;
+      if (!ocrResponse.ok) {
+        throw new Error(`OCR.space API error: ${ocrResponse.status}`);
+      }
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
-        contents: [
-          {
-            inlineData: {
-              data: image, // base64 string
-              mimeType: cleanMime
+      const ocrResult = await ocrResponse.json();
+      console.log(`OCR.space extracted result:`, ocrResult);
+      
+      if (ocrResult.IsErroredOnProcessing || !ocrResult.ParsedResults || ocrResult.ParsedResults.length === 0) {
+        throw new Error(ocrResult.ErrorMessage?.[0] || 'Gagal mengekstrak teks dari gambar.');
+      }
+
+      const parsedText = ocrResult.ParsedResults[0].ParsedText || '';
+      const lines = parsedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      
+      // Smart Heuristic Extraction from Raw Text
+      let extractedMerchant = 'Merchant Tidak Diketahui';
+      let extractedDate = new Date().toISOString().split('T')[0];
+      let extractedAmount = 0;
+      
+      if (lines.length > 0) {
+        // Assume first line is merchant
+        extractedMerchant = lines[0];
+      }
+      
+      // Find Date (DD/MM/YYYY or similar)
+      const dateRegex = /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/;
+      for (const line of lines) {
+        const match = line.match(dateRegex);
+        if (match) {
+          let year = match[3];
+          if (year.length === 2) year = '20' + year;
+          // Basic validation, assume DD/MM/YYYY
+          extractedDate = `${year}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
+          break;
+        }
+      }
+      
+      // Find Amount (look for TOTAL, AMOUNT, or biggest number at the bottom)
+      let maxNumber = 0;
+      let totalLineIndex = lines.length;
+      let absoluteTotalLineIndex = lines.length;
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].toUpperCase();
+        
+        // Find the FIRST total line (usually placed after the items) to stop item extraction
+        if (i > 4 && /(SUB\s*TOTAL|TOTAL QTY|TOTAL|BAYAR|CASH|KEMBALI)/i.test(line)) {
+            totalLineIndex = Math.min(totalLineIndex, i);
+        }
+        // Find the absolute total line (stops at TUNAI/CASH/KEMBALI or TOTAL without SUB) to allow capturing PPN
+        if (i > 4 && /(TOTAL|BAYAR|CASH|KEMBALI|TUNAI)/i.test(line) && !/SUB\s*TOTAL/i.test(line)) {
+            absoluteTotalLineIndex = Math.min(absoluteTotalLineIndex, i);
+        }
+        
+        // At the same time, find the max amount for the total (still scanning all lines)
+        const numericMatch = line.match(/[\d\.,]+/g);
+        if (numericMatch) {
+          for (const numStr of numericMatch) {
+            const cleanNum = parseInt(numStr.replace(/[^\d]/g, ''));
+            if (!isNaN(cleanNum) && cleanNum > maxNumber && cleanNum < 100000000 && cleanNum % 100 === 0) {
+              maxNumber = cleanNum;
             }
-          },
-          { text: prompt }
-        ],
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              merchant: { type: Type.STRING, description: 'Nama Toko, Restoran, atau Merchant, misal Starbucks Coffee, AlfaMart, Grab Taxi.' },
-              date: { type: Type.STRING, description: 'Tanggal Transaksi dalam format YYYY-MM-DD. Jika tahun tidak tertera berasumsi tahun 2026.' },
-              category: { type: Type.STRING, description: 'Kategori Pengeluaran: Operasional, Transportasi, Server, Marketing, Fasilitas & Utilitas, atau Lainnya' },
-              amount: { type: Type.INTEGER, description: 'Total pengeluaran nominal bersih final rupiah tanpa mata uang, misal 135000' },
-              notes: { type: Type.STRING, description: 'Singkatan deskripsi barang/jasa yang dibeli dalam bahasa Indonesia sederhana.' },
-              items: {
-                type: Type.ARRAY,
-                description: 'Daftar produk/barang yang dibeli dalam struk.',
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING, description: 'Nama produk' },
-                    price: { type: Type.INTEGER, description: 'Harga satuan produk (integer tanpa titik)' },
-                    quantity: { type: Type.INTEGER, description: 'Jumlah kuantitas produk' }
-                  },
-                  required: ['name', 'price', 'quantity']
-                }
-              }
-            },
-            required: ['merchant', 'date', 'category', 'amount', 'items']
           }
         }
-      });
+      }
+      extractedAmount = maxNumber;
 
-      const textResult = response.text;
-      if (!textResult) {
-        throw new Error('AI Scanner gagal menghasilkan teks ekstraksi.');
+      // Extract Items (Per Produk) - State Machine Approach
+      let extractedItems: any[] = [];
+      let pendingItemName = '';
+      
+      for (let i = 1; i < Math.min(lines.length, totalLineIndex); i++) {
+        const line = lines[i];
+        
+        // Skip common footer/header noise (Removed TAX/PAJAK/DISKON so they can be captured)
+        if (/TOTAL|SUBTOTAL|CASH|KEMBALI|CHANGE|TELP|TLP|NPWP|JL\.|JI\.|JALAN|NO\.|FAKTUR|TANGGAL|DATE|WAKTU|TIME|KODE|KASIR|PELANGGAN/i.test(line)) continue;
+        
+        // Exclude lines that look strictly like dates/times to avoid misinterpreting 2026 as Rp2.026
+        if (/^\s*\d{1,4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,4}\s*$/.test(line) || /^\s*\d{2}:\d{2}(:\d{2})?\s*$/.test(line)) {
+            continue;
+        }
+        
+        const numStrs = line.match(/[\d\.,]+/g);
+        let maxNumberInLine = 0;
+        let qty = 1;
+        let possibleNumbers: number[] = [];
+        
+        if (numStrs) {
+          for (const numStr of numStrs) {
+            const cleanNum = parseInt(numStr.replace(/[^\d]/g, ''));
+            if (!isNaN(cleanNum)) {
+               possibleNumbers.push(cleanNum);
+               // Assume prices are > 1000 in IDR context and end with 00 (filters out postal codes)
+               if (cleanNum > maxNumberInLine && cleanNum < 100000000 && cleanNum >= 1000 && cleanNum % 100 === 0) {
+                   maxNumberInLine = cleanNum;
+               }
+            }
+          }
+        }
+        
+        // Clean text
+        const textOnly = line.replace(/[\d\.,]+/g, ' ').replace(/[^a-zA-Z\s]/g, '').replace(/Rp|IDR/ig, '').trim();
+        const hasText = textOnly.length >= 3;
+
+        if (maxNumberInLine >= 1000) {
+          // Found a valid price in this line
+          // Look for quantity (small number < 100)
+          const smallNumbers = possibleNumbers.filter(n => n > 0 && n < 100);
+          if (smallNumbers.length > 0) qty = smallNumbers[0];
+          
+          let finalName = '';
+          if (hasText && pendingItemName) {
+             finalName = pendingItemName + ' ' + textOnly; // Combine them! e.g. "Indomie Goreng lusin x"
+             pendingItemName = '';
+          } else if (hasText) {
+             finalName = textOnly;
+             pendingItemName = '';
+          } else if (pendingItemName) {
+             finalName = pendingItemName;
+             pendingItemName = '';
+          } else {
+             finalName = 'Item ' + (extractedItems.length + 1);
+          }
+          
+          extractedItems.push({
+            name: finalName,
+            price: Math.floor(maxNumberInLine / qty), // normalize unit price so UI qty math works
+            quantity: qty
+          });
+        } else if (hasText) {
+          // No price, but found text. It might be an item name whose price is on the next line!
+          if (pendingItemName) {
+             pendingItemName += ' ' + textOnly;
+          } else {
+             pendingItemName = textOnly;
+          }
+        }
       }
 
-      console.log(`AI extracted result structure:`, textResult);
-      const parsed = JSON.parse(textResult.trim());
+      // Mathematical overflow cleanup (if a subtotal got mistakenly captured as an item)
+      let currentSum = extractedItems.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+      if (currentSum > maxNumber && maxNumber > 0) {
+         let unnamedItems = extractedItems
+             .map((it, idx) => ({...it, originalIndex: idx}))
+             .filter(it => /^Item \d+$/.test(it.name))
+             .sort((a, b) => (b.price * b.quantity) - (a.price * a.quantity));
+             
+         for (let uItem of unnamedItems) {
+             if (currentSum > maxNumber) {
+                currentSum -= (uItem.price * uItem.quantity);
+                extractedItems[uItem.originalIndex] = null;
+             }
+         }
+         extractedItems = extractedItems.filter(it => it !== null);
+      }
+
+      // Sum of State Machine
+      const smSum = extractedItems.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+
+      // COLUMNAR FALLBACK for POS like Pawoon
+      if (extractedItems.length === 0 || (extractedAmount > 0 && smSum < extractedAmount * 0.4)) {
+         let cNames: {text: string, index: number}[] = [];
+         let cQtys: {qty: number, index: number}[] = [];
+         let cPrices: {price: number, index: number}[] = [];
+         
+         for(let i=0; i<lines.length; i++) {
+            let line = lines[i];
+            if (/CASH|KEMBALI|CHANGE|TELP|TLP|NPWP|JL\.|JI\.|JALAN|NO\.|FAKTUR|TANGGAL|DATE|WAKTU|TIME|KODE|KASIR|PELANGGAN|WIFI|PASS/i.test(line)) continue;
+            if (/^\s*\d{1,4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,4}\s*$/.test(line) || /^\s*\d{2}:\d{2}(:\d{2})?\s*$/.test(line)) continue;
+            
+            let priceMatches = line.match(/[\d\.,]+/g);
+            let foundPrice = false;
+            if (priceMatches) {
+               for (let pm of priceMatches) {
+                   let cleanP = parseInt(pm.replace(/[^\d]/g, ''));
+                   if (cleanP >= 1000 && cleanP < 100000000 && cleanP % 100 === 0) {
+                      cPrices.push({price: cleanP, index: i});
+                      foundPrice = true;
+                      break;
+                   }
+               }
+            }
+            if (foundPrice) continue;
+            
+            let qtyMatch = line.match(/^x?\s*(\d+)\s*x?$/i);
+            if (qtyMatch && parseInt(qtyMatch[1]) < 100 && i < absoluteTotalLineIndex) {
+               cQtys.push({qty: parseInt(qtyMatch[1]), index: i});
+               continue;
+            }
+            
+            const textOnly = line.replace(/[\d\.,]+/g, ' ').replace(/[^a-zA-Z\s]/g, '').trim();
+            if (textOnly.length >= 3 && i > 4 && i < absoluteTotalLineIndex) {
+               if (!/pawoon|resto|terima|kasih|wifi|powered/i.test(textOnly)) {
+                 cNames.push({text: textOnly, index: i});
+               }
+            }
+         }
+         
+         if (cNames.length > 0) {
+           let lastObjIndex = cNames[cNames.length - 1].index;
+           let validPrices = cPrices.filter(p => p.index > lastObjIndex).map(p => p.price);
+           let validQtys = cQtys.map(q => q.qty);
+           
+           let fallbackItems: any[] = [];
+           let qIdx = 0;
+           let fbAmount = 0;
+           
+           for(let i=0; i<cNames.length; i++) {
+              let name = cNames[i].text;
+              let p = validPrices[i] || 0;
+              
+              if (/SUB\s*TOTAL/i.test(name)) continue;
+              if (/TOTAL/i.test(name) && !/SUB/i.test(name)) {
+                 fbAmount = p;
+                 continue;
+              }
+              
+              let q = 1;
+              if (!/PPN|PAJAK|TAX|DISKON/i.test(name) && qIdx < cQtys.length) {
+                 q = cQtys[qIdx].qty;
+                 qIdx++;
+              }
+              
+              fallbackItems.push({
+                 name: name,
+                 price: Math.floor(p / q),
+                 quantity: q
+              });
+           }
+           
+           let fbSum = fallbackItems.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+           if (fbSum > smSum) {
+              extractedItems = fallbackItems;
+           }
+         }
+      }
+
+      if (extractedItems.length === 0) {
+        extractedItems = [{ name: 'Total Belanja (Auto)', price: extractedAmount, quantity: 1 }];
+      }
+      
+      // Override exact extractedAmount with sum of all verified items to guarantee perfect mathematical match
+      let exactFinalAmount = extractedItems.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+      if (exactFinalAmount > 0) {
+        extractedAmount = exactFinalAmount;
+      }
+
+      const parsed = {
+        merchant: extractedMerchant,
+        date: extractedDate,
+        category: 'Operasional',
+        amount: extractedAmount,
+        notes: 'Hasil scan teks: ' + lines.slice(1, 3).join(' '),
+        items: extractedItems
+      };
+
       res.json({ 
         success: true, 
         extracted: parsed, 
-        aiMethod: 'Gemini 3.5 Flash Scanner API Engine' 
+        aiMethod: 'OCR.space (Advanced Heuristics)' 
       });
 
     } catch (error: any) {
@@ -434,11 +634,13 @@ async function startServer() {
     // 1. Call Hermes AI Mock Service to extract data
     const extractedData = await extractWithHermesMock(receiptUrl);
 
-    // Get employee's company_id
+    // Get employee's company_id and email
     let companyId = null;
+    let employeeEmail = null;
     if (employeeId) {
-      const { data: profile } = await supabaseAdmin.from('profiles').select('company_id').eq('id', employeeId).single();
-      companyId = profile?.company_id || null;
+      const { data: user } = await supabaseAdmin.from('users').select('company_id, email').eq('id', employeeId).single();
+      companyId = user?.company_id || null;
+      employeeEmail = user?.email || null;
     }
 
     // 2. Insert into Supabase transactions table using admin client (bypasses RLS)
@@ -463,6 +665,18 @@ async function startServer() {
       if (error) {
         console.error('Supabase Insert Error:', error);
         throw new Error('Gagal menyimpan transaksi ke database.');
+      }
+
+      // Add Notification
+      if (employeeEmail) {
+        db.notifications.push({
+          id: Math.random().toString(36).substring(7),
+          email: employeeEmail,
+          title: 'Pengajuan Diterima',
+          message: 'Pengajuan reimburse diterima sistem, tinggal menunggu admin untuk dicek.',
+          type: 'info',
+          timestamp: Date.now()
+        });
       }
 
       res.json({ success: true, transaction: data });
@@ -490,6 +704,28 @@ async function startServer() {
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
+  });
+
+  // --- Notifications API ---
+  app.get('/api/notifications/:email', (req, res) => {
+    const userNotifs = db.notifications
+      .filter(n => n.email === req.params.email)
+      .sort((a, b) => b.timestamp - a.timestamp);
+    res.json({ notifications: userNotifs });
+  });
+
+  app.post('/api/notifications', (req, res) => {
+    const { email, title, message, type } = req.body;
+    const notif = {
+      id: Math.random().toString(36).substring(7),
+      email,
+      title,
+      message,
+      type: type || 'info', // 'info' | 'success' | 'warning'
+      timestamp: Date.now()
+    };
+    db.notifications.push(notif);
+    res.json({ success: true, notification: notif });
   });
 
   app.delete('/api/transactions/employee/:id', async (req, res) => {

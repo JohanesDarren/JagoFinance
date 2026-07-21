@@ -743,7 +743,7 @@ export default function WebDashboard({
                   onApprove, onReject, onManualLedger, onToggleApp, onWebhookSave, onPayrollGenerate,
                   isLoading, onLogout, onInviteEmployee, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
                   categoryFilter, setCategoryFilter, splitViewTx, setSplitViewTx, rejectReasonText,
-                  setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
+                  setActiveTab, setRejectReasonText, showRejectForm, setShowRejectForm, showManualModal, setShowManualModal,
                   showWebhookModal, setShowWebhookModal, selectedLedgerReceipt, setSelectedLedgerReceipt,
                   approveRecipientName, setApproveRecipientName, approveBankName, setApproveBankName,
                   approveBankAccount, setApproveBankAccount, approveReceiptBase64, setApproveReceiptBase64,
