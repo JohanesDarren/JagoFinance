@@ -8,6 +8,9 @@ import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+import { exec } from 'child_process';
+import fs from 'fs';
+import os from 'os';
 // Load environment variables
 dotenv.config();
 
@@ -319,42 +322,44 @@ async function startServer() {
 
       const cleanMime = mimeType || 'image/jpeg';
 
-      // Verify key in server side
-      const apiKey = process.env.OCRSPACE_API_KEY || 'K87082730388957'; // Use user's key if env not set
+      console.log(`Using Local Python OCR. Invoking text extraction...`);
       
-      console.log(`OCR.space API config detected. Invoking text extraction...`);
-      
-      // Ensure base64Data has prefix since OCR.space requires it if using base64Image param
-      let base64Param = image;
-      if (!image.startsWith('data:image')) {
-        base64Param = `data:${cleanMime};base64,${image}`;
+      let base64Data = image;
+      if (image.startsWith('data:image')) {
+        base64Data = image.split(',')[1];
       }
       
-      const formData = new FormData();
-      formData.append('apikey', apiKey);
-      formData.append('base64Image', base64Param);
-      formData.append('OCREngine', '2'); // Engine 2 is often better for receipts
-      formData.append('scale', 'true');
-
-      const url = `https://api.ocr.space/parse/image`;
-
-      const ocrResponse = await fetch(url, {
-        method: 'POST',
-        body: formData as any
+      const tempId = Math.random().toString(36).substring(7);
+      const tempPath = path.join(os.tmpdir(), `receipt_${tempId}.jpg`);
+      fs.writeFileSync(tempPath, base64Data, 'base64');
+      
+      const parsedText = await new Promise<string>((resolve, reject) => {
+        exec(`python scripts/scan_ocr.py "${tempPath}"`, (error, stdout, stderr) => {
+          // Cleanup temp file
+          try { fs.unlinkSync(tempPath); } catch (e) {}
+          
+          if (error) {
+            reject(new Error(`Local OCR failed: ${error.message}`));
+            return;
+          }
+          
+          try {
+            const result = JSON.parse(stdout.trim());
+            if (result.error) {
+              reject(new Error(result.error));
+            } else {
+              resolve(result.text || '');
+            }
+          } catch (e) {
+             reject(new Error(`Failed to parse Python OCR output: ${stdout}`));
+          }
+        });
       });
-
-      if (!ocrResponse.ok) {
-        throw new Error(`OCR.space API error: ${ocrResponse.status}`);
-      }
-
-      const ocrResult = await ocrResponse.json();
-      console.log(`OCR.space extracted result:`, ocrResult);
       
-      if (ocrResult.IsErroredOnProcessing || !ocrResult.ParsedResults || ocrResult.ParsedResults.length === 0) {
-        throw new Error(ocrResult.ErrorMessage?.[0] || 'Gagal mengekstrak teks dari gambar.');
+      console.log(`Local OCR extracted text:`, parsedText);
+      if (!parsedText) {
+        throw new Error('Gagal mengekstrak teks dari gambar. Pastikan gambar jelas.');
       }
-
-      const parsedText = ocrResult.ParsedResults[0].ParsedText || '';
       const lines = parsedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
       
       // Smart Heuristic Extraction from Raw Text

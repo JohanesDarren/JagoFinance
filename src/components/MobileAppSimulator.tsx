@@ -56,11 +56,16 @@ export default function MobileAppSimulator({
   const [showPaywall, setShowPaywall] = useState(false);
   const [subTier, setSubTier] = useState<'free' | 'pro'>('free');
 
+  const isProfileComplete = currentUserProfile && currentUserProfile.full_name && currentUserProfile.bank_account && currentUserProfile.phone;
+
   useEffect(() => {
     if (currentUserProfile) {
       setEmail(currentUserProfile.email || '');
       setIsLogged(true);
       setSubTier('pro'); // default to pro for single tenant
+      if (!isProfileComplete) {
+        setCurrentScreen('edit-profile');
+      }
     } else {
       setIsLogged(false);
       setCurrentScreen('auth');
@@ -96,6 +101,7 @@ export default function MobileAppSimulator({
   const [historyTab, setHistoryTab] = useState<'Semua' | 'Pending' | 'Selesai'>('Semua');
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [zoomReceipt, setZoomReceipt] = useState(false);
+  const [hasNewNotifications, setHasNewNotifications] = useState(true);
 
   // Profile / Notification banner
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -184,7 +190,7 @@ export default function MobileAppSimulator({
   
   // Calculate approved and pending payments
   const totalApproved = staffTransactions
-    .filter(t => t.status === 'Approved' && (t.type === 'reimburse' || t.type === 'reimbursement'))
+    .filter(t => t.status === 'Approved' && t.type === 'reimburse')
     .reduce((sum, t) => sum + t.amount, 0);
   const sisaLimit = Math.max(0, limitMax - totalApproved);
   const limitPercentage = (sisaLimit / limitMax) * 100;
@@ -274,9 +280,14 @@ export default function MobileAppSimulator({
   };
 
   const handleOpenForm = (typeOption: 'reimburse' | 'cash_advance', imageBase64?: string, imageName?: string) => {
+    if (imageBase64) {
+      triggerOcrScan(imageBase64, imageName || 'upload.png', 'image/png');
+      return;
+    }
+
     setFormType(typeOption);
-    setScanImage(imageBase64 || null);
-    setScanImageName(imageName || '');
+    setScanImage(null);
+    setScanImageName('');
     setScannedData(null);
     setEditingTx(null);
     // Reset form
@@ -494,14 +505,57 @@ export default function MobileAppSimulator({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full bg-slate-50">
-      
-      {/* Main Web App container (responsive) */}
-      <div className="relative w-full max-w-7xl mx-auto h-full bg-[#f8f9fe] md:shadow-2xl overflow-hidden flex flex-col text-slate-800 font-sans md:border-x border-slate-200">
+    <div className="flex w-full h-screen bg-[#f8f9fe] overflow-hidden text-slate-800 font-sans">
+      {/* Desktop Sidebar (Only when logged) */}
+      {isLogged && currentScreen !== 'unassigned' && (
+        <aside className="w-64 bg-white border-r border-slate-200 flex flex-col z-20 shrink-0">
+          <div className="p-6 border-b border-slate-100 flex items-center justify-center relative">
+            <h1 className="text-2xl font-black text-brand tracking-tighter">Jago<span className="text-slate-800">Finance</span></h1>
+            {!isProfileComplete && <div className="absolute top-2 right-2 flex items-center justify-center w-6 h-6 bg-rose-100 text-rose-500 rounded-full"><Lock className="w-3 h-3" /></div>}
+          </div>
+          
+          <nav className="flex-1 p-4 flex flex-col gap-2 overflow-y-auto">
+            <button 
+              onClick={() => { if(isProfileComplete) { setCurrentScreen('home'); setSelectedTx(null); } }}
+              className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentScreen === 'home' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <CreditCard className="w-5 h-5" /> Home
+            </button>
+            <button 
+              onClick={() => { if(isProfileComplete) handleOpenScanner('reimburse'); }}
+              className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentScreen === 'scanner' || currentScreen === 'form' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <Camera className="w-5 h-5" /> Scan Struk
+            </button>
+            <button 
+              onClick={() => { if(isProfileComplete) { setCurrentScreen('history'); setSelectedTx(null); } }}
+              className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentScreen === 'history' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <FileText className="w-5 h-5" /> Riwayat
+            </button>
+            <button 
+              onClick={() => { if(isProfileComplete) { setCurrentScreen('notifications'); setSelectedTx(null); setHasNewNotifications(false); } }}
+              className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentScreen === 'notifications' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <Bell className="w-5 h-5" /> Notifikasi
+              {hasNewNotifications && <span className="ml-auto w-2 h-2 bg-rose-500 rounded-full"></span>}
+            </button>
+          </nav>
+          
+          <div className="p-4 border-t border-slate-100">
+            <button 
+              onClick={() => { setCurrentScreen('profile'); setSelectedTx(null); }}
+              className={`flex items-center gap-3 w-full p-3 rounded-xl font-medium transition-all ${currentScreen === 'profile' || currentScreen === 'edit-profile' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}
+            >
+              <User className="w-5 h-5" /> Profil Saya
+            </button>
+          </div>
+        </aside>
+      )}
 
-          {/* Screen Switcher */}
-          <div className="flex-1 overflow-y-auto pb-20 flex flex-col items-center">
-            <div className="w-full max-w-5xl mx-auto h-full flex flex-col">
+      {/* Main Content Area */}
+      <main className="flex-1 relative flex flex-col min-w-0 overflow-y-auto">
+        <div className="w-full max-w-5xl mx-auto h-full flex flex-col">
             
             {/* SCREEN 1: LOGIN (AUTH) */}
             {currentScreen === 'auth' && (
@@ -542,6 +596,8 @@ export default function MobileAppSimulator({
                 staffTransactions={staffTransactions}
                 handleOpenDetail={handleOpenDetail}
                 avatarUrl={currentUserProfile?.avatar_url}
+                hasNewNotifications={hasNewNotifications}
+                setHasNewNotifications={setHasNewNotifications}
               />
             )}
 
@@ -628,6 +684,8 @@ export default function MobileAppSimulator({
                 onLogout={onLogout}
                 setIsLogged={setIsLogged}
                 avatarUrl={currentUserProfile?.avatar_url}
+                bankName={currentUserProfile?.bank_name || editProfileData.bankName}
+                bankAccount={currentUserProfile?.bank_account || editProfileData.bankAccount}
               />
             )}
 
@@ -674,6 +732,9 @@ export default function MobileAppSimulator({
             {currentScreen === 'payslip-history' && (
               <PayslipHistoryScreen
                 setCurrentScreen={setCurrentScreen}
+                staffName={staffName}
+                bankName={currentUserProfile?.bank_name || editProfileData.bankName || 'Mandiri'}
+                bankAccount={currentUserProfile?.bank_account || editProfileData.bankAccount || '000000'}
               />
             )}
             {/* SCREEN 15: UNASSIGNED COMPANY LOCK */}
@@ -709,45 +770,8 @@ export default function MobileAppSimulator({
                 </button>
               </div>
             )}
-            </div>
-          </div>
 
-          {/* Bottom Native Web App Bar Navigation (Only when logged) */}
-          {isLogged && currentScreen !== 'unassigned' && (
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-150 px-10 flex justify-between items-center z-40">
-              <button 
-                onClick={() => {
-                  setCurrentScreen('home');
-                  setSelectedTx(null);
-                }}
-                className={`flex flex-col items-center gap-0.5 ${currentScreen === 'home' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                <CreditCard className="w-5 h-5" />
-                <span className="text-[10px] font-bold mt-1">Home</span>
-              </button>
-
-              {/* Central Floating Camera quick action */}
-              <button 
-                onClick={() => handleOpenScanner('reimburse')}
-                className="w-12 h-12 -mt-6 bg-brand text-white rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-lg shadow-brand/40 z-50 border-[3px] border-[#f8f9fe]"
-              >
-                <Camera className="w-5 h-5" />
-              </button>
-
-              <button 
-                onClick={() => {
-                  setCurrentScreen('profile');
-                  setSelectedTx(null);
-                }}
-                className={`flex flex-col items-center gap-0.5 ${currentScreen === 'profile' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                <User className="w-5 h-5" />
-                <span className="text-[10px] font-bold mt-1">Profil</span>
-              </button>
-            </div>
-          )}
-
-          {/* PAYWALL OVERLAY DI DALAM WEB APP */}
+          {/* Bottom Native Web App Bar Removed for Desktop Layout */}
           {showPaywall && (
             <div className="absolute inset-0 bg-slate-950 z-50 flex flex-col justify-between p-6 text-white select-none">
               <div className="flex justify-between items-center mt-4">
@@ -823,7 +847,8 @@ export default function MobileAppSimulator({
             </div>
           )}
         </div>
-      </div>
+      </main>
+    </div>
   );
 }
 

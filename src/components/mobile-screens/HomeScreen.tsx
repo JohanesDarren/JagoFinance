@@ -15,6 +15,8 @@ interface HomeScreenProps {
   handleOpenForm?: (type: 'reimburse' | 'cash_advance', imageBase64?: string, imageName?: string) => void;
   handleOpenDetail: (tx: Transaction) => void;
   avatarUrl?: string;
+  hasNewNotifications?: boolean;
+  setHasNewNotifications?: (val: boolean) => void;
 }
 
 // Framer Motion variants
@@ -44,7 +46,9 @@ export default function HomeScreen({
   handleOpenScanner,
   handleOpenForm,
   handleOpenDetail,
-  avatarUrl
+  avatarUrl,
+  hasNewNotifications,
+  setHasNewNotifications
 }: HomeScreenProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -122,15 +126,20 @@ export default function HomeScreen({
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setCurrentScreen('notifications')}
+              onClick={() => {
+                setCurrentScreen('notifications');
+                if (setHasNewNotifications) setHasNewNotifications(false);
+              }}
               className="relative p-3 text-slate-600 bg-white/60 backdrop-blur-md rounded-2xl shadow-sm hover:shadow-md transition-all border border-white"
             >
               <Bell className="w-5 h-5 md:w-6 md:h-6" />
-              <motion.div 
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute top-2 right-2.5 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full"
-              />
+              {hasNewNotifications && (
+                <motion.div 
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute top-2 right-2.5 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full"
+                />
+              )}
             </motion.button>
           </div>
         </motion.div>

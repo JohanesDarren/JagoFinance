@@ -11,6 +11,8 @@ interface ProfileScreenProps {
   onLogout?: () => void;
   setIsLogged: (logged: boolean) => void;
   avatarUrl?: string;
+  bankName?: string;
+  bankAccount?: string;
 }
 
 const staggerContainer = {
@@ -33,7 +35,9 @@ export default function ProfileScreen({
   setSelectedTx,
   onLogout,
   setIsLogged,
-  avatarUrl
+  avatarUrl,
+  bankName,
+  bankAccount
 }: ProfileScreenProps) {
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden">
@@ -105,8 +109,8 @@ export default function ProfileScreen({
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-500 font-medium flex items-center gap-1.5"><Wallet className="w-3.5 h-3.5 text-slate-400" /> Rekening Pribadi</span>
               <span className="font-bold text-slate-800 flex items-center gap-2">
-                Mandiri 
-                <span className="font-mono text-indigo-700 bg-white shadow-sm px-2 py-1 rounded-md text-[10px]">55409827</span>
+                {bankName || '-'} 
+                <span className="font-mono text-indigo-700 bg-white shadow-sm px-2 py-1 rounded-md text-[10px]">{bankAccount || '-'}</span>
               </span>
             </div>
           </div>

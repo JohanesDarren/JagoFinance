@@ -49,6 +49,20 @@ export default function FormScreen({
   isSubmitting,
   handleFormSubmit
 }: FormScreenProps) {
+  const formatRupiah = (val: number | string) => {
+    if (val === 0 || val === '0') return '0';
+    if (!val) return '';
+    const num = Number(val.toString().replace(/[^0-9]/g, ''));
+    if (isNaN(num)) return '';
+    return new Intl.NumberFormat('id-ID').format(num);
+  };
+
+  const handlePriceFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (e.target.value === '0') {
+      e.target.value = '';
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
       
@@ -139,20 +153,7 @@ export default function FormScreen({
           </div>
         </div>
 
-        <div className="relative z-10">
-          <label className="block text-[10px] font-bold text-indigo-900/60 uppercase tracking-widest mb-1.5">Total Nominal Tagihan (IDR)</label>
-          <div className="relative">
-            <span className="absolute left-4 top-3 text-sm font-bold text-slate-400">Rp</span>
-            <input 
-              type="number" 
-              value={formAmount || ''}
-              readOnly
-              className="w-full pl-10 pr-4 py-2.5 text-base bg-slate-100 border border-slate-200 rounded-xl outline-none font-mono font-bold text-slate-500 cursor-not-allowed transition-all"
-              placeholder="0"
-              required
-            />
-          </div>
-        </div>
+        {/* Total Nominal moved to bottom */}
 
         {/* Line Items Section */}
         <div className="pt-4 mt-2 border-t border-slate-100 relative z-10">
@@ -197,11 +198,15 @@ export default function FormScreen({
                       <div className="flex-1 relative">
                         <span className="absolute left-2.5 top-1.5 text-[10px] font-bold text-slate-400">Rp</span>
                         <input 
-                          type="number" 
-                          value={item.price}
-                          onChange={(e) => handleItemChange(idx, 'price', Number(e.target.value))}
+                          type="text" 
+                          value={formatRupiah(item.price)}
+                          onFocus={handlePriceFocus}
+                          onChange={(e) => {
+                             const raw = e.target.value.replace(/[^0-9]/g, '');
+                             handleItemChange(idx, 'price', Number(raw));
+                          }}
                           className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 focus:bg-white border border-transparent focus:border-slate-200 rounded-lg font-mono outline-none transition-all"
-                          placeholder="Harga"
+                          placeholder="0"
                         />
                       </div>
                       <div className="w-20 relative">
@@ -224,6 +229,21 @@ export default function FormScreen({
                 Belum ada item produk terdeteksi.
               </div>
             )}
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-4">
+          <label className="block text-[10px] font-bold text-indigo-900/60 uppercase tracking-widest mb-1.5">Total Nominal Tagihan (IDR)</label>
+          <div className="relative">
+            <span className="absolute left-4 top-3 text-sm font-bold text-slate-400">Rp</span>
+            <input 
+              type="text" 
+              value={formatRupiah(formAmount)}
+              readOnly
+              className="w-full pl-10 pr-4 py-2.5 text-base bg-slate-100 border border-slate-200 rounded-xl outline-none font-mono font-bold text-slate-500 cursor-not-allowed transition-all"
+              placeholder="0"
+              required
+            />
           </div>
         </div>
 
