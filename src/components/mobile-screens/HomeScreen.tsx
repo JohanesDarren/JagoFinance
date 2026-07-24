@@ -145,7 +145,7 @@ export default function HomeScreen({
         </motion.div>
 
         {/* Limit & Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           
           {/* Reimburse Limit Card (Glassy/Modern) */}
           <motion.div 
@@ -164,11 +164,11 @@ export default function HomeScreen({
             <div className="flex justify-between items-start relative z-10">
               <div>
                 <span className="text-[10px] md:text-xs uppercase font-bold tracking-widest text-indigo-200 block opacity-90 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" /> Sisa Limit Reimburse
+                  <Sparkles className="w-3 h-3" /> Sisa Limit Global
                 </span>
                 <h3 className="text-3xl md:text-4xl font-black font-display tracking-tight mt-2 text-white">Rp {sisaLimit.toLocaleString('id-ID')}</h3>
               </div>
-              <div className="text-[10px] md:text-xs bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-xl font-bold text-white shadow-sm">Bulan Ini</div>
+              <div className="text-[10px] md:text-xs bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-xl font-bold text-white shadow-sm text-center">Semua<br/>Perusahaan</div>
             </div>
 
             {/* Limit Progression bar */}
@@ -186,39 +186,6 @@ export default function HomeScreen({
                 <span>Kuota: <span className="font-bold text-white">Rp {limitMax.toLocaleString('id-ID')}</span></span>
               </div>
             </div>
-          </motion.div>
-
-          {/* Action Button */}
-          <motion.div variants={fadeUp} className="relative z-10">
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={onFileChange} 
-              className="hidden" 
-              accept="image/*" 
-            />
-            <motion.button 
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full h-full bg-white/70 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white shadow-xl shadow-slate-200/50 flex items-center gap-6 group overflow-hidden"
-              id="mobile_action_reimburse"
-            >
-              <div className="absolute -right-8 -top-8 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all"></div>
-              
-              <div className="p-4 bg-gradient-to-br from-indigo-500 to-violet-600 text-white rounded-[1.5rem] shadow-lg shadow-indigo-600/30 relative z-10 group-hover:rotate-12 transition-transform duration-300 flex-shrink-0">
-                <ImageIcon className="w-8 h-8" />
-              </div>
-              
-              <div className="relative z-10 flex-1 text-left">
-                <span className="font-black text-xl text-slate-800 block leading-tight mb-1">Ajukan Reimburse</span>
-                <span className="text-sm text-slate-500 font-medium line-clamp-2">Upload bukti struk & cairan dana</span>
-              </div>
-              
-              <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors shrink-0">
-                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-indigo-600" />
-              </div>
-            </motion.button>
           </motion.div>
         </div>
 

@@ -63,6 +63,7 @@ export interface Employee {
   bank_validated?: boolean;
   bank_rejection_reason?: string;
   companyId?: string | null;
+  companies?: Company[]; // Support multiple companies for an employee
   status?: 'active' | 'unassigned';
 }
 

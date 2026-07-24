@@ -115,9 +115,6 @@ export default function App() {
 
           if (profileError) throw profileError;
 
-          setProfile(profileData);
-          setUserRole(profileData.role);
-
           // Use Admin Client for super_admin to bypass RLS for dashboard data
           let dbClient = supabase;
           if (profileData.role === 'super_admin') {
@@ -129,6 +126,28 @@ export default function App() {
               });
             }
           }
+
+          // Fetch companies first so we can map them
+          const { data: compData } = await dbClient.from('companies').select('*');
+          const allCompanies = compData || [];
+          setCompanies(allCompanies);
+
+          // Get multi-companies from local mock + primary
+          let userCompanies = [];
+          try {
+            const extra = JSON.parse(localStorage.getItem(`user_companies_${profileData.id}`) || '[]');
+            const ids = new Set<string>([...extra]);
+            if (profileData.company_id) ids.add(profileData.company_id);
+            userCompanies = Array.from(ids).map(id => allCompanies.find((c: any) => c.id === id)).filter(Boolean);
+          } catch(e) {}
+
+          const augmentedProfile = {
+            ...profileData,
+            companies: userCompanies
+          };
+
+          setProfile(augmentedProfile);
+          setUserRole(augmentedProfile.role);
 
           // Fetch global balance
           const { data: fsData } = await dbClient.from('finance_settings').select('current_balance').eq('id', 1).single();
@@ -146,9 +165,11 @@ export default function App() {
           const { data: subData } = await dbClient.from('subscriptions').select('*');
           setSubscriptions(subData ? subData.map(mapSubFromDb) : []);
 
-          // Fetch companies
-          const { data: compData } = await dbClient.from('companies').select('*');
-          setCompanies(compData || []);
+          // Companies already fetched above for profile mapping if using Supabase
+          if (!compData) {
+             const { data: compData2 } = await dbClient.from('companies').select('*');
+             setCompanies(compData2 || []);
+          }
 
           // Fetch transactions
           const { data: txs } = await dbClient
@@ -768,8 +789,14 @@ export default function App() {
   const handleInviteEmployee = async (inviteEmail: string): Promise<{success: boolean, message: string}> => {
     try {
       if (isSupabaseConfigured() && profile) {
+        const { createClient } = await import('@supabase/supabase-js');
+        const { SERVICE_ROLE_KEY } = await import('./adminKey');
+        const supabaseAdmin = createClient(import.meta.env.VITE_SUPABASE_URL, SERVICE_ROLE_KEY, {
+          auth: { persistSession: false, autoRefreshToken: false }
+        });
+
         // Find profile by email first
-        const { data: targetProfile, error: searchErr } = await supabase
+        const { data: targetProfile, error: searchErr } = await supabaseAdmin
           .from('users')
           .select('*')
           .eq('email', inviteEmail)
@@ -779,36 +806,64 @@ export default function App() {
           return { success: false, message: `Email ${inviteEmail} belum terdaftar di sistem. Minta karyawan mendaftar akun terlebih dahulu.` };
         }
 
-        if (targetProfile.company_id) {
-          return { success: false, message: `Karyawan dengan email ${inviteEmail} sudah terhubung ke suatu perusahaan.` };
+        // Check if already in this specific company
+        let isAlreadyMember = false;
+        try {
+           const extra = JSON.parse(localStorage.getItem(`user_companies_${targetProfile.id}`) || '[]');
+           if (extra.includes(profile.company_id) || targetProfile.company_id === profile.company_id) {
+               isAlreadyMember = true;
+           }
+        } catch(e) {}
+
+        if (isAlreadyMember) {
+          return { success: false, message: `Karyawan dengan email ${inviteEmail} sudah terhubung ke perusahaan Anda.` };
         }
 
-        const { error: updateErr } = await supabase
-          .from('users')
-          .update({ company_id: profile.company_id })
-          .eq('id', targetProfile.id);
+        // Add to local storage mock for multi-company
+        try {
+           const extra = JSON.parse(localStorage.getItem(`user_companies_${targetProfile.id}`) || '[]');
+           if (!extra.includes(profile.company_id)) {
+               extra.push(profile.company_id);
+               localStorage.setItem(`user_companies_${targetProfile.id}`, JSON.stringify(extra));
+           }
+        } catch(e) {}
 
-        if (updateErr) throw updateErr;
+        // Only update primary company_id if it's currently null
+        if (!targetProfile.company_id) {
+          const { error: updateErr } = await supabaseAdmin
+            .from('users')
+            .update({ company_id: profile.company_id })
+            .eq('id', targetProfile.id);
+          if (updateErr) throw updateErr;
+        }
         
         await fetchFinancialData(true);
         return { success: true, message: `Undangan berhasil. Akun ${inviteEmail} kini terhubung ke perusahaan Anda.` };
       } else {
         // Offline Fallback Mock
         const targetEmpIndex = employees.findIndex(e => e.email === inviteEmail);
+        
         if (targetEmpIndex === -1) {
-          return { success: false, message: `Email ${inviteEmail} belum mendaftar. (Mode Offline Mock)` };
+          return { success: false, message: `Email ${inviteEmail} belum terdaftar di sistem. Minta karyawan mendaftar akun terlebih dahulu.` };
         }
 
         const targetEmp = employees[targetEmpIndex];
-        if (targetEmp.companyId) {
-          return { success: false, message: `Karyawan ${inviteEmail} sudah terhubung ke perusahaan lain.` };
+        // Check if already in this specific company (mock)
+        const mockExtra = JSON.parse(localStorage.getItem(`user_companies_${targetEmp.id}`) || '[]');
+        if (targetEmp.companyId === profile?.company_id || mockExtra.includes(profile?.company_id)) {
+          return { success: false, message: `Karyawan ${inviteEmail} sudah terhubung ke perusahaan Anda.` };
         }
         
+        if (profile?.company_id && !mockExtra.includes(profile.company_id)) {
+           mockExtra.push(profile.company_id);
+           localStorage.setItem(`user_companies_${targetEmp.id}`, JSON.stringify(mockExtra));
+        }
+
         // Mutate array for mock (simulating backend)
         const updatedEmployees = [...employees];
         updatedEmployees[targetEmpIndex] = {
           ...targetEmp,
-          companyId: profile?.company_id || 'COMP-JAGOAI',
+          companyId: targetEmp.companyId || profile?.company_id || 'COMP-JAGOAI',
           status: 'active'
         };
         setEmployees(updatedEmployees);

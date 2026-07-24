@@ -13,6 +13,7 @@ interface ProfileScreenProps {
   avatarUrl?: string;
   bankName?: string;
   bankAccount?: string;
+  companyName?: string;
 }
 
 const staggerContainer = {
@@ -37,7 +38,8 @@ export default function ProfileScreen({
   setIsLogged,
   avatarUrl,
   bankName,
-  bankAccount
+  bankAccount,
+  companyName
 }: ProfileScreenProps) {
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden">

@@ -3,7 +3,7 @@ import {
   Bell, User, CreditCard, ArrowLeft, Camera, CheckCircle, 
   AlertCircle, Loader2, Calendar, DollarSign, X, FileText, 
   ChevronRight, Image, Search, Lock, Mail, ArrowUpRight, ArrowRight,
-  Check, Download, Maximize2, Sparkles, LogOut, Settings, Info, Plus
+  Check, Download, Maximize2, Sparkles, LogOut, Settings, Info, Plus, Building
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Transaction } from '../types';
@@ -22,6 +22,8 @@ import AvatarCameraScreen from './mobile-screens/AvatarCameraScreen';
 import AvatarGalleryScreen from './mobile-screens/AvatarGalleryScreen';
 import NotificationsScreen from './mobile-screens/NotificationsScreen';
 import PayslipHistoryScreen from './mobile-screens/PayslipHistoryScreen';
+import CompaniesScreen from './mobile-screens/CompaniesScreen';
+import CompanyDetailScreen from './mobile-screens/CompanyDetailScreen';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { scanReceiptAndUpload } from '../lib/hermesApi';
 
@@ -44,7 +46,10 @@ export default function MobileAppSimulator({
 }: MobileAppSimulatorProps) {
   
   // Mobile Router/State
-  const [currentScreen, setCurrentScreen] = useState<'auth' | 'forgot' | 'home' | 'scanner' | 'ai-loading' | 'form' | 'success' | 'history' | 'detail' | 'profile' | 'edit-profile' | 'avatar-camera' | 'avatar-gallery' | 'notifications' | 'payslip-history'>(currentUserProfile ? 'home' : 'auth');
+  const [currentScreen, setCurrentScreen] = useState<'auth' | 'forgot' | 'home' | 'scanner' | 'ai-loading' | 'form' | 'success' | 'history' | 'detail' | 'profile' | 'edit-profile' | 'avatar-camera' | 'avatar-gallery' | 'notifications' | 'payslip-history' | 'companies' | 'company-detail'>(currentUserProfile ? 'home' : 'auth');
+  
+  const [selectedCompany, setSelectedCompany] = useState<any>(null);
+  const [formCompanyId, setFormCompanyId] = useState<string | undefined>(undefined);
   
   // Authentication credentials
   const [email, setEmail] = useState(currentUserProfile?.email || '');
@@ -101,7 +106,15 @@ export default function MobileAppSimulator({
   const [historyTab, setHistoryTab] = useState<'Semua' | 'Pending' | 'Selesai'>('Semua');
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [zoomReceipt, setZoomReceipt] = useState(false);
-  const [hasNewNotifications, setHasNewNotifications] = useState(true);
+  const [hasNewNotifications, setHasNewNotifications] = useState(notifications.length > 0);
+
+  useEffect(() => {
+    if (notifications.length > 0) {
+      setHasNewNotifications(true);
+    } else {
+      setHasNewNotifications(false);
+    }
+  }, [notifications]);
 
   // Profile / Notification banner
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -279,13 +292,15 @@ export default function MobileAppSimulator({
     setCurrentScreen('scanner');
   };
 
-  const handleOpenForm = (typeOption: 'reimburse' | 'cash_advance', imageBase64?: string, imageName?: string) => {
+  const handleOpenForm = (type: 'reimburse' | 'cash_advance' = 'reimburse', imageBase64?: string, imageName?: string, specificCompanyId?: string) => {
     if (imageBase64) {
+      setFormCompanyId(specificCompanyId);
       triggerOcrScan(imageBase64, imageName || 'upload.png', 'image/png');
       return;
     }
 
-    setFormType(typeOption);
+    setFormType(type);
+    setFormCompanyId(specificCompanyId);
     setScanImage(null);
     setScanImageName('');
     setScannedData(null);
@@ -447,7 +462,7 @@ export default function MobileAppSimulator({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               created_by: currentUserProfile.id,
-              company_id: currentUserProfile.company_id,
+              company_id: formCompanyId || currentUserProfile.company_id,
               merchant: formMerchant,
               category: formCategory,
               amount: Number(formAmount),
@@ -477,7 +492,8 @@ export default function MobileAppSimulator({
             amount: Number(formAmount),
             notes: formNotes,
             receiptUrl: finalReceiptUrl,
-            employeeId: currentUserProfile?.id,
+            companyId: formCompanyId || currentUserProfile?.company_id || 'COMP-JAGOAI',
+            employeeId: currentUserProfile?.id || 'admin',
             type: formType
           })
         });
@@ -508,7 +524,7 @@ export default function MobileAppSimulator({
     <div className="flex w-full h-screen bg-[#f8f9fe] overflow-hidden text-slate-800 font-sans">
       {/* Desktop Sidebar (Only when logged) */}
       {isLogged && currentScreen !== 'unassigned' && (
-        <aside className="w-64 bg-white border-r border-slate-200 flex flex-col z-20 shrink-0">
+        <aside className="hidden md:flex w-64 bg-white border-r border-slate-200 flex-col z-20 shrink-0">
           <div className="p-6 border-b border-slate-100 flex items-center justify-center relative">
             <h1 className="text-2xl font-black text-brand tracking-tighter">Jago<span className="text-slate-800">Finance</span></h1>
             {!isProfileComplete && <div className="absolute top-2 right-2 flex items-center justify-center w-6 h-6 bg-rose-100 text-rose-500 rounded-full"><Lock className="w-3 h-3" /></div>}
@@ -522,24 +538,24 @@ export default function MobileAppSimulator({
               <CreditCard className="w-5 h-5" /> Home
             </button>
             <button 
+              onClick={() => { if(isProfileComplete) { setCurrentScreen('companies'); setSelectedTx(null); } }}
+              className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentScreen === 'companies' || currentScreen === 'company-detail' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <Building className="w-5 h-5" /> Perusahaan
+            </button>
+            <button 
+              onClick={() => { if(isProfileComplete) { setCurrentScreen('history'); setSelectedTx(null); } }}
+              className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentScreen === 'history' || currentScreen === 'detail' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <FileText className="w-5 h-5" /> Riwayat Pengajuan
+            </button>
+            <button 
               onClick={() => { if(isProfileComplete) handleOpenScanner('reimburse'); }}
               className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentScreen === 'scanner' || currentScreen === 'form' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Camera className="w-5 h-5" /> Scan Struk
             </button>
-            <button 
-              onClick={() => { if(isProfileComplete) { setCurrentScreen('history'); setSelectedTx(null); } }}
-              className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentScreen === 'history' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <FileText className="w-5 h-5" /> Riwayat
-            </button>
-            <button 
-              onClick={() => { if(isProfileComplete) { setCurrentScreen('notifications'); setSelectedTx(null); setHasNewNotifications(false); } }}
-              className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentScreen === 'notifications' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <Bell className="w-5 h-5" /> Notifikasi
-              {hasNewNotifications && <span className="ml-auto w-2 h-2 bg-rose-500 rounded-full"></span>}
-            </button>
+
           </nav>
           
           <div className="p-4 border-t border-slate-100">
@@ -686,6 +702,7 @@ export default function MobileAppSimulator({
                 avatarUrl={currentUserProfile?.avatar_url}
                 bankName={currentUserProfile?.bank_name || editProfileData.bankName}
                 bankAccount={currentUserProfile?.bank_account || editProfileData.bankAccount}
+                companyName={currentUserProfile?.companies?.name || 'Jago Finance'}
               />
             )}
 
@@ -737,6 +754,27 @@ export default function MobileAppSimulator({
                 bankAccount={currentUserProfile?.bank_account || editProfileData.bankAccount || '000000'}
               />
             )}
+
+            {/* SCREEN 15: COMPANIES */}
+            {currentScreen === 'companies' && (
+              <CompaniesScreen
+                companies={currentUserProfile?.companies || []}
+                setCurrentScreen={setCurrentScreen}
+                setSelectedCompany={setSelectedCompany}
+              />
+            )}
+
+            {/* SCREEN 16: COMPANY DETAIL */}
+            {currentScreen === 'company-detail' && selectedCompany && (
+              <CompanyDetailScreen
+                company={selectedCompany}
+                setCurrentScreen={setCurrentScreen}
+                staffTransactions={staffTransactions}
+                handleOpenScanner={handleOpenScanner}
+                handleOpenForm={handleOpenForm}
+              />
+            )}
+
             {/* SCREEN 15: UNASSIGNED COMPANY LOCK */}
             {currentScreen === 'unassigned' && (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-6 mt-16">
@@ -771,7 +809,54 @@ export default function MobileAppSimulator({
               </div>
             )}
 
-          {/* Bottom Native Web App Bar Removed for Desktop Layout */}
+          {/* BOTTOM NAVIGATION FOR MOBILE */}
+          {isLogged && currentScreen !== 'unassigned' && (
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-2 pb-safe z-40 px-6 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+              <div className="flex justify-between items-center max-w-sm mx-auto h-14 relative">
+                
+                <button 
+                  onClick={() => setCurrentScreen('home')}
+                  className={`flex flex-col items-center justify-center w-14 transition-colors ${currentScreen === 'home' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <CreditCard className={`w-5 h-5 mb-1 ${currentScreen === 'home' ? 'fill-brand/20' : ''}`} />
+                  <span className="text-[9px] font-bold">Home</span>
+                </button>
+
+                <button 
+                  onClick={() => { if(isProfileComplete) setCurrentScreen('companies'); }}
+                  className={`flex flex-col items-center justify-center w-14 transition-colors ${currentScreen === 'companies' || currentScreen === 'company-detail' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <Building className={`w-5 h-5 mb-1 ${currentScreen === 'companies' || currentScreen === 'company-detail' ? 'fill-brand/20' : ''}`} />
+                  <span className="text-[9px] font-bold">Perusahaan</span>
+                </button>
+
+                {/* Floating Center Button */}
+                <button 
+                  onClick={() => { if(isProfileComplete) handleOpenScanner('reimburse'); }}
+                  className={`w-14 h-14 bg-brand text-white rounded-full flex items-center justify-center shadow-lg shadow-brand/30 border-4 border-[#f8f9fe] absolute left-1/2 -translate-x-1/2 -top-6 hover:bg-brand/90 hover:scale-105 active:scale-95 transition-all ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <Camera className="w-6 h-6" />
+                </button>
+
+                <button 
+                  onClick={() => { if(isProfileComplete) setCurrentScreen('history'); }}
+                  className={`flex flex-col items-center justify-center w-14 transition-colors pl-6 ${currentScreen === 'history' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <FileText className={`w-5 h-5 mb-1 ${currentScreen === 'history' ? 'fill-brand/20' : ''}`} />
+                  <span className="text-[9px] font-bold">Riwayat</span>
+                </button>
+
+                <button 
+                  onClick={() => setCurrentScreen('profile')}
+                  className={`flex flex-col items-center justify-center w-14 transition-colors ${currentScreen === 'profile' || currentScreen === 'edit-profile' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  <User className={`w-5 h-5 mb-1 ${currentScreen === 'profile' || currentScreen === 'edit-profile' ? 'fill-brand/20' : ''}`} />
+                  <span className="text-[9px] font-bold">Profil</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {showPaywall && (
             <div className="absolute inset-0 bg-slate-950 z-50 flex flex-col justify-between p-6 text-white select-none">
               <div className="flex justify-between items-center mt-4">

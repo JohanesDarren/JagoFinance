@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Users, Search, Building2, Mail, Shield, Eye, X, Wallet, Building, CircleUserRound, ShieldCheck, ShieldAlert, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Users, Search, Building2, Mail, Shield, Eye, X, Wallet, Building, CircleUserRound, ShieldCheck, ShieldAlert, Loader2, Image as ImageIcon, UserPlus } from 'lucide-react';
 import { WebScreenProps } from '../shared/WebScreenProps';
 import { Employee } from '../../../types';
 import { supabase } from '../../../lib/supabase';
@@ -14,6 +14,11 @@ export default function EmployeeManagementScreen(props: WebScreenProps) {
   const [isValidating, setIsValidating] = useState(false);
   const [showRejectBankModal, setShowRejectBankModal] = useState(false);
   const [rejectBankReason, setRejectBankReason] = useState('');
+  
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteMessage, setInviteMessage] = useState<{success: boolean, message: string} | null>(null);
 
   const handleValidateBank = async (employeeId: string, currentStatus: boolean) => {
     setIsValidating(true);
@@ -136,6 +141,12 @@ export default function EmployeeManagementScreen(props: WebScreenProps) {
             <p className="text-base text-slate-500 mt-2 font-medium">Manajemen data seluruh karyawan, filter berdasarkan cabang atau cari spesifik nama/email.</p>
           </div>
         </div>
+        <button 
+          onClick={() => setShowInviteModal(true)}
+          className="px-6 py-4 bg-slate-900 hover:bg-slate-800 text-white font-black rounded-[1.5rem] shadow-xl shadow-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2 hover:-translate-y-0.5"
+        >
+          <UserPlus className="w-5 h-5" /> Undang Karyawan
+        </button>
       </div>
 
       {/* Filter and Table Container */}
@@ -394,6 +405,94 @@ export default function EmployeeManagementScreen(props: WebScreenProps) {
               >
                 {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Kirim Penolakan'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invite Employee Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+            
+            <div className="p-8 border-b border-slate-100 flex justify-between items-center relative z-10">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-[1.25rem] flex items-center justify-center shadow-inner">
+                  <UserPlus className="w-6 h-6" strokeWidth="2.5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-xl text-slate-900 font-display tracking-tight">Undang Karyawan</h3>
+                  <span className="text-[11px] font-bold text-slate-500">Hubungkan akun yang sudah ada</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowInviteModal(false);
+                  setInviteEmail('');
+                  setInviteMessage(null);
+                }}
+                className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-8 relative z-10">
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!inviteEmail || !props.onInviteEmployee) return;
+                  setInviteLoading(true);
+                  const res = await props.onInviteEmployee(inviteEmail);
+                  setInviteMessage(res);
+                  setInviteLoading(false);
+                  if (res.success) {
+                    setInviteEmail('');
+                    setTimeout(() => {
+                      setInviteMessage(null);
+                      setShowInviteModal(false);
+                      if (props.onRefreshData) props.onRefreshData();
+                    }, 3000);
+                  }
+                }}
+                className="flex flex-col gap-6"
+              >
+                <div>
+                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 block mb-2">Email Karyawan</label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input 
+                      type="email" 
+                      placeholder="email.karyawan@contoh.com"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      className="w-full pl-12 pr-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold outline-none focus:border-indigo-400 focus:bg-white transition-all shadow-inner"
+                      required
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500 mt-3 leading-relaxed">
+                    Karyawan harus sudah mendaftarkan akun di sistem JagoFinance menggunakan email ini sebelum dapat diundang.
+                  </p>
+                </div>
+
+                {inviteMessage && (
+                  <div className={`p-4 rounded-2xl text-sm font-bold border flex items-start gap-3 ${
+                    inviteMessage.success ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+                  }`}>
+                    <ShieldAlert className={`w-5 h-5 shrink-0 ${inviteMessage.success ? 'text-emerald-500' : 'text-rose-500'}`} />
+                    <span>{inviteMessage.message}</span>
+                  </div>
+                )}
+
+                <button 
+                  type="submit"
+                  disabled={inviteLoading || !inviteEmail}
+                  className="w-full px-6 py-4 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-black rounded-2xl shadow-xl shadow-slate-200 transition-all flex items-center justify-center gap-2"
+                >
+                  {inviteLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Kirim Undangan'}
+                </button>
+              </form>
             </div>
           </div>
         </div>
