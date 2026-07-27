@@ -438,7 +438,7 @@ export default function WebDashboard({
           {/* Top Header with Profile and Notifications */}
           <div className="flex items-center justify-between bg-white/70 backdrop-blur-xl border border-white p-4 px-6 rounded-[2rem] shadow-sm mb-8 z-20 sticky top-0">
             <div>
-              <h1 className="text-xl font-black font-display text-slate-900 tracking-tight capitalize">
+              <h1 className="text-xl font-black font-display text-blue-950 tracking-tight capitalize">
                 {activeTab === 'overview' ? 'Dashboard Utama' :
                  activeTab === 'approvals' ? 'Persetujuan Klaim' :
                  activeTab === 'inbound' ? 'Arus Uang Masuk' :
@@ -457,7 +457,7 @@ export default function WebDashboard({
               <div className="relative">
                 <button 
                   onClick={() => { setShowNotifications(!showNotifications); setShowProfileMenu(false); }}
-                  className={`w-12 h-12 flex items-center justify-center rounded-2xl border transition-all relative ${showNotifications ? 'bg-indigo-50 border-indigo-200 shadow-inner' : 'bg-white border-slate-100 shadow-sm hover:shadow-md hover:bg-slate-50'}`}
+                  className={`w-12 h-12 flex items-center justify-center rounded-2xl border transition-all relative ${showNotifications ? 'bg-blue-50 border-blue-200 shadow-inner' : 'bg-white border-slate-100 shadow-sm hover:shadow-md hover:bg-slate-50'}`}
                 >
                   <Bell className={`w-5 h-5 ${showNotifications ? 'text-brand' : 'text-slate-600'}`} />
                   {notificationItems.length > 0 && (
@@ -470,7 +470,7 @@ export default function WebDashboard({
                     <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                       <h3 className="font-black text-slate-800 font-display text-lg tracking-tight">Notifikasi</h3>
                       {notificationItems.length > 0 && (
-                        <span className="px-2 py-1 bg-indigo-100 text-brand text-xs font-bold rounded-lg">{notificationItems.length} Baru</span>
+                        <span className="px-2 py-1 bg-blue-100 text-brand text-xs font-bold rounded-lg">{notificationItems.length} Baru</span>
                       )}
                     </div>
                     
@@ -509,7 +509,7 @@ export default function WebDashboard({
 <div className="p-2 border-t border-slate-100">
   <button
     onClick={() => { setActiveTab('notifications'); setShowNotifications(false); }}
-    className="w-full text-left px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-b-[1.5rem]"
+    className="w-full text-left px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 rounded-b-[1.5rem]"
   >
     Lihat seluruh notifikasi
   </button>
@@ -524,7 +524,7 @@ export default function WebDashboard({
                   onClick={() => { setShowProfileMenu(!showProfileMenu); setShowNotifications(false); }}
                   className="flex items-center gap-3 p-1.5 pr-4 bg-white border border-slate-100 rounded-full shadow-sm hover:shadow-md hover:bg-slate-50 transition-all"
                 >
-                  <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-100 bg-indigo-50 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-blue-100 bg-blue-50 flex items-center justify-center">
                     {userProfile?.avatar_url ? (
                       <img 
                         src={userProfile.avatar_url}
@@ -532,33 +532,47 @@ export default function WebDashboard({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <User className="w-5 h-5 text-indigo-400" />
+                      <User className="w-5 h-5 text-blue-500" />
                     )}
                   </div>
                   <div className="hidden md:block text-left">
                     <span className="block text-xs font-black text-slate-800 leading-tight truncate max-w-[100px]">{userProfile?.full_name || 'Admin'}</span>
-                    <span className="block text-[10px] text-indigo-600 font-bold tracking-widest uppercase mt-0.5">{userRole === 'super_admin' ? 'Super Admin' : userRole === 'admin_corp' ? 'Admin' : 'Karyawan'}</span>
+                    <span className="block text-[10px] text-blue-700 font-bold tracking-widest uppercase mt-0.5">{userRole === 'super_admin' ? 'Super Admin' : userRole === 'admin_corp' ? 'Admin' : 'Karyawan'}</span>
                   </div>
                   <ChevronDown className="w-4 h-4 text-slate-400 hidden md:block" />
                 </button>
 
                 {showProfileMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 shadow-xl rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
-                    <button 
-                      onClick={() => { setActiveTab('profile'); setShowProfileMenu(false); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors"
-                    >
-                      <User className="w-4 h-4 text-slate-400" />
-                      <span className="text-sm font-bold text-slate-700">Profil Akun</span>
-                    </button>
-                    <div className="h-px w-full bg-slate-100"></div>
-                    <button 
-                      onClick={() => { setShowProfileMenu(false); if(onLogout) onLogout(); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-rose-50 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4 text-rose-500" />
-                      <span className="text-sm font-bold text-rose-600">Keluar Sistem</span>
-                    </button>
+                  <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 shadow-2xl rounded-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 origin-top-right">
+                    <div className="p-4 border-b border-slate-50 bg-slate-50/50 flex items-center gap-3">
+                       <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm bg-blue-50 flex items-center justify-center shrink-0">
+                         {userProfile?.avatar_url ? (
+                           <img src={userProfile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                         ) : (
+                           <User className="w-5 h-5 text-blue-500" />
+                         )}
+                       </div>
+                       <div className="overflow-hidden">
+                         <p className="text-sm font-black text-slate-800 truncate">{userProfile?.full_name || 'Admin'}</p>
+                         <p className="text-[10px] font-bold text-slate-400 truncate">{userProfile?.email || 'admin@jagofinance.id'}</p>
+                       </div>
+                    </div>
+                    <div className="p-2">
+                      <button 
+                        onClick={() => { setActiveTab('profile'); setShowProfileMenu(false); }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-xl hover:bg-slate-50 transition-colors group"
+                      >
+                        <User className="w-4 h-4 text-slate-400 group-hover:text-blue-700 transition-colors" />
+                        <span className="text-sm font-bold text-slate-700 group-hover:text-blue-800">Profile saya</span>
+                      </button>
+                      <button 
+                        onClick={() => { setShowProfileMenu(false); if(onLogout) onLogout(); }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-xl hover:bg-rose-50 transition-colors group mt-1"
+                      >
+                        <LogOut className="w-4 h-4 text-slate-400 group-hover:text-rose-500 transition-colors" />
+                        <span className="text-sm font-bold text-slate-700 group-hover:text-rose-600">Logout</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -865,19 +879,19 @@ export default function WebDashboard({
       </div>
 {/* MODAL 1: B-3.2 Persetujuan Split-View Modal */}
       {splitViewTx && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 bg-blue-950/60 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6">
           <div className="bg-white/90 backdrop-blur-2xl w-full max-w-5xl h-[720px] max-h-[92vh] rounded-[2.5rem] shadow-2xl shadow-indigo-900/20 overflow-hidden flex flex-col relative animate-in fade-in zoom-in-95" style={{ animationDuration: '0.3s' }}>
             
             {/* Split Modal Head */}
             <div className="px-8 py-5 border-b border-slate-200/50 flex justify-between items-center bg-white/50 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-brand/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
               <div className="flex items-center gap-4 relative z-10">
-                <div className="w-12 h-12 bg-indigo-50 rounded-[1.25rem] flex items-center justify-center border border-indigo-100 text-brand shadow-inner shadow-indigo-100/50">
+                <div className="w-12 h-12 bg-blue-50 rounded-[1.25rem] flex items-center justify-center border border-blue-100 text-brand shadow-inner shadow-blue-100/50">
                   <ShieldAlert className="w-6 h-6" strokeWidth="2.5" />
                 </div>
                 <div>
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand/80 block mb-0.5">Persetujuan Reimburse AI</span>
-                  <h3 className="font-black text-xl text-slate-900 font-display tracking-tight leading-none">Split-View Audit <span className="text-slate-400 font-mono text-lg font-bold ml-1">#{splitViewTx.id}</span></h3>
+                  <h3 className="font-black text-xl text-blue-950 font-display tracking-tight leading-none">Split-View Audit <span className="text-slate-400 font-mono text-lg font-bold ml-1">#{splitViewTx.id}</span></h3>
                 </div>
               </div>
               <button 
@@ -920,8 +934,8 @@ export default function WebDashboard({
               <div className="w-1/2 p-8 flex flex-col overflow-y-auto space-y-6 bg-white/40">
                 
                 <div className="space-y-5">
-                  <div className="p-4 bg-gradient-to-r from-indigo-50 to-brand/5 rounded-2xl border border-indigo-100/50 flex items-start gap-3 shadow-sm">
-                    <div className="w-8 h-8 rounded-[0.85rem] bg-white text-brand flex items-center justify-center shrink-0 border border-indigo-100 shadow-sm">
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-brand/5 rounded-2xl border border-blue-100/50 flex items-start gap-3 shadow-sm">
+                    <div className="w-8 h-8 rounded-[0.85rem] bg-white text-brand flex items-center justify-center shrink-0 border border-blue-100 shadow-sm">
                       <Info className="w-4 h-4" strokeWidth="2.5" />
                     </div>
                     <div className="text-xs text-indigo-900/80 leading-relaxed pt-0.5">
@@ -933,22 +947,22 @@ export default function WebDashboard({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="col-span-2 relative group">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Merek Toko / Supplier</label>
-                      <div className="font-black text-slate-800 text-sm bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm transition-colors group-hover:border-indigo-200">{splitViewTx.merchant}</div>
+                      <div className="font-black text-slate-800 text-sm bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm transition-colors group-hover:border-blue-200">{splitViewTx.merchant}</div>
                     </div>
 
                     <div className="relative group">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Tanggal Transaksi</label>
-                      <div className="font-bold text-slate-700 bg-white p-3.5 rounded-2xl border border-slate-200 font-mono text-sm shadow-sm transition-colors group-hover:border-indigo-200">{splitViewTx.date}</div>
+                      <div className="font-bold text-slate-700 bg-white p-3.5 rounded-2xl border border-slate-200 font-mono text-sm shadow-sm transition-colors group-hover:border-blue-200">{splitViewTx.date}</div>
                     </div>
                     
                     <div className="relative group">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Kategori</label>
-                      <div className="font-bold text-slate-700 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm text-sm truncate transition-colors group-hover:border-indigo-200">{splitViewTx.category}</div>
+                      <div className="font-bold text-slate-700 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm text-sm truncate transition-colors group-hover:border-blue-200">{splitViewTx.category}</div>
                     </div>
 
                     <div className="col-span-2 relative">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Nominal Pengajuan (IDR)</label>
-                      <div className="font-black text-brand font-mono text-2xl bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 shadow-inner flex items-center justify-between">
+                      <div className="font-black text-brand font-mono text-2xl bg-blue-50/50 p-4 rounded-2xl border border-blue-100 shadow-inner flex items-center justify-between">
                         <span>Rp</span>
                         <span>{splitViewTx.amount.toLocaleString('id-ID')}</span>
                       </div>
@@ -963,7 +977,7 @@ export default function WebDashboard({
                   </div>
                   {/* Rincian Rekening Penerima & Bukti Transfer Section */}
                   <div className="border-t border-slate-200/60 pt-6 space-y-4">
-                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                    <h4 className="text-xs font-black text-blue-950 uppercase tracking-widest flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
                         <Wallet className="w-3 h-3 text-slate-600" />
                       </div>
@@ -975,7 +989,7 @@ export default function WebDashboard({
                         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-2 gap-4">
                           <div className="col-span-2">
                             <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider mb-1">Nama Penerima</span>
-                            <span className="font-black text-slate-900 text-sm">{(employees.find(e => e.id === splitViewTx.employeeId)?.name || "Unknown")}</span>
+                            <span className="font-black text-blue-950 text-sm">{(employees.find(e => e.id === splitViewTx.employeeId)?.name || "Unknown")}</span>
                           </div>
                           <div>
                             <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider mb-1">Bank</span>
@@ -1026,13 +1040,13 @@ export default function WebDashboard({
                           </label>
                           
                           {approveReceiptBase64 ? (
-                            <div className="border border-brand bg-indigo-50/50 p-3 rounded-2xl flex items-center justify-between shadow-sm animate-in fade-in">
+                            <div className="border border-brand bg-blue-50/50 p-3 rounded-2xl flex items-center justify-between shadow-sm animate-in fade-in">
                               <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-white rounded-xl overflow-hidden flex items-center justify-center p-0.5 shrink-0 shadow-sm border border-indigo-100">
+                                <div className="w-12 h-12 bg-white rounded-xl overflow-hidden flex items-center justify-center p-0.5 shrink-0 shadow-sm border border-blue-100">
                                   <img src={approveReceiptBase64} alt="Preview transfer" className="object-cover w-full h-full rounded-lg" />
                                 </div>
                                 <div>
-                                  <span className="font-black text-xs text-slate-900 block truncate max-w-[150px]">Bukti_Transfer_Reimburse.png</span>
+                                  <span className="font-black text-xs text-blue-950 block truncate max-w-[150px]">Bukti_Transfer_Reimburse.png</span>
                                   <span className="text-[10px] text-emerald-600 block font-black flex items-center gap-1 mt-0.5">
                                     <CheckCircle className="w-3.5 h-3.5" /> Berhasil Diunggah
                                   </span>
@@ -1053,7 +1067,7 @@ export default function WebDashboard({
                               onDrop={handleDrop}
                               className={`border-2 border-dashed rounded-[1.5rem] p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-3 group ${
                                 isDragging 
-                                  ? 'border-brand bg-indigo-50/50 scale-[0.99]' 
+                                  ? 'border-brand bg-blue-50/50 scale-[0.99]' 
                                   : 'border-slate-300 bg-white hover:bg-slate-50 hover:border-brand shadow-sm'
                               }`}
                               onClick={() => document.getElementById('approve_transfer_file_input')?.click()}
@@ -1069,7 +1083,7 @@ export default function WebDashboard({
                                   }
                                 }}
                               />
-                              <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 group-hover:bg-indigo-50 group-hover:border-indigo-100 group-hover:shadow-inner text-slate-400 group-hover:text-brand flex items-center justify-center transition-all shadow-sm">
+                              <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 group-hover:bg-blue-50 group-hover:border-blue-100 group-hover:shadow-inner text-slate-400 group-hover:text-brand flex items-center justify-center transition-all shadow-sm">
                                 <Plus className="w-6 h-6" />
                               </div>
                               <div className="text-xs text-slate-600 font-bold mt-1 leading-snug">
@@ -1149,7 +1163,7 @@ export default function WebDashboard({
                               }}
                               className={`flex-1 py-3.5 text-white font-black text-sm rounded-[1.25rem] shadow-sm transition-all flex items-center justify-center gap-2 group ${
                                 approveReceiptBase64 && !isSubmittingApproval
-                                  ? 'bg-gradient-to-r from-brand to-indigo-600 hover:shadow-lg hover:shadow-indigo-600/20 hover:-translate-y-0.5 cursor-pointer' 
+                                  ? 'bg-gradient-to-r from-brand to-blue-700 hover:shadow-lg hover:shadow-blue-700/20 hover:-translate-y-0.5 cursor-pointer' 
                                   : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
                               }`}
                               id="web_approve_btn"
@@ -1283,7 +1297,7 @@ export default function WebDashboard({
                 <label className="block font-bold text-slate-500 mb-0.5">Unggah Bukti Transaksi (Kuitansi / Nota) <span className="text-slate-400 font-normal">(Opsional)</span></label>
                 
                 {manualReceiptBase64 ? (
-                  <div className="border border-indigo-150 bg-indigo-50/20 p-2.5 rounded-2xl flex items-center justify-between shadow-3xs animate-in fade-in">
+                  <div className="border border-indigo-150 bg-blue-50/20 p-2.5 rounded-2xl flex items-center justify-between shadow-3xs animate-in fade-in">
                     <div className="flex items-center gap-2.5">
                       <div className="w-10 h-10 border border-slate-200 rounded-lg bg-white overflow-hidden flex items-center justify-center p-0.5 shrink-0 shadow-3xs">
                         <img src={manualReceiptBase64} alt="Preview" className="object-contain w-full h-full rounded" />
@@ -1318,7 +1332,7 @@ export default function WebDashboard({
                     }}
                     className={`border-2 border-dashed rounded-2xl p-3 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 min-h-[80px] ${
                       isDraggingManual 
-                        ? 'border-brand bg-indigo-50/40 scale-[0.99]' 
+                        ? 'border-brand bg-blue-50/40 scale-[0.99]' 
                         : 'border-slate-250 bg-slate-50 hover:bg-slate-100/40 hover:border-slate-300'
                     }`}
                     onClick={() => document.getElementById('manual_receipt_file_input')?.click()}
@@ -1336,7 +1350,7 @@ export default function WebDashboard({
                     />
                     <Plus className="w-5 h-5 text-slate-400" />
                     <div className="text-[10px] text-slate-600 font-extrabold leading-tight">
-                      Drag & Drop bukti atau <span className="text-indigo-600 font-black underline">Cari File</span>
+                      Drag & Drop bukti atau <span className="text-blue-700 font-black underline">Cari File</span>
                     </div>
                     <p className="text-[8px] text-slate-405 font-medium">JPEG, PNG, WEBP (Maks 5MB)</p>
                   </div>

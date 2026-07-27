@@ -20,25 +20,25 @@ export default function PayrollScreen(props: WebScreenProps) {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-6 bg-white/70 backdrop-blur-xl p-8 rounded-[3rem] border border-white shadow-xl shadow-slate-200/40">
         <div className="flex items-center gap-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-50 to-white text-indigo-600 rounded-[1.5rem] flex items-center justify-center shadow-inner border border-indigo-100/50">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-white text-blue-700 rounded-[1.5rem] flex items-center justify-center shadow-inner border border-blue-100/50">
             <Users className="w-8 h-8" strokeWidth="2.5" />
           </div>
           <div>
-            <h2 className="text-3xl lg:text-4xl font-black font-display text-slate-900 tracking-tight">Manajemen Tim & Gaji</h2>
+            <h2 className="text-3xl lg:text-4xl font-black font-display text-blue-950 tracking-tight">Manajemen Tim & Gaji</h2>
             <p className="text-base text-slate-500 mt-2 font-medium">Manajemen database staf PT JagoAI. Terbitkan dan transfer payroll bulanan massal dengan sekali klik rasa bank.</p>
           </div>
         </div>
       </div>
 
       {/* Mass Payroll Generator Control Center panel */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white p-8 sm:p-12 rounded-[3rem] shadow-2xl shadow-indigo-900/30 border border-slate-700/50 space-y-8 relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-125 transition-transform duration-1000"></div>
+      <div className="bg-gradient-to-r from-blue-950 via-slate-800 to-indigo-950 text-white p-8 sm:p-12 rounded-[3rem] shadow-2xl shadow-indigo-900/30 border border-slate-700/50 space-y-8 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-125 transition-transform duration-1000"></div>
         <div className="absolute bottom-0 left-20 w-48 h-48 bg-brand/30 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-1000"></div>
 
         <div className="relative z-10 flex flex-col md:flex-row gap-6 md:items-center justify-between">
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white text-[11px] font-black tracking-widest uppercase mb-4 shadow-inner">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
+              <Sparkles className="w-3.5 h-3.5 text-blue-400" />
               Generator Otomatis
             </div>
             <h4 className="text-3xl sm:text-4xl font-black font-display text-white tracking-tight">
@@ -61,27 +61,27 @@ export default function PayrollScreen(props: WebScreenProps) {
 
         <div className="relative z-10 flex flex-col md:flex-row gap-6 items-end mt-6 bg-white/5 p-6 rounded-[2rem] border border-white/10 backdrop-blur-sm">
           <div className="flex-1 space-y-3 w-full">
-            <label className="text-[11px] uppercase font-black tracking-[0.2em] text-indigo-200 block">Pilih Divisi Pembayaran</label>
+            <label className="text-[11px] uppercase font-black tracking-[0.2em] text-blue-200 block">Pilih Divisi Pembayaran</label>
             <div className="relative">
               <select 
                 value={payrollDivision}
                 onChange={(e) => setPayrollDivision(e.target.value)}
-                className="w-full pl-6 pr-12 py-4 bg-white/10 backdrop-blur-md text-white rounded-[1.5rem] border border-white/20 outline-none focus:border-indigo-400 focus:bg-white/20 text-[15px] font-bold cursor-pointer transition-all shadow-inner appearance-none"
+                className="w-full pl-6 pr-12 py-4 bg-white/10 backdrop-blur-md text-white rounded-[1.5rem] border border-white/20 outline-none focus:border-blue-500 focus:bg-white/20 text-[15px] font-bold cursor-pointer transition-all shadow-inner appearance-none"
               >
-                <option value="Semua" className="text-slate-900 font-bold">Semua Karyawan ({employees.length} Staff)</option>
-                <option value="Engineering" className="text-slate-900 font-bold">Divisi Engineering</option>
-                <option value="Product" className="text-slate-900 font-bold">Divisi Product</option>
-                <option value="Operations" className="text-slate-900 font-bold">Divisi Operations</option>
+                <option value="Semua" className="text-blue-950 font-bold">Semua Karyawan ({employees.length} Staff)</option>
+                <option value="Engineering" className="text-blue-950 font-bold">Divisi Engineering</option>
+                <option value="Product" className="text-blue-950 font-bold">Divisi Product</option>
+                <option value="Operations" className="text-blue-950 font-bold">Divisi Operations</option>
               </select>
               <div className="absolute inset-y-0 right-5 flex items-center pointer-events-none">
-                <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] border-transparent border-t-indigo-200"></div>
+                <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] border-transparent border-t-blue-200"></div>
               </div>
             </div>
           </div>
 
           <button 
             onClick={handleMassPayroll}
-            className="p-4 px-10 bg-gradient-to-r from-brand to-indigo-500 hover:from-brand hover:to-indigo-400 text-white font-black text-[15px] rounded-[1.5rem] flex items-center justify-center gap-3 transition-all w-full md:w-auto shadow-xl hover:shadow-2xl hover:shadow-brand/40 border border-indigo-400/30 hover:-translate-y-1"
+            className="p-4 px-10 bg-gradient-to-r from-brand to-blue-600 hover:from-brand hover:to-blue-500 text-white font-black text-[15px] rounded-[1.5rem] flex items-center justify-center gap-3 transition-all w-full md:w-auto shadow-xl hover:shadow-2xl hover:shadow-brand/40 border border-blue-500/30 hover:-translate-y-1"
           >
             <Play className="w-5 h-5 fill-white/20" /> Terbitkan & Bayar Payroll Massal
           </button>
@@ -93,10 +93,10 @@ export default function PayrollScreen(props: WebScreenProps) {
         {/* Invite New Employee Panel */}
         <div className="bg-white/90 backdrop-blur-xl rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-8 lg:col-span-1 flex flex-col justify-between h-full">
           <div>
-            <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-[1.25rem] flex items-center justify-center shadow-inner mb-6">
+            <div className="w-14 h-14 bg-blue-50 text-blue-700 rounded-[1.25rem] flex items-center justify-center shadow-inner mb-6">
               <UserPlus className="w-7 h-7" strokeWidth="2.5" />
             </div>
-            <h3 className="font-black font-display text-slate-900 text-2xl tracking-tight">Undang Karyawan</h3>
+            <h3 className="font-black font-display text-blue-950 text-2xl tracking-tight">Undang Karyawan</h3>
             <p className="text-sm text-slate-500 mt-2 font-medium">Masukkan email karyawan yang telah melakukan registrasi mandiri untuk menghubungkan akun mereka ke perusahaan Anda.</p>
           </div>
           
@@ -120,14 +120,14 @@ export default function PayrollScreen(props: WebScreenProps) {
                 placeholder="email.karyawan@contoh.com"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
-                className="w-full pl-14 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] text-[15px] font-semibold outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition-all shadow-inner"
+                className="w-full pl-14 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] text-[15px] font-semibold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all shadow-inner"
                 required
               />
             </div>
             <button 
               type="submit"
               disabled={inviteLoading}
-              className="w-full px-6 py-4 bg-slate-900 hover:bg-slate-800 text-white font-black rounded-[1.5rem] shadow-xl shadow-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2 hover:-translate-y-0.5"
+              className="w-full px-6 py-4 bg-blue-950 hover:bg-slate-800 text-white font-black rounded-[1.5rem] shadow-xl shadow-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2 hover:-translate-y-0.5"
             >
               {inviteLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Kirim Undangan</span>}
             </button>
@@ -145,8 +145,8 @@ export default function PayrollScreen(props: WebScreenProps) {
         {/* Employee directories listings */}
         <div className="bg-white/90 backdrop-blur-xl rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden pb-6 p-6 lg:col-span-2">
           <div className="p-4 pb-6 flex items-center justify-between">
-            <h3 className="font-black text-slate-900 text-2xl font-display tracking-tight px-2">Direktori Staf</h3>
-            <span className="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-xs font-black shadow-sm border border-indigo-100">
+            <h3 className="font-black text-blue-950 text-2xl font-display tracking-tight px-2">Direktori Staf</h3>
+            <span className="bg-blue-50 text-blue-800 px-4 py-2 rounded-full text-xs font-black shadow-sm border border-blue-100">
               Total {employees.length}
             </span>
           </div>
@@ -165,11 +165,11 @@ export default function PayrollScreen(props: WebScreenProps) {
                   <tr key={emp.id} className="bg-white hover:bg-slate-50 transition-all shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 border border-slate-100 group rounded-[2rem] overflow-hidden">
                     <td className="p-5 pl-6 rounded-l-[2rem]">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-[1.25rem] bg-gradient-to-br from-indigo-100 to-brand/10 text-brand flex items-center justify-center font-black text-lg shadow-sm border border-brand/10 group-hover:bg-brand group-hover:text-white transition-colors duration-500">
+                        <div className="w-12 h-12 rounded-[1.25rem] bg-gradient-to-br from-blue-100 to-brand/10 text-brand flex items-center justify-center font-black text-lg shadow-sm border border-brand/10 group-hover:bg-brand group-hover:text-white transition-colors duration-500">
                           {emp.name.charAt(0)}
                         </div>
                         <div className="leading-tight">
-                          <span className="font-black text-slate-900 block text-base group-hover:text-brand transition-colors">{emp.name}</span>
+                          <span className="font-black text-blue-950 block text-base group-hover:text-brand transition-colors">{emp.name}</span>
                           <span className="text-xs text-slate-400 font-mono font-semibold block mt-1">{emp.email} • ID: {emp.id.substring(0,6)}...</span>
                         </div>
                       </div>
@@ -187,14 +187,14 @@ export default function PayrollScreen(props: WebScreenProps) {
                         <span className="text-sm text-slate-500 font-bold ml-1">{emp.role}</span>
                       </div>
                     </td>
-                    <td className="p-5 font-mono font-black text-slate-900 text-lg">Rp {emp.salary.toLocaleString('id-ID')}</td>
+                    <td className="p-5 font-mono font-black text-blue-950 text-lg">Rp {emp.salary.toLocaleString('id-ID')}</td>
                     <td className="p-5 rounded-r-[2rem] pr-6">
-                      <div className="flex items-center justify-end gap-3 p-3 px-4 rounded-[1rem] w-max ml-auto group-hover:bg-indigo-50 transition-colors border border-transparent group-hover:border-indigo-100">
+                      <div className="flex items-center justify-end gap-3 p-3 px-4 rounded-[1rem] w-max ml-auto group-hover:bg-blue-50 transition-colors border border-transparent group-hover:border-blue-100">
                         <div className="text-right leading-tight">
-                          <span className="font-black text-sm text-slate-900 block group-hover:text-indigo-900">{emp.bankName}</span>
-                          <span className="font-mono text-xs text-slate-500 block mt-0.5 group-hover:text-indigo-700">{emp.bankAccount}</span>
+                          <span className="font-black text-sm text-blue-950 block group-hover:text-indigo-900">{emp.bankName}</span>
+                          <span className="font-mono text-xs text-slate-500 block mt-0.5 group-hover:text-blue-800">{emp.bankAccount}</span>
                         </div>
-                        <Banknote className="w-5 h-5 text-slate-400 group-hover:text-indigo-500" strokeWidth="2" />
+                        <Banknote className="w-5 h-5 text-slate-400 group-hover:text-blue-600" strokeWidth="2" />
                       </div>
                     </td>
                   </tr>

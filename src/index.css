@@ -6,9 +6,31 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --font-display: "Space Grotesk", sans-serif;
   
-  --color-brand: #1800ad;
-  --color-brand-light: #503eff;
-  --color-brand-bg: #f5f3ff;
+  /* BRAND COLORS */
+  --color-brand: #022E4C;
+  --color-brand-light: #517493;
+  --color-brand-bg: #E2D9CB;
+
+  /* NAVY BLUE GELAP (#022E4C) & DUSTY BLUE (#517493) */
+  --color-blue-950: #022E4C;
+  --color-blue-900: #0d3856;
+  --color-blue-800: #2b5170;
+  --color-blue-700: #517493;
+  --color-blue-600: #6288a8;
+  --color-blue-100: #d0dee8;
+  --color-blue-50: #e7eff5;
+
+  /* Default Clean Whites/Grays for Background */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  
+  /* BURGUNDY / WINE RED (#56061D) */
+  --color-rose-700: #3f0414;
+  --color-rose-600: #56061D;
+  --color-rose-500: #7a1532;
+  --color-rose-100: #fae8ec;
+  --color-rose-50: #fdf2f5;
 }
 
 /* Custom visual system styling */
@@ -55,7 +77,18 @@
 }
 
 .shimmer-brand-active {
-  background: linear-gradient(90deg, #1800ad 25%, #503eff 50%, #1800ad 75%);
+  background: linear-gradient(90deg, #022E4C 25%, #517493 50%, #022E4C 75%);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
+}
+
+/* Print Overrides to hide default browser headers/footers */
+@media print {
+  @page {
+    margin: 0; /* Removes default browser headers and footers containing URL/Title */
+  }
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }

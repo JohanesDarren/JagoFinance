@@ -215,13 +215,13 @@ export default function ProfileScreen(props: WebScreenProps) {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-[3rem] p-10 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden flex flex-col md:flex-row justify-between md:items-center gap-8 group">
+      <div className="bg-gradient-to-r from-blue-950 via-indigo-950 to-blue-950 rounded-[3rem] p-10 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden flex flex-col md:flex-row justify-between md:items-center gap-8 group">
         <div className="absolute top-0 right-0 w-80 h-80 bg-brand/20 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-1000"></div>
-        <div className="absolute bottom-0 left-20 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000"></div>
+        <div className="absolute bottom-0 left-20 w-48 h-48 bg-blue-600/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000"></div>
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-8">
           <div className="relative group/avatar cursor-pointer">
-            <div className="w-24 h-24 rounded-full overflow-hidden shrink-0 border-4 border-white/20 shadow-xl group-hover:scale-105 transition-transform duration-500 bg-indigo-50 flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full overflow-hidden shrink-0 border-4 border-white/20 shadow-xl group-hover:scale-105 transition-transform duration-500 bg-blue-50 flex items-center justify-center">
               {profileData.avatar_url ? (
                 <img 
                   src={profileData.avatar_url}
@@ -229,11 +229,11 @@ export default function ProfileScreen(props: WebScreenProps) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <User className="w-10 h-10 text-indigo-400" />
+                <User className="w-10 h-10 text-blue-500" />
               )}
             </div>
             <div 
-              className="absolute inset-0 bg-slate-900/40 rounded-full flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
+              className="absolute inset-0 bg-blue-950/40 rounded-full flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
               onClick={() => setShowPhotoSource(true)}
             >
               <span className="text-[10px] font-bold text-white uppercase tracking-widest text-center">Ubah<br/>Foto</span>
@@ -265,7 +265,7 @@ export default function ProfileScreen(props: WebScreenProps) {
         
         {/* Info Personal */}
         <div className="bg-white/90 backdrop-blur-xl rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-8 lg:col-span-2">
-          <h3 className="font-black font-display text-slate-900 text-2xl tracking-tight mb-8">Informasi Personal</h3>
+          <h3 className="font-black font-display text-blue-950 text-2xl tracking-tight mb-8">Informasi Personal</h3>
           
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -351,15 +351,15 @@ export default function ProfileScreen(props: WebScreenProps) {
         <div className="space-y-8 lg:col-span-1">
           
           <div className="bg-white/90 backdrop-blur-xl rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-8">
-            <h3 className="font-black font-display text-slate-900 text-xl tracking-tight mb-6">Detail Pekerjaan</h3>
+            <h3 className="font-black font-display text-blue-950 text-xl tracking-tight mb-6">Detail Pekerjaan</h3>
             <div className="space-y-5">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner border border-indigo-100/50">
+                <div className="w-12 h-12 bg-blue-50 text-blue-700 rounded-2xl flex items-center justify-center shadow-inner border border-blue-100/50">
                   <Building className="w-5 h-5" />
                 </div>
                 <div>
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Perusahaan</span>
-                  <p className="font-black text-slate-900 mt-0.5">
+                  <p className="font-black text-blue-950 mt-0.5">
                     {userProfile?.role === 'super_admin' 
                       ? 'JagoFinance' 
                       : (companies?.find(c => c.id === userProfile?.company_id)?.name || 'Pusat / Tidak Terhubung')
@@ -368,12 +368,12 @@ export default function ProfileScreen(props: WebScreenProps) {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner border border-indigo-100/50">
+                <div className="w-12 h-12 bg-blue-50 text-blue-700 rounded-2xl flex items-center justify-center shadow-inner border border-blue-100/50">
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <div>
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Jabatan / Role</span>
-                  <p className="font-black text-slate-900 mt-0.5">
+                  <p className="font-black text-blue-950 mt-0.5">
                     {userProfile?.role === 'super_admin' ? 'Super Administrator' : userProfile?.role === 'admin_corp' ? 'Admin Cabang' : 'Karyawan'}
                   </p>
                 </div>
@@ -382,7 +382,7 @@ export default function ProfileScreen(props: WebScreenProps) {
           </div>
 
           <div className="bg-white/90 backdrop-blur-xl rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-8">
-            <h3 className="font-black font-display text-slate-900 text-xl tracking-tight mb-6">Keamanan Akun</h3>
+            <h3 className="font-black font-display text-blue-950 text-xl tracking-tight mb-6">Keamanan Akun</h3>
             <div className="space-y-4">
               <button 
                 onClick={() => setPwdStep('request_otp')}
@@ -402,12 +402,12 @@ export default function ProfileScreen(props: WebScreenProps) {
 
       {/* MODAL: Photo Source Picker */}
       {showPhotoSource && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-blue-950/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-[2rem] shadow-2xl p-6 w-full max-w-sm animate-in zoom-in-95 duration-200 relative">
             <button onClick={() => setShowPhotoSource(false)} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-full">
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-lg font-black text-slate-900 mb-6 font-display">Ubah Foto Profil</h3>
+            <h3 className="text-lg font-black text-blue-950 mb-6 font-display">Ubah Foto Profil</h3>
             <div className="grid grid-cols-2 gap-4">
               <button 
                 onClick={startCamera}
@@ -430,14 +430,14 @@ export default function ProfileScreen(props: WebScreenProps) {
 
       {/* MODAL: Webcam Capture */}
       {showCamera && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/90 backdrop-blur-md p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-blue-950/90 backdrop-blur-md p-4">
           <div className="bg-white rounded-[2rem] shadow-2xl p-4 w-full max-w-lg flex flex-col items-center relative animate-in zoom-in-95 duration-200">
             <button onClick={stopCamera} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-full z-10">
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-lg font-black text-slate-900 mb-4 font-display self-start px-4">Ambil Foto</h3>
+            <h3 className="text-lg font-black text-blue-950 mb-4 font-display self-start px-4">Ambil Foto</h3>
             
-            <div className="w-full relative aspect-square bg-slate-900 rounded-[1.5rem] overflow-hidden mb-6 border border-slate-100">
+            <div className="w-full relative aspect-square bg-blue-950 rounded-[1.5rem] overflow-hidden mb-6 border border-slate-100">
               <video 
                 ref={videoRef} 
                 autoPlay 
@@ -467,7 +467,7 @@ export default function ProfileScreen(props: WebScreenProps) {
 
       {/* MODAL: Password Flow */}
       {pwdStep !== 'idle' && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-blue-950/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-[2rem] shadow-2xl p-8 w-full max-w-md relative animate-in zoom-in-95 duration-200">
             <button 
               onClick={() => { setPwdStep('idle'); setPwdError(''); setOtpCode(''); setNewPassword(''); setConfirmPassword(''); }} 
@@ -480,12 +480,12 @@ export default function ProfileScreen(props: WebScreenProps) {
               <div className="flex flex-col items-center text-center space-y-6">
                 <div className="relative mt-2">
                   <div className="absolute inset-0 bg-brand/20 blur-2xl rounded-full scale-150"></div>
-                  <div className="relative w-20 h-20 bg-gradient-to-br from-indigo-500 to-brand text-white rounded-[2rem] shadow-xl flex items-center justify-center transform -rotate-6 hover:rotate-0 transition-transform duration-300">
+                  <div className="relative w-20 h-20 bg-gradient-to-br from-blue-600 to-brand text-white rounded-[2rem] shadow-xl flex items-center justify-center transform -rotate-6 hover:rotate-0 transition-transform duration-300">
                     <Mail className="w-10 h-10" />
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-slate-900 font-display tracking-tight mb-3">Verifikasi Keamanan</h3>
+                  <h3 className="text-2xl font-black text-blue-950 font-display tracking-tight mb-3">Verifikasi Keamanan</h3>
                   <p className="text-slate-500 font-medium leading-relaxed">
                     Kami perlu memastikan ini benar-benar Anda.<br/>
                     Kode OTP akan dikirimkan ke <strong className="text-slate-800">{profileData.email}</strong>
@@ -504,7 +504,7 @@ export default function ProfileScreen(props: WebScreenProps) {
             {pwdStep === 'verify_otp' && (
               <div className="flex flex-col items-center text-center space-y-8">
                 <div>
-                  <h3 className="text-2xl font-black text-slate-900 font-display tracking-tight mb-3">Masukkan Kode OTP</h3>
+                  <h3 className="text-2xl font-black text-blue-950 font-display tracking-tight mb-3">Masukkan Kode OTP</h3>
                   <p className="text-slate-500 font-medium leading-relaxed">
                     Silakan periksa kotak masuk email Anda dan masukkan kode otentikasi.
                   </p>
@@ -530,7 +530,7 @@ export default function ProfileScreen(props: WebScreenProps) {
             {pwdStep === 'update_pwd' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-2xl font-black text-slate-900 font-display tracking-tight mb-2">Buat Kata Sandi Baru</h3>
+                  <h3 className="text-2xl font-black text-blue-950 font-display tracking-tight mb-2">Buat Kata Sandi Baru</h3>
                   <p className="text-slate-500 font-medium">Pastikan kata sandi baru Anda kuat dan belum pernah digunakan sebelumnya.</p>
                 </div>
                 
@@ -637,7 +637,7 @@ export default function ProfileScreen(props: WebScreenProps) {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-3xl font-black text-slate-900 font-display tracking-tight mb-3">Berhasil!</h3>
+                  <h3 className="text-3xl font-black text-blue-950 font-display tracking-tight mb-3">Berhasil!</h3>
                   <p className="text-slate-500 font-medium leading-relaxed">
                     Kata sandi Anda telah berhasil diubah.<br/>
                     Gunakan kata sandi baru ini untuk login berikutnya.

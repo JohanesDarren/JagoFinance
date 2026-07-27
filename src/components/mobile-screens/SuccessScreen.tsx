@@ -21,7 +21,7 @@ export default function SuccessScreen({
         </div>
 
         <div className="space-y-1.5">
-          <h3 className="text-base font-bold font-display text-slate-900 leading-tight">Pengajuan Berhasil!</h3>
+          <h3 className="text-base font-bold font-display text-blue-950 leading-tight">Pengajuan Berhasil!</h3>
           <p className="text-xs text-slate-500 px-4">Nota struk belanja Anda telah direkam dan diajukan ke tim Finance PT JagoAI.</p>
         </div>
 

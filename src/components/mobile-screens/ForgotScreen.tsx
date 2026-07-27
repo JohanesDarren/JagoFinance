@@ -26,7 +26,7 @@ export default function ForgotScreen({
           <ArrowLeft className="w-3.5 h-3.5" /> Kembali
         </button>
         
-        <h3 className="text-lg font-bold text-slate-900 font-display">Lupa Kata Sandi</h3>
+        <h3 className="text-lg font-bold text-blue-950 font-display">Lupa Kata Sandi</h3>
         <p className="text-xs text-slate-500 mt-1">Masukkan alamat email terdaftar Anda untuk memicu pengiriman kode verifikasi pengaturan ulang.</p>
       </div>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, FileText, Download, AlertCircle, X, Printer, Building2, ChevronRight } from 'lucide-react';
+import { ArrowLeft, FileText, Download, AlertCircle, X, Printer, Building2, ChevronRight, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface PayslipHistoryScreenProps {
@@ -8,6 +8,19 @@ interface PayslipHistoryScreenProps {
   bankName?: string;
   bankAccount?: string;
 }
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 15 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+};
 
 export default function PayslipHistoryScreen({ setCurrentScreen, staffName = 'Karyawan', bankName = 'Mandiri', bankAccount = '000000' }: PayslipHistoryScreenProps) {
   const [selectedPayslip, setSelectedPayslip] = useState<any>(null);
@@ -19,161 +32,206 @@ export default function PayslipHistoryScreen({ setCurrentScreen, staffName = 'Ka
   ];
 
   const handlePrint = () => {
+    const originalTitle = document.title;
+    if (selectedPayslip) {
+      document.title = `Slip Gaji ${selectedPayslip.period}`;
+    }
     window.print();
+    document.title = originalTitle;
   };
 
   return (
-    <div className="p-4 space-y-4 h-full relative">
-      <div className="flex items-center justify-between mb-2">
-        <button 
-          onClick={() => setCurrentScreen('profile')}
-          className="p-1 px-1.5 bg-white border border-slate-100 rounded-lg shadow-2xs text-[10px] flex items-center gap-1"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> Profil
-        </button>
-        <span className="text-xs font-bold font-display text-slate-800">Riwayat Slip Gaji</span>
-        <div className="w-8"></div>
-      </div>
-
-      <div className="space-y-2">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block">Daftar Slip Gaji</span>
+    <motion.div 
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ type: "spring", stiffness: 250, damping: 25 }}
+      className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden font-sans"
+    >
+      <div className="p-5 pt-8 space-y-6 relative z-10 flex flex-col h-full pb-28 custom-scrollbar">
         
-        {payslips.length === 0 ? (
-          <div className="bg-white p-8 rounded-2xl border border-slate-100 text-center space-y-2 text-slate-500 mt-2">
-            <AlertCircle className="w-8 h-8 mx-auto text-slate-300" />
-            <p className="text-[10px] font-semibold text-slate-400">Belum ada slip gaji tersedia.</p>
+        {/* Header */}
+        <div className="flex items-center justify-between text-blue-950">
+          <motion.button 
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setCurrentScreen('profile')}
+            className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </motion.button>
+          <span className="text-[13px] font-black font-display tracking-widest uppercase">Riwayat Slip Gaji</span>
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200 text-blue-950">
+            <FileText className="w-4 h-4" />
           </div>
-        ) : (
-          <div className="space-y-2">
-            {payslips.map((ps, idx) => (
-              <div 
-                key={idx}
-                className="bg-white p-3 rounded-2xl border border-slate-100 shadow-4xs flex items-center justify-between hover:border-brand/30 hover:shadow-md transition-all cursor-pointer group"
-                onClick={() => setSelectedPayslip(ps)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-indigo-50 text-indigo-700 rounded-lg text-xs group-hover:bg-brand group-hover:text-white transition-colors">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h6 className="font-bold text-xs text-slate-800 leading-tight group-hover:text-brand transition-colors">{ps.period}</h6>
-                    <p className="text-[9px] text-slate-500 mt-0.5">{ps.desc}</p>
-                  </div>
-                </div>
+        </div>
 
-                <div className="p-1.5 bg-slate-50 text-slate-400 rounded-lg group-hover:bg-indigo-50 group-hover:text-brand transition-colors">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
+        <div className="flex-1 overflow-y-auto">
+          
+          {payslips.length === 0 ? (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white p-8 rounded-[1.5rem] border border-slate-200 shadow-sm text-center space-y-4"
+            >
+              <div className="w-16 h-16 bg-slate-100 rounded-[1.25rem] flex items-center justify-center mx-auto">
+                <AlertCircle className="w-8 h-8 text-slate-400" />
               </div>
-            ))}
-          </div>
-        )}
+              <p className="text-sm font-bold text-slate-600">Belum ada slip gaji tersedia.</p>
+            </motion.div>
+          ) : (
+            <motion.div 
+              variants={staggerContainer}
+              initial="hidden"
+              animate="show"
+              className="space-y-4"
+            >
+              {payslips.map((ps, idx) => (
+                <motion.div 
+                  key={idx}
+                  variants={fadeUp}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-white p-5 rounded-[1.5rem] border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer group"
+                  onClick={() => setSelectedPayslip(ps)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-slate-100 rounded-[1rem] flex items-center justify-center text-blue-950 group-hover:bg-blue-950 group-hover:text-white transition-colors shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h6 className="font-black text-[15px] text-blue-950 leading-tight">{ps.period}</h6>
+                      <p className="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{ps.desc}</p>
+                    </div>
+                  </div>
+
+                  <div className="w-8 h-8 flex items-center justify-center text-slate-300 group-hover:text-blue-950 transition-colors">
+                    <ChevronRight className="w-5 h-5" />
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </div>
       </div>
 
-      {/* HTML Payslip Modal */}
+      {/* HTML Payslip Modal (Premium Digital Receipt) */}
       <AnimatePresence>
         {selectedPayslip && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center p-4 print:p-0 print:bg-white print:block"
+            className="fixed inset-0 z-50 bg-blue-950/90 backdrop-blur-md flex flex-col items-center justify-center p-5 print:p-0 print:bg-white print:block"
           >
             <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] print:max-h-none print:shadow-none print:rounded-none print:w-full print:max-w-none"
+              initial={{ scale: 0.95, y: 30, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 30, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="bg-white w-full max-w-lg rounded-[1.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] print:max-h-none print:shadow-none print:rounded-none print:w-full print:max-w-none relative"
             >
+              {/* Jagged receipt edge */}
+              <div className="absolute top-16 left-4 right-4 h-1 border-t-2 border-dashed border-slate-200 print:hidden"></div>
+
               {/* Modal Actions (Hidden on Print) */}
-              <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 print:hidden shrink-0">
-                <span className="font-bold text-slate-800 text-sm">Slip Gaji HTML</span>
-                <div className="flex items-center gap-2">
-                  <button onClick={handlePrint} className="p-2 bg-indigo-50 text-indigo-700 hover:bg-brand hover:text-white rounded-xl transition-colors flex items-center gap-2 text-xs font-bold px-4">
+              <div className="p-5 flex justify-between items-center bg-white print:hidden shrink-0 relative z-10 pb-6 border-b border-dashed border-slate-200">
+                <span className="font-black tracking-widest uppercase text-blue-950 text-[11px]">Slip Gaji Elektronik</span>
+                <div className="flex items-center gap-3">
+                  <motion.button 
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handlePrint} 
+                    className="h-10 px-5 bg-blue-950 text-white rounded-full flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
+                  >
                     <Printer className="w-4 h-4" /> Cetak / PDF
-                  </button>
-                  <button onClick={() => setSelectedPayslip(null)} className="p-2 bg-slate-200 text-slate-600 hover:bg-slate-300 rounded-xl transition-colors">
-                    <X className="w-4 h-4" />
-                  </button>
+                  </motion.button>
+                  <motion.button 
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setSelectedPayslip(null)} 
+                    className="w-10 h-10 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center"
+                  >
+                    <X className="w-5 h-5" />
+                  </motion.button>
                 </div>
               </div>
 
               {/* Payslip Content */}
-              <div className="p-6 md:p-8 overflow-y-auto bg-white flex-1 relative print:overflow-visible">
+              <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar bg-white flex-1 relative print:overflow-visible text-blue-950 font-sans">
                 {/* Decorative background watermark */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
                   <Building2 className="w-64 h-64" />
                 </div>
 
-                <div className="relative z-10 space-y-6">
+                <div className="relative z-10 space-y-8">
                   {/* Header */}
-                  <div className="text-center border-b-2 border-slate-800 pb-4">
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Slip Gaji Karyawan</h1>
-                    <h2 className="text-base font-bold text-brand mt-1">PT. JAGO FINANCE TEKNOLOGI</h2>
-                    <p className="text-xs text-slate-500 mt-1">Jl. Sudirman Kav 24, Jakarta Selatan, Indonesia 12920</p>
+                  <div className="text-center border-b-2 border-blue-950 pb-6">
+                    <h1 className="text-3xl font-black font-display tracking-tight uppercase mb-2">Slip Gaji</h1>
+                    <h2 className="text-sm font-black tracking-widest uppercase">PT. Jago Finance Teknologi</h2>
+                    <p className="text-[11px] font-bold text-slate-500 mt-2">Jl. Sudirman Kav 24, Jakarta Selatan, 12920</p>
                   </div>
 
                   {/* Employee Info */}
-                  <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div className="grid grid-cols-2 gap-y-6 gap-x-4 text-xs bg-slate-50 p-6 rounded-[1.5rem]">
                     <div>
-                      <p className="text-slate-500 mb-1">Nama Karyawan</p>
-                      <p className="font-bold text-slate-800 text-sm">{staffName}</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Nama Karyawan</p>
+                      <p className="font-bold text-blue-950 text-sm">{staffName}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 mb-1">Periode Gaji</p>
-                      <p className="font-bold text-slate-800 text-sm">{selectedPayslip.period}</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Periode Gaji</p>
+                      <p className="font-bold text-blue-950 text-sm">{selectedPayslip.period}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 mb-1">Metode Pembayaran</p>
-                      <p className="font-bold text-slate-800">{bankName} - {bankAccount}</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Metode Pembayaran</p>
+                      <p className="font-bold text-blue-950">{bankName} - {bankAccount}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 mb-1">Divisi / Jabatan</p>
-                      <p className="font-bold text-slate-800">Operations / Product Manager</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Divisi / Jabatan</p>
+                      <p className="font-bold text-blue-950">Operations / Product Manager</p>
                     </div>
                   </div>
 
                   {/* Earnings & Deductions */}
-                  <div className="grid grid-cols-1 gap-6 pt-4 border-t border-slate-100">
-                    <div className="space-y-3">
-                      <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs border-b border-slate-200 pb-2">Pendapatan</h3>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-600">Gaji Pokok</span>
-                        <span className="font-mono font-medium">Rp {selectedPayslip.amount.toLocaleString('id-ID')}</span>
+                  <div className="grid grid-cols-1 gap-8 pt-2">
+                    <div className="space-y-4">
+                      <h3 className="font-black text-slate-400 uppercase tracking-widest text-[10px] border-b border-slate-200 pb-2">Pendapatan</h3>
+                      <div className="flex justify-between items-center text-sm font-bold">
+                        <span>Gaji Pokok</span>
+                        <span className="font-mono">Rp {selectedPayslip.amount.toLocaleString('id-ID')}</span>
                       </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-600">Tunjangan Operasional</span>
-                        <span className="font-mono font-medium">Rp {selectedPayslip.allowance.toLocaleString('id-ID')}</span>
+                      <div className="flex justify-between items-center text-sm font-bold">
+                        <span>Tunjangan Operasional</span>
+                        <span className="font-mono">Rp {selectedPayslip.allowance.toLocaleString('id-ID')}</span>
                       </div>
-                      <div className="flex justify-between items-center text-sm font-bold pt-2 border-t border-slate-100 text-emerald-700">
+                      <div className="flex justify-between items-center text-sm font-black pt-4 border-t-2 border-blue-950">
                         <span>Total Pendapatan</span>
-                        <span className="font-mono">Rp {(selectedPayslip.amount + selectedPayslip.allowance).toLocaleString('id-ID')}</span>
+                        <span className="font-mono text-lg">Rp {(selectedPayslip.amount + selectedPayslip.allowance).toLocaleString('id-ID')}</span>
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs border-b border-slate-200 pb-2">Potongan</h3>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-600">Pajak PPh 21</span>
-                        <span className="font-mono font-medium text-rose-600">Rp {selectedPayslip.deduction.toLocaleString('id-ID')}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm font-bold pt-2 border-t border-slate-100 text-rose-700">
-                        <span>Total Potongan</span>
+                    <div className="space-y-4">
+                      <h3 className="font-black text-slate-400 uppercase tracking-widest text-[10px] border-b border-slate-200 pb-2">Potongan</h3>
+                      <div className="flex justify-between items-center text-sm font-bold">
+                        <span>Pajak PPh 21</span>
                         <span className="font-mono">Rp {selectedPayslip.deduction.toLocaleString('id-ID')}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm font-black pt-4 border-t-2 border-blue-950">
+                        <span>Total Potongan</span>
+                        <span className="font-mono text-lg">Rp {selectedPayslip.deduction.toLocaleString('id-ID')}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Net Pay */}
-                  <div className="mt-8 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Gaji Bersih Diterima</p>
-                    <p className="text-3xl font-black text-brand font-mono">Rp {((selectedPayslip.amount + selectedPayslip.allowance) - selectedPayslip.deduction).toLocaleString('id-ID')}</p>
+                  <div className="mt-8 bg-blue-950 text-white p-8 rounded-[1.5rem] text-center shadow-xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
+                    <div className="relative z-10">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Gaji Bersih Diterima</p>
+                      <p className="text-4xl font-black font-mono tracking-tighter">Rp {((selectedPayslip.amount + selectedPayslip.allowance) - selectedPayslip.deduction).toLocaleString('id-ID')}</p>
+                    </div>
                   </div>
 
                   {/* Footer */}
-                  <div className="text-center pt-8 text-[10px] text-slate-400 font-medium italic">
-                    <p>Dokumen ini dicetak otomatis dari sistem JagoFinance pada {new Date().toLocaleString('id-ID')}.</p>
-                    <p>Pihak manajemen JagoFinance menyatakan bahwa dokumen ini sah dan tidak memerlukan tanda tangan basah.</p>
+                  <div className="text-center pt-8 text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+                    <p>Dokumen dicetak dari sistem JagoFinance pada {new Date().toLocaleString('id-ID')}.</p>
+                    <p>Dokumen ini sah dan tidak memerlukan tanda tangan basah.</p>
                   </div>
                 </div>
               </div>
@@ -181,6 +239,6 @@ export default function PayslipHistoryScreen({ setCurrentScreen, staffName = 'Ka
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

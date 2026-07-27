@@ -36,11 +36,11 @@ export default function BroadcastScreen(props: WebScreenProps) {
         
         <div className="relative z-10 flex items-center gap-6">
           <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-[1.5rem] border border-white/20 flex items-center justify-center shrink-0 shadow-inner group-hover:rotate-12 transition-transform duration-500">
-            <MessageSquare className="w-8 h-8 text-indigo-300" strokeWidth="2.5" />
+            <MessageSquare className="w-8 h-8 text-blue-400" strokeWidth="2.5" />
           </div>
           <div>
             <h2 className="text-4xl lg:text-5xl font-black font-display tracking-tight text-white">Broadcast Pengumuman</h2>
-            <p className="text-indigo-200 mt-3 text-base max-w-xl font-medium">Kirimkan informasi atau pesan massal ke seluruh karyawan, cabang tertentu, atau grup khusus.</p>
+            <p className="text-blue-200 mt-3 text-base max-w-xl font-medium">Kirimkan informasi atau pesan massal ke seluruh karyawan, cabang tertentu, atau grup khusus.</p>
           </div>
         </div>
       </div>
@@ -64,15 +64,15 @@ export default function BroadcastScreen(props: WebScreenProps) {
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-3">Target Penerima</label>
               <div className="space-y-3">
-                <label className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-all ${targetType === 'all' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:bg-slate-50'}`}>
+                <label className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-all ${targetType === 'all' ? 'border-blue-600 bg-blue-50 text-blue-800' : 'border-slate-200 hover:bg-slate-50'}`}>
                   <input type="radio" name="target" checked={targetType === 'all'} onChange={() => setTargetType('all')} className="hidden" />
-                  <Users className={`w-5 h-5 ${targetType === 'all' ? 'text-indigo-600' : 'text-slate-400'}`} />
+                  <Users className={`w-5 h-5 ${targetType === 'all' ? 'text-blue-700' : 'text-slate-400'}`} />
                   <span className="font-bold text-sm">Seluruh Karyawan (Semua Cabang)</span>
                 </label>
                 
-                <label className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-all ${targetType === 'branch' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:bg-slate-50'}`}>
+                <label className={`flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-all ${targetType === 'branch' ? 'border-blue-600 bg-blue-50 text-blue-800' : 'border-slate-200 hover:bg-slate-50'}`}>
                   <input type="radio" name="target" checked={targetType === 'branch'} onChange={() => setTargetType('branch')} className="hidden" />
-                  <MapPin className={`w-5 h-5 ${targetType === 'branch' ? 'text-indigo-600' : 'text-slate-400'}`} />
+                  <MapPin className={`w-5 h-5 ${targetType === 'branch' ? 'text-blue-700' : 'text-slate-400'}`} />
                   <span className="font-bold text-sm">Pilih Cabang Spesifik</span>
                 </label>
               </div>
@@ -82,7 +82,7 @@ export default function BroadcastScreen(props: WebScreenProps) {
               <div className="animate-in fade-in slide-in-from-top-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">Pilih Cabang</label>
                 <select 
-                  className="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-xl p-3 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all font-medium text-sm"
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-xl p-3 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-200 transition-all font-medium text-sm"
                   value={selectedBranch}
                   onChange={(e) => setSelectedBranch(e.target.value)}
                   required
@@ -106,7 +106,7 @@ export default function BroadcastScreen(props: WebScreenProps) {
                 onChange={e => setTitle(e.target.value)}
                 placeholder="Contoh: Pengumuman THR 2026"
                 required
-                className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl p-4 text-lg font-bold focus:outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-inner"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl p-4 text-lg font-bold focus:outline-none focus:border-blue-600 focus:bg-white transition-all shadow-inner"
               />
             </div>
             
@@ -118,7 +118,7 @@ export default function BroadcastScreen(props: WebScreenProps) {
                 placeholder="Tuliskan isi pesan secara mendetail..."
                 required
                 rows={8}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-2xl p-4 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-inner resize-y min-h-[200px]"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-2xl p-4 focus:outline-none focus:border-blue-600 focus:bg-white transition-all shadow-inner resize-y min-h-[200px]"
               />
             </div>
 
@@ -130,7 +130,7 @@ export default function BroadcastScreen(props: WebScreenProps) {
               
               <button 
                 type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-2xl flex items-center gap-3 transition-all active:scale-95 shadow-lg shadow-indigo-600/30"
+                className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-4 px-8 rounded-2xl flex items-center gap-3 transition-all active:scale-95 shadow-lg shadow-blue-700/30"
               >
                 <span>Kirim Broadcast</span>
                 <Send className="w-5 h-5" />

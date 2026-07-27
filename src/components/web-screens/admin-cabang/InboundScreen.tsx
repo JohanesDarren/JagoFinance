@@ -78,7 +78,7 @@ export default function InboundScreen(props: WebScreenProps) {
                     <tr key={t.id} className="bg-white hover:bg-emerald-50/50 transition-all shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 border border-slate-100 group rounded-[2rem] overflow-hidden">
                       <td className="p-5 pl-8 rounded-l-[2rem] font-mono text-sm text-slate-400 group-hover:text-slate-600 transition-colors font-semibold">{t.date}</td>
                       <td className="p-5 font-mono text-xs text-brand font-black bg-brand/5 group-hover:bg-brand/10 border border-transparent group-hover:border-brand/20 px-3 py-1.5 my-4 rounded-xl inline-block mx-2 transition-colors">{t.id}</td>
-                      <td className="p-5 font-black text-slate-900 text-base group-hover:text-emerald-600 transition-colors">
+                      <td className="p-5 font-black text-blue-950 text-base group-hover:text-emerald-600 transition-colors">
                         {t.merchant}
                         {companies && t.employeeId && (
                           <div className="mt-2 text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded inline-block">

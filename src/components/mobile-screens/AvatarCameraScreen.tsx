@@ -105,7 +105,7 @@ export default function AvatarCameraScreen({
           disabled={!!errorMsg}
           className={`w-16 h-16 rounded-full bg-white border-4 ${errorMsg ? 'border-slate-500 opacity-50' : 'border-slate-300'} flex items-center justify-center active:scale-95 transition-transform shadow-[0_0_15px_rgba(255,255,255,0.5)]`}
         >
-          <div className={`w-12 h-12 rounded-full border-2 ${errorMsg ? 'border-slate-500' : 'border-slate-900'} flex items-center justify-center`}>
+          <div className={`w-12 h-12 rounded-full border-2 ${errorMsg ? 'border-slate-500' : 'border-blue-950'} flex items-center justify-center`}>
             {!errorMsg && <CameraIcon className="w-5 h-5 text-slate-800" />}
           </div>
         </button>

@@ -240,7 +240,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#eff6ff] via-white to-[#f0fdfa] flex font-sans selection:bg-indigo-100 selection:text-indigo-900 overflow-hidden relative">
+    <div className="min-h-screen bg-gradient-to-br from-[#eff6ff] via-white to-[#f0fdfa] flex font-sans selection:bg-blue-100 selection:text-indigo-900 overflow-hidden relative">
       
       {/* Animated Light Orbs (Moved to root for full page effect) */}
       <div className="absolute top-[-10%] left-[-5%] w-[60%] h-[60%] rounded-full bg-blue-300/20 blur-[100px] pointer-events-none animate-pulse duration-[6s]"></div>
@@ -280,11 +280,11 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
           whileHover={{ scale: 1.05 }}
           className="relative z-10 flex items-center gap-3 w-fit cursor-pointer"
         >
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-200">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-700 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-200">
             <Building2 className="w-6 h-6 text-white" />
           </div>
-          <span className="text-2xl font-bold tracking-tight text-slate-900 font-outfit">
-            Jago<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-cyan-500">Finance</span>
+          <span className="text-2xl font-bold tracking-tight text-blue-950 font-outfit">
+            Jago<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-cyan-500">Finance</span>
           </span>
         </motion.div>
 
@@ -300,8 +300,8 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
               <span className="text-xs font-bold text-slate-700 tracking-widest uppercase">Platform Finansial Generasi Baru</span>
             </motion.div>
 
-            <h1 className="text-[3.5rem] font-black text-slate-900 leading-[1.05] tracking-tight mb-6 font-outfit">
-              Otomatisasi <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-cyan-500">Keuangan Anda.</span>
+            <h1 className="text-[3.5rem] font-black text-blue-950 leading-[1.05] tracking-tight mb-6 font-outfit">
+              Otomatisasi <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-cyan-500">Keuangan Anda.</span>
             </h1>
             <p className="text-slate-600 text-lg leading-relaxed mb-10 font-jakarta max-w-md">
               Hilangkan pekerjaan manual. Kelola arus kas, rekonsiliasi, dan operasional lintas cabang dalam satu ekosistem super-app pintar.
@@ -309,12 +309,12 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
             
             <div className="flex items-center gap-4 bg-white/70 border border-white rounded-2xl p-4 shadow-sm backdrop-blur-md w-max">
               <div className="flex -space-x-3">
-                <div className="w-10 h-10 rounded-full border-2 border-white bg-gradient-to-br from-indigo-400 to-blue-500 shadow-sm"></div>
+                <div className="w-10 h-10 rounded-full border-2 border-white bg-gradient-to-br from-blue-500 to-blue-500 shadow-sm"></div>
                 <div className="w-10 h-10 rounded-full border-2 border-white bg-gradient-to-br from-cyan-400 to-teal-500 shadow-sm"></div>
                 <div className="w-10 h-10 rounded-full border-2 border-white bg-gradient-to-br from-purple-400 to-pink-500 shadow-sm"></div>
               </div>
               <div className="text-sm font-medium text-slate-500 font-jakarta">
-                Dipercaya <strong className="text-slate-900 font-bold">50+</strong> enterprise besar
+                Dipercaya <strong className="text-blue-950 font-bold">50+</strong> enterprise besar
               </div>
             </div>
           </motion.div>
@@ -327,7 +327,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
         {/* Top Header */}
         <header className="px-8 py-6 sm:px-12 flex justify-between items-center w-full z-10">
           <div className="lg:hidden flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-700 to-cyan-500 flex items-center justify-center shadow-lg">
               <Building2 className="w-5 h-5 text-white" />
             </div>
           </div>
@@ -336,14 +336,14 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
             {onBack && (
               <button 
                 onClick={onBack}
-                className="group flex items-center gap-2 px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 rounded-full text-xs font-bold transition-all"
+                className="group flex items-center gap-2 px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-blue-950 rounded-full text-xs font-bold transition-all"
               >
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                 <span className="hidden sm:inline">Kembali</span>
               </button>
             )}
             {isSupabase ? (
-              <span className="inline-flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-indigo-700 bg-indigo-50 px-4 py-2.5 rounded-full shadow-sm border border-indigo-100">
+              <span className="inline-flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-blue-800 bg-blue-50 px-4 py-2.5 rounded-full shadow-sm border border-blue-100">
                 <ShieldCheck className="w-4 h-4" /> Live Base
               </span>
             ) : (
@@ -361,7 +361,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
             initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             className="mb-10 text-center"
           >
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-3 font-outfit">
+            <h2 className="text-3xl sm:text-4xl font-black text-blue-950 tracking-tight mb-3 font-outfit">
               {forgotPasswordState !== 'none' 
                 ? (forgotPasswordState === 'email' ? 'Lupa Kata Sandi' : forgotPasswordState === 'code' ? 'Verifikasi Kode' : 'Sandi Baru')
                 : (isSignUp ? 'Buat Akun Baru' : 'Selamat Datang')}
@@ -391,13 +391,13 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
             <form onSubmit={handleForgotPasswordSubmit} className="space-y-5">
               {forgotPasswordState === 'email' && (
                 <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="relative group">
-                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-700 transition-colors" />
                   <input 
                     type="email" 
                     placeholder="Email terdaftar" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-5 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 transition-all font-jakarta font-medium"
+                    className="w-full pl-12 pr-5 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-blue-950 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-200 transition-all font-jakarta font-medium"
                     required
                   />
                 </motion.div>
@@ -405,13 +405,13 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
 
               {forgotPasswordState === 'code' && (
                 <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="relative group">
-                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-700 transition-colors" />
                   <input 
                     type="text" 
                     placeholder="Kode OTP" 
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 8))}
-                    className="w-full pl-12 pr-5 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[20px] tracking-[0.5em] text-center text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 transition-all font-jakarta font-medium uppercase"
+                    className="w-full pl-12 pr-5 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[20px] tracking-[0.5em] text-center text-blue-950 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-200 transition-all font-jakarta font-medium uppercase"
                     required
                   />
                 </motion.div>
@@ -420,17 +420,17 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
               {forgotPasswordState === 'new_password' && (
                 <>
                   <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="relative group">
-                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-700 transition-colors" />
                     <input 
                       type={showPassword ? "text" : "password"}
                       placeholder="Kata Sandi Baru" 
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-12 pr-14 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 transition-all font-jakarta font-medium"
+                      className="w-full pl-12 pr-14 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-blue-950 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-200 transition-all font-jakarta font-medium"
                       required
                       autoComplete="new-password"
                     />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 p-1 hover:text-indigo-600 transition-colors">
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 p-1 hover:text-blue-700 transition-colors">
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </motion.div>
@@ -465,18 +465,18 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
                   </AnimatePresence>
 
                   <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative group mt-5">
-                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-700 transition-colors" />
                     <input 
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Konfirmasi Kata Sandi Baru" 
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className={`w-full pl-12 pr-24 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none transition-all font-jakarta font-medium ${
+                      className={`w-full pl-12 pr-24 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 rounded-full text-[14px] text-blue-950 placeholder-slate-400 outline-none transition-all font-jakarta font-medium ${
                         confirmPassword.length > 0 
                           ? passwordsMatch 
                             ? 'border-emerald-200 focus:bg-white focus:border-emerald-300 focus:shadow-[0_4px_25px_rgba(16,185,129,0.15)] bg-white' 
                             : 'border-rose-200 focus:bg-white focus:border-rose-300 focus:shadow-[0_4px_25px_rgba(244,63,94,0.15)] bg-white'
-                          : 'border-transparent focus:bg-white focus:border-indigo-200 focus:shadow-[0_4px_25px_rgba(99,102,241,0.12)] hover:bg-slate-200/80'
+                          : 'border-transparent focus:bg-white focus:border-blue-200 focus:shadow-[0_4px_25px_rgba(99,102,241,0.12)] hover:bg-slate-200/80'
                       }`}
                       required
                       autoComplete="new-password"
@@ -490,7 +490,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
                       <button 
                         type="button" 
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="text-slate-400 hover:text-indigo-600 transition-colors p-1"
+                        className="text-slate-400 hover:text-blue-700 transition-colors p-1"
                       >
                         {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
@@ -502,7 +502,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
               <button 
                 type="submit" 
                 disabled={loading}
-                className={`w-full py-4 mt-6 text-white font-bold text-[15px] rounded-full flex items-center justify-center transition-all ${loading ? 'bg-slate-300' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5'}`}
+                className={`w-full py-4 mt-6 text-white font-bold text-[15px] rounded-full flex items-center justify-center transition-all ${loading ? 'bg-slate-300' : 'bg-blue-700 hover:bg-blue-800 hover:shadow-lg hover:-translate-y-0.5'}`}
               >
                 {loading ? 'Memproses...' : 'Kirim'}
               </button>
@@ -529,24 +529,24 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
                   className="grid grid-cols-2 gap-4"
                 >
                   <motion.div whileTap={{ scale: 0.98 }} className="relative group">
-                    <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                    <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-700 transition-colors" />
                     <input 
                       type="text" 
                       placeholder="Nama Depan" 
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full pl-12 pr-5 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 focus:shadow-[0_4px_25px_rgba(99,102,241,0.12)] hover:bg-slate-100/80 transition-all font-jakarta font-medium"
+                      className="w-full pl-12 pr-5 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-blue-950 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-200 focus:shadow-[0_4px_25px_rgba(99,102,241,0.12)] hover:bg-slate-100/80 transition-all font-jakarta font-medium"
                       required
                     />
                   </motion.div>
                   <motion.div whileTap={{ scale: 0.98 }} className="relative group">
-                    <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                    <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-700 transition-colors" />
                     <input 
                       type="text" 
                       placeholder="Nama Belakang" 
                       value={surname}
                       onChange={(e) => setSurname(e.target.value)}
-                      className="w-full pl-12 pr-5 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 focus:shadow-[0_4px_25px_rgba(99,102,241,0.12)] hover:bg-slate-100/80 transition-all font-jakarta font-medium"
+                      className="w-full pl-12 pr-5 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-blue-950 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-200 focus:shadow-[0_4px_25px_rgba(99,102,241,0.12)] hover:bg-slate-100/80 transition-all font-jakarta font-medium"
                       required
                     />
                   </motion.div>
@@ -558,13 +558,13 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
               initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
               whileTap={{ scale: 0.98 }} className="relative group"
             >
-              <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+              <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-700 transition-colors" />
               <input 
                 type="email" 
                 placeholder="Alamat Email Akses" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-5 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 focus:shadow-[0_4px_25px_rgba(99,102,241,0.12)] hover:bg-slate-100/80 transition-all font-jakarta font-medium"
+                className="w-full pl-12 pr-5 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-blue-950 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-200 focus:shadow-[0_4px_25px_rgba(99,102,241,0.12)] hover:bg-slate-100/80 transition-all font-jakarta font-medium"
                 required
               />
             </motion.div>
@@ -573,19 +573,19 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
               initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
               whileTap={{ scale: 0.98 }} className="relative group"
             >
-              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-700 transition-colors" />
               <input 
                 type={showPassword ? "text" : "password"}
                 placeholder="Kata Sandi Utama" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-14 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-200 focus:shadow-[0_4px_25px_rgba(99,102,241,0.12)] hover:bg-slate-100/80 transition-all font-jakarta font-medium"
+                className="w-full pl-12 pr-14 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 border-transparent rounded-full text-[14px] text-blue-950 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-200 focus:shadow-[0_4px_25px_rgba(99,102,241,0.12)] hover:bg-slate-100/80 transition-all font-jakarta font-medium"
                 required
               />
               <button 
                 type="button" 
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors p-1"
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-700 transition-colors p-1"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -630,18 +630,18 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
                   whileTap={{ scale: 0.98 }} 
                   className="relative group"
                 >
-                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-700 transition-colors" />
                   <input 
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Konfirmasi Kata Sandi" 
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={`w-full pl-12 pr-24 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 rounded-full text-[14px] text-slate-900 placeholder-slate-400 outline-none transition-all font-jakarta font-medium ${
+                    className={`w-full pl-12 pr-24 py-4 bg-slate-100 shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border-2 rounded-full text-[14px] text-blue-950 placeholder-slate-400 outline-none transition-all font-jakarta font-medium ${
                       confirmPassword.length > 0 
                         ? passwordsMatch 
                           ? 'border-emerald-200 focus:bg-white focus:border-emerald-300 focus:shadow-[0_4px_25px_rgba(16,185,129,0.15)] bg-white' 
                           : 'border-rose-200 focus:bg-white focus:border-rose-300 focus:shadow-[0_4px_25px_rgba(244,63,94,0.15)] bg-white'
-                        : 'border-transparent focus:bg-white focus:border-indigo-200 focus:shadow-[0_4px_25px_rgba(99,102,241,0.12)] hover:bg-slate-200/80'
+                        : 'border-transparent focus:bg-white focus:border-blue-200 focus:shadow-[0_4px_25px_rgba(99,102,241,0.12)] hover:bg-slate-200/80'
                     }`}
                     required
                   />
@@ -654,7 +654,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
                     <button 
                       type="button" 
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="text-slate-400 hover:text-indigo-600 transition-colors p-1"
+                      className="text-slate-400 hover:text-blue-700 transition-colors p-1"
                     >
                       {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -676,10 +676,10 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
                     id="terms"
                     checked={agreeTerms}
                     onChange={(e) => setAgreeTerms(e.target.checked)}
-                    className="mt-1 w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    className="mt-1 w-4 h-4 rounded border-slate-300 text-blue-700 focus:ring-blue-600 cursor-pointer"
                   />
                   <label htmlFor="terms" className="text-sm text-slate-600 font-jakarta leading-relaxed cursor-pointer select-none">
-                    Saya telah membaca dan menyetujui <a href="#" onClick={(e) => { e.preventDefault(); setLegalView('privacy'); }} className="text-indigo-600 font-bold hover:underline">Kebijakan Privasi</a> dan <a href="#" onClick={(e) => { e.preventDefault(); setLegalView('terms'); }} className="text-indigo-600 font-bold hover:underline">Syarat & Ketentuan</a>
+                    Saya telah membaca dan menyetujui <a href="#" onClick={(e) => { e.preventDefault(); setLegalView('privacy'); }} className="text-blue-700 font-bold hover:underline">Kebijakan Privasi</a> dan <a href="#" onClick={(e) => { e.preventDefault(); setLegalView('terms'); }} className="text-blue-700 font-bold hover:underline">Syarat & Ketentuan</a>
                   </label>
                 </motion.div>
               )}
@@ -692,7 +692,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
                 className={`w-full py-4 mt-6 text-white font-bold text-[15px] rounded-full flex items-center justify-center gap-3 transition-all duration-300 ${
                   loading || (isSignUp && (!allReqsMet || !passwordsMatch || !agreeTerms))
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' 
-                    : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-[0_10px_30px_rgba(79,70,229,0.3)] hover:-translate-y-0.5 active:scale-[0.98]'
+                    : 'bg-blue-700 hover:bg-blue-800 hover:shadow-[0_10px_30px_rgba(79,70,229,0.3)] hover:-translate-y-0.5 active:scale-[0.98]'
                 }`}
               >
                 <span>{loading ? 'Memproses...' : isSignUp ? 'Daftar Sekarang' : 'Masuk ke Portal'}</span>
@@ -705,7 +705,7 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
                 <button 
                   type="button" 
                   onClick={() => setForgotPasswordState('email')}
-                  className="text-sm text-indigo-600 font-bold hover:text-indigo-800 transition-colors"
+                  className="text-sm text-blue-700 font-bold hover:text-indigo-800 transition-colors"
                 >
                   Lupa Kata Sandi?
                 </button>
@@ -728,10 +728,10 @@ export default function LoginPage({ onSelectRole, onAuthSuccess, onBack }: Login
                 setPassword('');
                 setConfirmPassword('');
               }}
-              className="text-[14px] text-indigo-600 hover:text-indigo-800 transition-colors font-bold group relative"
+              className="text-[14px] text-blue-700 hover:text-indigo-800 transition-colors font-bold group relative"
             >
               {isSignUp ? 'Masuk di sini' : 'Registrasi Karyawan'}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-600 transition-all group-hover:w-full"></span>
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-700 transition-all group-hover:w-full"></span>
             </button>
           </motion.div>
           </>

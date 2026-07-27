@@ -81,13 +81,13 @@ export default function CompanyManagementScreen(props: WebScreenProps) {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 rounded-[3rem] p-10 text-white shadow-2xl shadow-indigo-900/30 relative overflow-hidden flex flex-col md:flex-row justify-between md:items-center gap-8 group">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none group-hover:scale-110 transition-transform duration-1000"></div>
+      <div className="bg-gradient-to-r from-blue-950 via-slate-800 to-indigo-950 rounded-[3rem] p-10 text-white shadow-2xl shadow-indigo-900/30 relative overflow-hidden flex flex-col md:flex-row justify-between md:items-center gap-8 group">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none group-hover:scale-110 transition-transform duration-1000"></div>
         <div className="absolute bottom-0 left-20 w-48 h-48 bg-brand/30 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-1000"></div>
         
         <div className="relative z-10 flex items-center gap-6">
           <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-[1.5rem] border border-white/20 flex items-center justify-center shrink-0 shadow-inner group-hover:rotate-12 transition-transform duration-500">
-            <Building2 className="w-8 h-8 text-indigo-300" strokeWidth="2.5" />
+            <Building2 className="w-8 h-8 text-blue-400" strokeWidth="2.5" />
           </div>
           <div>
             <h2 className="text-4xl lg:text-5xl font-black font-display tracking-tight text-white">Kelola Perusahaan</h2>
@@ -108,7 +108,7 @@ export default function CompanyManagementScreen(props: WebScreenProps) {
           </div>
           <button 
             onClick={() => handleOpenModal()}
-            className="bg-indigo-500 hover:bg-indigo-400 text-white px-6 py-3.5 rounded-[1.5rem] flex items-center gap-3 shadow-lg shadow-indigo-500/30 transition-all active:scale-95 font-bold"
+            className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3.5 rounded-[1.5rem] flex items-center gap-3 shadow-lg shadow-blue-600/30 transition-all active:scale-95 font-bold"
           >
             <Plus className="w-5 h-5" strokeWidth="2.5" />
             <span>Tambah Perusahaan</span>
@@ -133,11 +133,11 @@ export default function CompanyManagementScreen(props: WebScreenProps) {
                 <tr key={company.id} className="bg-white hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group">
                   <td className="p-5 pl-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-[1.25rem] bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-600 flex items-center justify-center font-black text-lg shadow-sm border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300 shrink-0">
+                      <div className="w-12 h-12 rounded-[1.25rem] bg-gradient-to-br from-blue-100 to-blue-50 text-blue-700 flex items-center justify-center font-black text-lg shadow-sm border border-blue-100 group-hover:bg-blue-700 group-hover:text-white transition-colors duration-300 shrink-0">
                         {company.name.charAt(0)}
                       </div>
                       <div>
-                        <span className="font-black text-slate-900 block text-base group-hover:text-indigo-600 transition-colors line-clamp-1" title={company.name}>{company.name}</span>
+                        <span className="font-black text-blue-950 block text-base group-hover:text-blue-700 transition-colors line-clamp-1" title={company.name}>{company.name}</span>
                       </div>
                     </div>
                   </td>
@@ -159,7 +159,7 @@ export default function CompanyManagementScreen(props: WebScreenProps) {
                     <div className="flex items-center justify-end gap-2">
                       <button 
                         onClick={() => handleOpenModal(company)}
-                        className="p-2.5 bg-slate-100 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl transition-all shadow-sm"
+                        className="p-2.5 bg-slate-100 text-blue-700 hover:bg-blue-700 hover:text-white rounded-xl transition-all shadow-sm"
                         title="Edit Perusahaan"
                       >
                         <Edit2 className="w-5 h-5" />
@@ -193,11 +193,11 @@ export default function CompanyManagementScreen(props: WebScreenProps) {
       {showModal && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
             
             <div className="p-8 border-b border-slate-100 flex justify-between items-center relative z-10">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100">
                   {editingId ? <Edit2 className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
                 </div>
                 <div>
@@ -223,7 +223,7 @@ export default function CompanyManagementScreen(props: WebScreenProps) {
                   placeholder="Contoh: PT. Jago Tech"
                   value={formData.name || ''}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
                 />
               </div>
 
@@ -232,7 +232,7 @@ export default function CompanyManagementScreen(props: WebScreenProps) {
                 <select 
                   value={formData.subscription_tier || 'Free'}
                   onChange={(e) => setFormData({...formData, subscription_tier: e.target.value})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all appearance-none cursor-pointer"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all appearance-none cursor-pointer"
                 >
                   <option value="Free">Free</option>
                   <option value="Starter">Starter</option>
@@ -253,7 +253,7 @@ export default function CompanyManagementScreen(props: WebScreenProps) {
               <button 
                 disabled={isSubmitting || !formData.name}
                 onClick={handleSubmit}
-                className="px-8 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/20 transition-all text-sm disabled:opacity-50 flex items-center gap-2"
+                className="px-8 py-3 rounded-xl font-bold text-white bg-blue-700 hover:bg-blue-600 shadow-md shadow-blue-700/20 transition-all text-sm disabled:opacity-50 flex items-center gap-2"
               >
                 <Save className="w-4 h-4" />
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}

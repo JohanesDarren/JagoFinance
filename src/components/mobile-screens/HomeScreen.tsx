@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Bell, AlertCircle, Image as ImageIcon, Sparkles, ChevronRight, CheckCircle2 } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Bell, AlertCircle, Image as ImageIcon, Sparkles, ChevronRight, CheckCircle2, ScanLine, Clock, Wallet, ArrowUpRight, ArrowDownRight, CreditCard, Wifi, MoreHorizontal, User, LogOut } from 'lucide-react';
 import { Transaction } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -17,6 +17,7 @@ interface HomeScreenProps {
   avatarUrl?: string;
   hasNewNotifications?: boolean;
   setHasNewNotifications?: (val: boolean) => void;
+  handleLogout?: () => void;
 }
 
 // Framer Motion variants
@@ -24,9 +25,7 @@ const staggerContainer = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
+    transition: { staggerChildren: 0.1 }
   }
 };
 
@@ -48,9 +47,10 @@ export default function HomeScreen({
   handleOpenDetail,
   avatarUrl,
   hasNewNotifications,
-  setHasNewNotifications
+  handleLogout
 }: HomeScreenProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,205 +67,122 @@ export default function HomeScreen({
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 pb-24 h-full overflow-y-auto bg-slate-50 relative w-full overflow-x-hidden">
+    <div className="p-5 md:p-8 space-y-8 pb-28 h-full overflow-y-auto bg-[#F8FAFC] relative w-full overflow-x-hidden font-sans custom-scrollbar">
       
-      {/* Animated Top Background Gradient */}
-      <div className="absolute top-0 left-0 right-0 h-[400px] overflow-hidden pointer-events-none">
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.1, 1],
-            opacity: [0.3, 0.5, 0.3],
-            rotate: [0, 5, 0]
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-400/40 rounded-full blur-[80px]"
-        />
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.2, 0.4, 0.2],
-            rotate: [0, -5, 0]
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute top-0 -right-20 w-80 h-80 bg-violet-400/30 rounded-full blur-[80px]"
-        />
-      </div>
-
       <motion.div 
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="max-w-4xl mx-auto space-y-6 relative z-10"
+        className="max-w-4xl mx-auto space-y-7 relative z-10"
       >
-        {/* Header */}
-        <motion.div variants={fadeUp} className="flex justify-between items-center relative z-10">
-          <div className="flex items-center gap-4">
-            <motion.div 
-              whileTap={{ scale: 0.9 }}
-              className="relative cursor-pointer"
-              onClick={() => setCurrentScreen('profile')}
-            >
-              <div className="rounded-[1.25rem] bg-slate-200 border-2 border-white shadow-md overflow-hidden transition-transform">
-                <img 
-                  src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"} 
-                  alt="Profile" 
-                  className="w-12 h-12 md:w-16 md:h-16 object-cover"
-                />
+
+        {/* Welcome Banner / Global Stats */}
+        <div className="mt-2 w-full">
+          <div className="bg-blue-950 text-white px-6 py-8 rounded-[2rem] shadow-lg relative overflow-hidden">
+            {/* Safe background decoration that won't interfere */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-950 to-blue-900 pointer-events-none z-0"></div>
+            
+            <div className="relative z-10 flex flex-col w-full h-full justify-center">
+              <p className="text-blue-200 text-xs md:text-sm leading-relaxed font-medium">
+                Pantau seluruh pengajuan reimburse & kasbon Anda.
+              </p>
+
+              <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-[9px] uppercase font-bold tracking-widest text-blue-300">Total Pengajuan</span>
+                  <span className="text-3xl font-black font-display text-white leading-none mt-1">{staffTransactions.length}</span>
+                </div>
+                
+                <div className="flex gap-4 items-center">
+                  <div className="flex flex-col items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    </div>
+                    <span className="text-sm font-bold text-white">{staffTransactions.filter(t => t.status === 'Approved').length}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center">
+                      <Clock className="w-3.5 h-3.5 text-amber-400" />
+                    </div>
+                    <span className="text-sm font-bold text-white">{staffTransactions.filter(t => t.status === 'Pending').length}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-full bg-rose-500/20 flex items-center justify-center">
+                      <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
+                    </div>
+                    <span className="text-sm font-bold text-white">{staffTransactions.filter(t => t.status === 'Rejected').length}</span>
+                  </div>
+                </div>
               </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white shadow-sm flex items-center justify-center">
-                <CheckCircle2 className="w-2.5 h-2.5 text-white" />
-              </div>
-            </motion.div>
-            <div>
-              <p className="text-xs md:text-sm text-slate-500 font-bold uppercase tracking-wider">Selamat pagi,</p>
-              <h4 className="text-lg md:text-2xl font-black text-slate-900 tracking-tight">{staffName}</h4>
             </div>
           </div>
-          
-          <div className="flex gap-2">
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setCurrentScreen('notifications');
-                if (setHasNewNotifications) setHasNewNotifications(false);
-              }}
-              className="relative p-3 text-slate-600 bg-white/60 backdrop-blur-md rounded-2xl shadow-sm hover:shadow-md transition-all border border-white"
-            >
-              <Bell className="w-5 h-5 md:w-6 md:h-6" />
-              {hasNewNotifications && (
-                <motion.div 
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute top-2 right-2.5 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full"
-                />
-              )}
-            </motion.button>
-          </div>
-        </motion.div>
-
-        {/* Limit & Action Cards */}
-        <div className="grid grid-cols-1 gap-6">
-          
-          {/* Reimburse Limit Card (Glassy/Modern) */}
-          <motion.div 
-            variants={fadeUp}
-            className="bg-gradient-to-br from-indigo-900 via-indigo-700 to-violet-800 text-white p-6 md:p-8 rounded-[2.5rem] shadow-2xl shadow-indigo-500/30 relative overflow-hidden z-10"
-          >
-            {/* Animated Shimmer */}
-            <motion.div 
-              animate={{ x: ["-100%", "200%"] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 pointer-events-none"
-            />
-            
-            <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
-            
-            <div className="flex justify-between items-start relative z-10">
-              <div>
-                <span className="text-[10px] md:text-xs uppercase font-bold tracking-widest text-indigo-200 block opacity-90 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" /> Sisa Limit Global
-                </span>
-                <h3 className="text-3xl md:text-4xl font-black font-display tracking-tight mt-2 text-white">Rp {sisaLimit.toLocaleString('id-ID')}</h3>
-              </div>
-              <div className="text-[10px] md:text-xs bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-xl font-bold text-white shadow-sm text-center">Semua<br/>Perusahaan</div>
-            </div>
-
-            {/* Limit Progression bar */}
-            <div className="mt-8 relative z-10">
-              <div className="w-full bg-black/30 h-2 md:h-3 rounded-full overflow-hidden p-0.5 shadow-inner">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${limitPercentage}%` }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="bg-gradient-to-r from-emerald-400 to-teal-300 h-full rounded-full"
-                />
-              </div>
-              <div className="flex justify-between items-center text-xs md:text-sm text-indigo-200 mt-3 font-medium">
-                <span>Terpakai: <span className="font-bold text-white">Rp {totalApproved.toLocaleString('id-ID')}</span></span>
-                <span>Kuota: <span className="font-bold text-white">Rp {limitMax.toLocaleString('id-ID')}</span></span>
-              </div>
-            </div>
-          </motion.div>
         </div>
 
-        {/* Recent Activity Portion */}
-        <motion.div variants={fadeUp} className="space-y-4">
-          <div className="flex justify-between items-center mt-6">
-            <span className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-brand"></span> Aktivitas Terakhir
-            </span>
+        {/* Transactions List (Inspiration 1, 2) */}
+        <motion.div variants={fadeUp} className="space-y-4 pt-4">
+          <div className="flex justify-between items-center px-1">
+            <h2 className="text-[17px] font-black text-blue-950 tracking-tight">Transactions</h2>
             <button 
               onClick={() => setCurrentScreen('history')}
-              className="text-xs md:text-sm text-indigo-600 hover:text-indigo-800 font-bold bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
+              className="text-[11px] font-bold uppercase tracking-widest text-blue-700 hover:text-blue-950 transition-colors"
             >
-              Lihat Semua
+              See all
             </button>
           </div>
 
-          {staffTransactions.length === 0 ? (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white/60 backdrop-blur-md p-8 md:p-12 rounded-[2rem] border border-white shadow-xl shadow-slate-200/40 text-center space-y-3 text-slate-500"
-            >
-              <div className="w-20 h-20 bg-slate-100 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4 border border-white shadow-inner">
-                <AlertCircle className="w-10 h-10 text-slate-300" />
+          <div className="space-y-3">
+            {staffTransactions.length === 0 ? (
+              <div className="bg-white border border-slate-100 p-8 rounded-[2rem] text-center shadow-sm">
+                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-6 h-6 text-slate-300" />
+                </div>
+                <h4 className="font-black text-blue-950 text-sm mb-1">Belum Ada Transaksi</h4>
+                <p className="text-xs font-medium text-slate-400">Transaksi bulan ini akan muncul di sini.</p>
               </div>
-              <h5 className="font-black text-lg text-slate-700">Belum ada aktivitas</h5>
-              <p className="text-sm font-medium text-slate-400 max-w-[200px] mx-auto">Pengajuan reimburse bulan ini masih kosong.</p>
-            </motion.div>
-          ) : (
-            <div className="space-y-3">
-              <AnimatePresence>
-                {staffTransactions.slice(0, 3).map((tx, idx) => (
-                  <motion.div 
-                    key={tx.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleOpenDetail(tx)}
-                    className="bg-white/80 backdrop-blur-md p-4 rounded-[1.5rem] border border-white shadow-md shadow-slate-200/40 flex items-center justify-between cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-50 text-slate-600 rounded-2xl text-lg font-black flex items-center justify-center group-hover:from-indigo-500 group-hover:to-violet-600 group-hover:text-white shadow-inner border border-white transition-all duration-300 shrink-0">
-                        {tx.merchant.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <h5 className="font-bold text-[15px] text-slate-800 tracking-tight truncate max-w-[140px] sm:max-w-[200px] group-hover:text-indigo-600 transition-colors">{tx.merchant}</h5>
-                        <p className="text-[11px] text-slate-400 font-bold mt-0.5 tracking-wide">{tx.date} • {tx.category}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="text-right">
-                      <span className="font-mono text-[15px] font-black text-slate-800 block">Rp {tx.amount.toLocaleString('id-ID')}</span>
-                      <span className={`inline-flex items-center justify-center text-[9px] uppercase tracking-widest font-black px-2.5 py-1 rounded-lg mt-1 border ${
-                        tx.status === 'Approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                        tx.status === 'Rejected' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                        'bg-amber-50 text-amber-600 border-amber-100'
-                      }`}>
-                        {tx.status}
-                      </span>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          )}
+            ) : (
+              staffTransactions.slice(0, 4).map((tx) => (
+                <motion.div
+                  key={tx.id}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleOpenDetail(tx)}
+                  className="bg-white border border-slate-100 p-4 rounded-[2rem] shadow-sm flex items-center gap-4 cursor-pointer group"
+                >
+                  {/* Modern Icon with specific colors */}
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                    tx.type === 'reimburse' || (tx.type as string) === 'reimbursement' 
+                    ? 'bg-rose-50 text-rose-600' 
+                    : 'bg-blue-50 text-blue-700'
+                  }`}>
+                    {tx.type === 'reimburse' || (tx.type as string) === 'reimbursement' ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownRight className="w-5 h-5" />}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-black text-[15px] text-blue-950 truncate">{tx.merchant}</h4>
+                    <p className="text-[11px] font-bold text-slate-400 truncate mt-0.5">
+                      {tx.category} • {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : 'Hari ini'}
+                    </p>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="font-black text-[15px] text-blue-950 block">
+                      -Rp {tx.amount.toLocaleString('id-ID')}
+                    </span>
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest mt-1 ${
+                      tx.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' :
+                      tx.status === 'Rejected' ? 'bg-rose-100 text-rose-700' : 
+                      'bg-slate-100 text-slate-600'
+                    }`}>
+                      {tx.status === 'Approved' ? 'Selesai' :
+                       tx.status === 'Rejected' ? 'Ditolak' : 'Proses'}
+                    </span>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </div>
         </motion.div>
 
-        {/* Visual Guidelines Banner */}
-        <motion.div variants={fadeUp} className="bg-gradient-to-r from-indigo-50 to-violet-50 border border-white p-5 rounded-[2rem] text-sm text-indigo-900 flex items-start gap-4 shadow-lg shadow-indigo-100/50">
-          <div className="w-8 h-8 shrink-0 bg-white rounded-xl shadow-sm flex items-center justify-center text-indigo-500">
-            <Sparkles className="w-4 h-4" />
-          </div>
-          <div className="leading-relaxed">
-            <span className="font-black block mb-1">Tips Pengajuan</span>
-            Pastikan foto nota / struk Anda terlihat jelas (tidak buram) dan terpotong rapi agar verifikasi AI lebih instan.
-          </div>
-        </motion.div>
       </motion.div>
     </div>
   );

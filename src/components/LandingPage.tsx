@@ -141,7 +141,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       title: 'Multi-Tenant OS',
       description: 'Satu sentralisasi kas untuk semua sub-produk dan unit bisnis startup Anda dengan akses RBAC.',
       color: 'from-violet-50 to-purple-50',
-      border: 'border-violet-200',
+      border: 'border-blue-200',
       glow: 'shadow-[0_0_30px_rgba(167,139,250,0.15)]'
     },
     {
@@ -155,7 +155,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-500 selection:text-white relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-blue-600 selection:text-white relative overflow-hidden">
       {/* Global Mouse Follower */}
       <motion.div
         className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
@@ -235,7 +235,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       {/* Aurora Ambient Background Light */}
       <div className="aurora-bg">
         <div className="aurora-blob bg-cyan-200/50 w-[600px] h-[600px] top-[-20%] left-[-10%]" style={{ animationDelay: '0s' }}></div>
-        <div className="aurora-blob bg-violet-200/50 w-[800px] h-[800px] top-[20%] right-[-20%]" style={{ animationDelay: '-5s' }}></div>
+        <div className="aurora-blob bg-blue-200/50 w-[800px] h-[800px] top-[20%] right-[-20%]" style={{ animationDelay: '-5s' }}></div>
         <div className="aurora-blob bg-blue-200/40 w-[500px] h-[500px] bottom-[-20%] left-[20%]" style={{ animationDelay: '-10s' }}></div>
       </div>
 
@@ -249,24 +249,24 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
               <Building2 className="w-5 h-5 text-white" />
             </div>
-            <span className="text-2xl font-bold tracking-tight text-slate-900 font-outfit">
+            <span className="text-2xl font-bold tracking-tight text-blue-950 font-outfit">
               Jago<span className="text-gradient-accent">Finance</span>
             </span>
           </motion.div>
 
           <motion.nav initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="hidden md:flex items-center gap-8 text-[14px] font-bold font-jakarta">
-            <a href="#platform" className={`transition-colors ${activeSection === 'platform' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900'}`}>Platform</a>
-            <a href="#features" className={`transition-colors ${activeSection === 'features' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900'}`}>Fitur</a>
-            <a href="#workflow" className={`transition-colors ${activeSection === 'workflow' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900'}`}>Workflow</a>
-            <a href="#pricing" className={`transition-colors ${activeSection === 'pricing' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900'}`}>Harga</a>
+            <a href="#platform" className={`transition-colors ${activeSection === 'platform' ? 'text-blue-700' : 'text-slate-500 hover:text-blue-950'}`}>Platform</a>
+            <a href="#features" className={`transition-colors ${activeSection === 'features' ? 'text-blue-700' : 'text-slate-500 hover:text-blue-950'}`}>Fitur</a>
+            <a href="#workflow" className={`transition-colors ${activeSection === 'workflow' ? 'text-blue-700' : 'text-slate-500 hover:text-blue-950'}`}>Workflow</a>
+            <a href="#pricing" className={`transition-colors ${activeSection === 'pricing' ? 'text-blue-700' : 'text-slate-500 hover:text-blue-950'}`}>Harga</a>
           </motion.nav>
 
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <button
               onClick={onLoginClick}
-              className="relative overflow-hidden group flex items-center gap-2 bg-slate-900 text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-all hover:scale-[1.02] active:scale-95 font-jakarta shadow-md hover:shadow-lg hover:shadow-slate-900/20"
+              className="relative overflow-hidden group flex items-center gap-2 bg-blue-950 text-white px-6 py-2.5 rounded-full font-bold text-[14px] transition-all hover:scale-[1.02] active:scale-95 font-jakarta shadow-md hover:shadow-lg hover:shadow-blue-950/20"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-800 to-slate-900 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-800 to-blue-950 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <User className="w-4 h-4 relative z-10 text-white" />
               <span className="relative z-10">Buka Portal</span>
             </button>
@@ -282,7 +282,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="inline-flex items-center gap-3 bg-white/40 border border-slate-200/60 px-5 py-2 rounded-full text-xs font-bold text-slate-800 backdrop-blur-xl mb-10 hover:bg-white/60 transition-all cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.04)]"
         >
-          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-600">
+          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700">
             <Zap className="w-3 h-3" />
           </div>
           <span>JagoFinance Telah Hadir</span>
@@ -293,8 +293,8 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
           initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           className="text-5xl sm:text-7xl lg:text-[7.5rem] font-black tracking-tighter leading-[0.9] font-outfit max-w-5xl"
         >
-          <span className="text-slate-900">Otomasi Keuangan.</span><br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400">Kini Digerakkan AI.</span>
+          <span className="text-blue-950">Otomasi Keuangan.</span><br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-cyan-400">Kini Digerakkan AI.</span>
         </motion.h1>
 
         <motion.p
@@ -310,14 +310,14 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
         >
           <button
             onClick={onLoginClick}
-            className="w-full sm:w-auto group relative flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white px-10 py-4 rounded-full font-bold text-[15px] transition-all hover:scale-[1.02] active:scale-95 shadow-[0_8px_30px_rgba(0,0,0,0.12)] font-jakarta overflow-hidden"
+            className="w-full sm:w-auto group relative flex items-center justify-center gap-3 bg-blue-950 hover:bg-slate-800 text-white px-10 py-4 rounded-full font-bold text-[15px] transition-all hover:scale-[1.02] active:scale-95 shadow-[0_8px_30px_rgba(0,0,0,0.12)] font-jakarta overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-cyan-500/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-cyan-500/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
             <span className="relative z-10 flex items-center gap-2">Mulai Eksplorasi <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></span>
           </button>
 
           <button className="w-full sm:w-auto group flex items-center justify-center gap-3 bg-white/60 border border-slate-200/80 hover:bg-white text-slate-700 px-10 py-4 rounded-full font-bold text-[15px] transition-all hover:scale-[1.02] active:scale-95 shadow-[0_4px_20px_rgba(0,0,0,0.03)] backdrop-blur-md font-jakarta">
-            <PlayCircle className="w-5 h-5 text-indigo-500 group-hover:scale-110 transition-transform" />
+            <PlayCircle className="w-5 h-5 text-blue-600 group-hover:scale-110 transition-transform" />
             <span>Lihat Demo Interaktif</span>
           </button>
         </motion.div>
@@ -349,7 +349,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
               <div className="col-span-1 lg:col-span-7 space-y-10 relative z-10">
                 <div>
                   <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-[0.2em] font-jakarta mb-4">Live Consolidated Balance</h3>
-                  <div className="text-6xl sm:text-8xl font-black text-slate-900 tracking-tighter font-mono flex items-baseline gap-2">
+                  <div className="text-6xl sm:text-8xl font-black text-blue-950 tracking-tighter font-mono flex items-baseline gap-2">
                     <span className="text-slate-400 text-4xl font-light">Rp</span> 12.450<span className="text-slate-400">.000</span>
                   </div>
                 </div>
@@ -367,7 +367,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
                   <div className="bg-white border border-slate-100 rounded-[2rem] p-7 relative overflow-hidden group hover:shadow-[0_8px_30px_rgba(251,113,133,0.12)] transition-shadow cursor-pointer shadow-sm">
                     <div className="absolute top-0 right-0 p-6"><ArrowRight className="w-6 h-6 text-rose-500 opacity-30 group-hover:opacity-100 transition-opacity" /></div>
                     <div className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-jakarta">Outbound Expenses</div>
-                    <div className="text-4xl font-bold text-slate-900 font-mono">- 128.4M</div>
+                    <div className="text-4xl font-bold text-blue-950 font-mono">- 128.4M</div>
                     <div className="mt-5 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                       <motion.div initial={{ width: 0 }} whileInView={{ width: '35%' }} transition={{ duration: 1.5, ease: "easeOut" }} className="h-full bg-gradient-to-r from-rose-500 to-rose-400"></motion.div>
                     </div>
@@ -402,7 +402,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
                         <item.icon className={`w-6 h-6 ${item.color}`} />
                       </div>
                       <div className="flex flex-col justify-center">
-                        <div className="font-bold text-slate-900 text-[15px] font-outfit tracking-wide">{item.title}</div>
+                        <div className="font-bold text-blue-950 text-[15px] font-outfit tracking-wide">{item.title}</div>
                         <div className="text-slate-500 text-[13px] mt-1 font-jakarta">{item.desc}</div>
                       </div>
                     </motion.div>
@@ -419,7 +419,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       {/* Bento Grid Features - Premium Style */}
       <section id="features" className="py-32 px-6 relative z-10 max-w-7xl mx-auto">
         <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight mb-6 font-outfit">
+          <h2 className="text-4xl md:text-6xl font-black text-blue-950 tracking-tight mb-6 font-outfit">
             Dibangun untuk <span className="text-gradient-primary">Kecepatan.</span><br />
             Didesain untuk <span className="text-gradient-accent">Skala.</span>
           </h2>
@@ -434,7 +434,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
               <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center border ${feature.border} mb-8 ${feature.glow} relative z-10`}>
                 {feature.icon}
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-3 relative z-10 font-outfit">{feature.title}</h3>
+              <h3 className="text-2xl font-bold text-blue-950 mb-3 relative z-10 font-outfit">{feature.title}</h3>
               <p className="text-slate-500 text-[15px] leading-relaxed relative z-10 font-jakarta">
                 {feature.description}
               </p>
@@ -447,7 +447,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       <section id="workflow" className="py-32 px-6 relative z-10 border-t border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-20 items-start">
           <div className="lg:w-1/2 lg:sticky top-32 space-y-8">
-            <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1] font-outfit">
+            <h2 className="text-4xl md:text-6xl font-black text-blue-950 tracking-tight leading-[1.1] font-outfit">
               Sistem yang bekerja<br /> <span className="text-slate-400">di balik layar.</span>
             </h2>
             <p className="text-slate-500 text-lg leading-relaxed font-jakarta">
@@ -468,7 +468,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
               <SpotlightCard key={i} className="flex gap-6 group cursor-pointer bg-slate-50 hover:bg-white border-slate-200">
                 <div className="text-4xl font-black text-slate-200 font-mono group-hover:text-cyan-500 transition-colors">{step.num}</div>
                 <div>
-                  <h4 className="text-2xl font-bold text-slate-900 mb-2 font-outfit">{step.title}</h4>
+                  <h4 className="text-2xl font-bold text-blue-950 mb-2 font-outfit">{step.title}</h4>
                   <p className="text-slate-500 text-[15px] leading-relaxed font-jakarta">{step.desc}</p>
                 </div>
               </SpotlightCard>
@@ -481,7 +481,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       <section id="pricing" className="py-32 px-6 relative z-10 bg-slate-50 border-t border-slate-200">
         <div className="max-w-7xl mx-auto space-y-20">
           <div className="text-center space-y-6">
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight font-outfit">
+            <h2 className="text-4xl md:text-5xl font-black text-blue-950 tracking-tight font-outfit">
               Investasi cerdas untuk <br /> <span className="text-gradient-accent">pertumbuhan bisnis.</span>
             </h2>
             <p className="text-slate-500 text-lg max-w-2xl mx-auto font-jakarta">
@@ -498,7 +498,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
                 <div className="relative z-10 flex-1">
                   <h3 className="text-2xl font-black text-slate-800 mb-2 font-outfit tracking-tight">Free</h3>
                   <div className="flex items-baseline gap-2 mb-8">
-                    <span className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">Gratis</span>
+                    <span className="text-4xl lg:text-5xl font-black text-blue-950 tracking-tight">Gratis</span>
                   </div>
                   <div className="space-y-6 mb-8 font-jakarta">
                     <div className="flex items-start gap-4">
@@ -534,30 +534,30 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
 
             {/* Starter Tier */}
             <div className="relative group h-full md:-mt-4 md:mb-4 z-20">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-cyan-500 rounded-[2rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-700 animate-pulse"></div>
-              <div className="bg-white border-2 border-indigo-100 shadow-2xl shadow-indigo-900/10 rounded-[2rem] p-8 lg:p-10 flex flex-col justify-between h-full hover:-translate-y-3 transition-transform duration-500 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white to-cyan-50/50 opacity-100"></div>
-                <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-100 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 group-hover:bg-indigo-200 transition-colors duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-[2rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-700 animate-pulse"></div>
+              <div className="bg-white border-2 border-blue-100 shadow-2xl shadow-indigo-900/10 rounded-[2rem] p-8 lg:p-10 flex flex-col justify-between h-full hover:-translate-y-3 transition-transform duration-500 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-cyan-50/50 opacity-100"></div>
+                <div className="absolute top-0 right-0 w-48 h-48 bg-blue-100 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 group-hover:bg-blue-200 transition-colors duration-500"></div>
                 
                 <div className="absolute top-0 inset-x-0 flex justify-center -mt-0.5">
-                  <span className="bg-gradient-to-r from-indigo-600 to-cyan-500 text-white text-[10px] font-black uppercase tracking-widest px-5 py-2 rounded-b-xl shadow-md">
+                  <span className="bg-gradient-to-r from-blue-700 to-cyan-500 text-white text-[10px] font-black uppercase tracking-widest px-5 py-2 rounded-b-xl shadow-md">
                     Paling Populer
                   </span>
                 </div>
                 
                 <div className="relative z-10 flex-1 mt-6">
-                  <h3 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-cyan-600 mb-2 font-outfit tracking-tight">Starter</h3>
+                  <h3 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-cyan-600 mb-2 font-outfit tracking-tight">Starter</h3>
                   <div className="flex items-baseline gap-2 mb-8">
-                    <span className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">Rp 29k</span>
+                    <span className="text-4xl lg:text-5xl font-black text-blue-950 tracking-tight">Rp 29k</span>
                     <span className="text-slate-500 font-medium font-jakarta">/bulan</span>
                   </div>
                   <div className="space-y-6 mb-8 font-jakarta">
                     <div className="flex items-start gap-4">
-                      <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center shrink-0 shadow-inner border border-indigo-100">
-                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500"></div>
+                      <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 shadow-inner border border-blue-100">
+                        <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
                       </div>
                       <div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 block mb-1">Fitur yang Diakses</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 block mb-1">Fitur yang Diakses</span>
                         <p className="text-[14px] font-bold text-slate-700 leading-relaxed">Semua fitur Free +<br />Payroll Generator</p>
                       </div>
                     </div>
@@ -575,7 +575,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
                 <div className="relative z-10 mt-8">
                   <button 
                     onClick={onLoginClick}
-                    className="w-full py-4 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold rounded-2xl transition-all duration-300 font-jakarta text-[14px] shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/40 border border-indigo-400/50 group-hover:scale-[1.02]"
+                    className="w-full py-4 bg-gradient-to-r from-blue-700 to-cyan-600 hover:from-blue-600 hover:to-cyan-500 text-white font-bold rounded-2xl transition-all duration-300 font-jakarta text-[14px] shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/40 border border-blue-500/50 group-hover:scale-[1.02]"
                   >
                     Pilih Starter
                   </button>
@@ -593,7 +593,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
                 <div className="relative z-10 flex-1">
                   <h3 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-600 mb-2 font-outfit tracking-tight">Pro</h3>
                   <div className="flex items-baseline gap-2 mb-8">
-                    <span className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">Rp 59k</span>
+                    <span className="text-4xl lg:text-5xl font-black text-blue-950 tracking-tight">Rp 59k</span>
                     <span className="text-slate-500 font-medium font-jakarta">/bulan</span>
                   </div>
                   <div className="space-y-6 mb-8 font-jakarta">
@@ -635,7 +635,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       <section className="py-32 px-6 relative z-10 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-50 to-white pointer-events-none"></div>
         <div className="max-w-4xl mx-auto text-center space-y-10 relative z-10">
-          <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-[1.05] font-outfit">
+          <h2 className="text-5xl md:text-7xl font-black text-blue-950 tracking-tight leading-[1.05] font-outfit">
             Masa depan finance <br /> dimulai hari ini.
           </h2>
           <p className="text-slate-500 text-xl max-w-2xl mx-auto leading-relaxed font-jakarta">
@@ -644,7 +644,7 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
           <div className="pt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
             <button
               onClick={onLoginClick}
-              className="w-full sm:w-auto bg-slate-900 text-white px-10 py-4 rounded-full font-bold text-[16px] shadow-xl shadow-slate-900/20 transition-all hover:scale-105 flex items-center justify-center gap-2 font-jakarta"
+              className="w-full sm:w-auto bg-blue-950 text-white px-10 py-4 rounded-full font-bold text-[16px] shadow-xl shadow-blue-950/20 transition-all hover:scale-105 flex items-center justify-center gap-2 font-jakarta"
             >
               Akses Sistem Sekarang <ArrowUpRight className="w-5 h-5" />
             </button>
@@ -656,19 +656,19 @@ export default function LandingPage({ onLoginClick }: LandingPageProps) {
       <footer className="bg-white pt-10 pb-10 px-6 border-t border-slate-200 font-jakarta relative z-10">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity">
-            <Building2 className="w-5 h-5 text-slate-900" />
-            <span className="text-lg font-bold tracking-tight text-slate-900 font-outfit">
+            <Building2 className="w-5 h-5 text-blue-950" />
+            <span className="text-lg font-bold tracking-tight text-blue-950 font-outfit">
               JagoFinance
             </span>
           </div>
           <div className="flex gap-8 text-[14px] font-bold text-slate-500">
-            <a href="#" className="hover:text-slate-900 transition-colors">Platform</a>
-            <a href="#" className="hover:text-slate-900 transition-colors">API Docs</a>
-            <a href="#" className="hover:text-slate-900 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-slate-900 transition-colors">Terms</a>
+            <a href="#" className="hover:text-blue-950 transition-colors">Platform</a>
+            <a href="#" className="hover:text-blue-950 transition-colors">API Docs</a>
+            <a href="#" className="hover:text-blue-950 transition-colors">Privacy</a>
+            <a href="#" className="hover:text-blue-950 transition-colors">Terms</a>
           </div>
           <div className="text-[13px] text-slate-400 font-medium">
-            © 2026 <a href="https://jagoai.dev/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 transition-colors font-bold">JagoAI</a>.
+            © 2026 <a href="https://jagoai.dev/" target="_blank" rel="noopener noreferrer" className="hover:text-blue-950 transition-colors font-bold">JagoAI</a>.
           </div>
         </div>
       </footer>

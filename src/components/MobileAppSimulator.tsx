@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Bell, User, CreditCard, ArrowLeft, Camera, CheckCircle, 
-  AlertCircle, Loader2, Calendar, DollarSign, X, FileText, 
-  ChevronRight, Image, Search, Lock, Mail, ArrowUpRight, ArrowRight,
-  Check, Download, Maximize2, Sparkles, LogOut, Settings, Info, Plus, Building
+  Bell, Building, Lock, CreditCard, Camera, User, FileText, 
+  Settings, LogOut, ArrowRight, ArrowLeft, Clock, Search, 
+  MapPin, Check, Plus, AlertCircle, ScanLine, Wallet, Image, X,
+  Trash2, ShieldAlert, Sparkles, Building2, Info, Menu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Transaction } from '../types';
@@ -62,6 +62,7 @@ export default function MobileAppSimulator({
   const [subTier, setSubTier] = useState<'free' | 'pro'>('free');
 
   const isProfileComplete = currentUserProfile && currentUserProfile.full_name && currentUserProfile.bank_account && currentUserProfile.phone;
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (currentUserProfile) {
@@ -107,6 +108,7 @@ export default function MobileAppSimulator({
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [zoomReceipt, setZoomReceipt] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState(notifications.length > 0);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   useEffect(() => {
     if (notifications.length > 0) {
@@ -199,7 +201,17 @@ export default function MobileAppSimulator({
     .join(' ');
 
   const staffTransactions = transactions.filter(t => t.employeeId === currentUserProfile?.id);
-  const limitMax = 15000000; // Rp 15.000.000 Limit Bulanan
+  
+  // Read dynamic limit from local storage based on company ID (default to 15.000.000)
+  const getDynamicLimit = () => {
+    try {
+      const companyId = currentUserProfile?.company_id || 'default';
+      const stored = localStorage.getItem(`company_limit_${companyId}`);
+      if (stored) return parseInt(stored, 10);
+    } catch(e) {}
+    return 15000000;
+  };
+  const limitMax = getDynamicLimit();
   
   // Calculate approved and pending payments
   const totalApproved = staffTransactions
@@ -334,10 +346,6 @@ export default function MobileAppSimulator({
   };
 
   const handleDeleteTransaction = async (tx: Transaction) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus pengajuan reimburse ini?')) {
-      return;
-    }
-    
     try {
       if (isSupabaseConfigured()) {
         const res = await fetch(`/api/transactions/employee/${tx.id}`, { method: 'DELETE' });
@@ -521,56 +529,155 @@ export default function MobileAppSimulator({
   };
 
   return (
-    <div className="flex w-full h-screen bg-[#f8f9fe] overflow-hidden text-slate-800 font-sans">
+    <div className="flex w-full h-screen bg-slate-50 overflow-hidden text-blue-950 font-sans">
       {/* Desktop Sidebar (Only when logged) */}
-      {isLogged && currentScreen !== 'unassigned' && (
-        <aside className="hidden md:flex w-64 bg-white border-r border-slate-200 flex-col z-20 shrink-0">
-          <div className="p-6 border-b border-slate-100 flex items-center justify-center relative">
-            <h1 className="text-2xl font-black text-brand tracking-tighter">Jago<span className="text-slate-800">Finance</span></h1>
-            {!isProfileComplete && <div className="absolute top-2 right-2 flex items-center justify-center w-6 h-6 bg-rose-100 text-rose-500 rounded-full"><Lock className="w-3 h-3" /></div>}
+      {isLogged && currentScreen !== 'unassigned' && currentScreen !== 'scanner' && (
+        <aside className={`hidden md:flex ${isSidebarCollapsed ? 'w-[5.5rem]' : 'w-72'} m-4 h-[calc(100vh-2rem)] bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex-col z-20 shrink-0 transition-all duration-300 relative overflow-hidden border border-slate-100/50`}>
+          <div className={`p-6 pb-6 flex items-center ${isSidebarCollapsed ? 'flex-col gap-4 justify-center px-0' : 'justify-between'} transition-all`}>
+            <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+              <div className="p-2.5 bg-blue-950 text-white rounded-2xl flex items-center justify-center shadow-lg w-12 h-12 shadow-blue-950/20 shrink-0 relative overflow-hidden group">
+                <Sparkles className="w-6 h-6 shrink-0 relative z-10" />
+              </div>
+              {!isSidebarCollapsed && (
+                <div className="overflow-hidden transition-all duration-300 whitespace-nowrap">
+                  <span className="font-black font-display text-blue-950 text-xl tracking-tight block leading-none mt-1">JagoFinance</span>
+                </div>
+              )}
+            </div>
+            
+            <button 
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className="w-8 h-8 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 shadow-sm transition-all shrink-0 z-50"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
           </div>
           
-          <nav className="flex-1 p-4 flex flex-col gap-2 overflow-y-auto">
+          <nav className="flex-1 px-4 py-6 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
             <button 
               onClick={() => { if(isProfileComplete) { setCurrentScreen('home'); setSelectedTx(null); } }}
-              className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentScreen === 'home' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`relative flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-[13px] font-bold transition-all group overflow-hidden ${isSidebarCollapsed ? 'justify-center' : ''} ${currentScreen === 'home' ? 'text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <CreditCard className="w-5 h-5" /> Home
+              {currentScreen === 'home' && <motion.div layoutId="sidebar-active" className="absolute inset-0 bg-blue-950 rounded-2xl z-0" />}
+              <CreditCard className={`w-5 h-5 shrink-0 relative z-10 ${currentScreen === 'home' ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} />
+              {!isSidebarCollapsed && <span className="whitespace-nowrap relative z-10">Home</span>}
             </button>
             <button 
               onClick={() => { if(isProfileComplete) { setCurrentScreen('companies'); setSelectedTx(null); } }}
-              className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentScreen === 'companies' || currentScreen === 'company-detail' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`relative flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-[13px] font-bold transition-all group overflow-hidden ${isSidebarCollapsed ? 'justify-center' : ''} ${currentScreen === 'companies' || currentScreen === 'company-detail' ? 'text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <Building className="w-5 h-5" /> Perusahaan
+              {(currentScreen === 'companies' || currentScreen === 'company-detail') && <motion.div layoutId="sidebar-active" className="absolute inset-0 bg-blue-950 rounded-2xl z-0" />}
+              <Building className={`w-5 h-5 shrink-0 relative z-10 ${currentScreen === 'companies' || currentScreen === 'company-detail' ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} />
+              {!isSidebarCollapsed && <span className="whitespace-nowrap relative z-10">Perusahaan</span>}
             </button>
             <button 
               onClick={() => { if(isProfileComplete) { setCurrentScreen('history'); setSelectedTx(null); } }}
-              className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentScreen === 'history' || currentScreen === 'detail' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`relative flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-[13px] font-bold transition-all group overflow-hidden ${isSidebarCollapsed ? 'justify-center' : ''} ${currentScreen === 'history' || currentScreen === 'detail' ? 'text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <FileText className="w-5 h-5" /> Riwayat Pengajuan
-            </button>
-            <button 
-              onClick={() => { if(isProfileComplete) handleOpenScanner('reimburse'); }}
-              className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentScreen === 'scanner' || currentScreen === 'form' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <Camera className="w-5 h-5" /> Scan Struk
+              {(currentScreen === 'history' || currentScreen === 'detail') && <motion.div layoutId="sidebar-active" className="absolute inset-0 bg-blue-950 rounded-2xl z-0" />}
+              <FileText className={`w-5 h-5 shrink-0 relative z-10 ${currentScreen === 'history' || currentScreen === 'detail' ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} />
+              {!isSidebarCollapsed && <span className="whitespace-nowrap relative z-10">Riwayat Pengajuan</span>}
             </button>
 
           </nav>
           
-          <div className="p-4 border-t border-slate-100">
-            <button 
-              onClick={() => { setCurrentScreen('profile'); setSelectedTx(null); }}
-              className={`flex items-center gap-3 w-full p-3 rounded-xl font-medium transition-all ${currentScreen === 'profile' || currentScreen === 'edit-profile' ? 'bg-brand/10 text-brand font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}
-            >
-              <User className="w-5 h-5" /> Profil Saya
-            </button>
-          </div>
         </aside>
       )}
 
       {/* Main Content Area */}
       <main className="flex-1 relative flex flex-col min-w-0 overflow-y-auto">
+        
+        {/* Global Header */}
+        {isLogged && !['auth', 'scanner', 'unassigned', 'forgot', 'success', 'ai-loading', 'avatar-camera'].includes(currentScreen) && (
+          <div className="px-5 md:px-8 py-4 flex justify-between items-center sticky top-0 z-50 bg-[#F8FAFC]/90 backdrop-blur-xl border-b border-slate-200/50">
+            <div className="flex-1">
+              {currentScreen === 'home' ? (
+                <div className="flex flex-col gap-1">
+                  <h2 className="text-[17px] font-black text-blue-950 tracking-tight leading-none">
+                    Halo, {staffName.split(' ')[0]}
+                  </h2>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    {new Date().toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '')}
+                  </p>
+                </div>
+              ) : (
+                <div className="h-8"></div>
+              )}
+            </div>
+            
+            <div className="flex gap-3">
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setCurrentScreen('notifications');
+                  setHasNewNotifications(false);
+                }}
+                className="relative w-11 h-11 flex items-center justify-center text-blue-950 border border-slate-200 bg-white rounded-full transition-all shadow-sm"
+              >
+                <Bell className="w-5 h-5" />
+                {hasNewNotifications && (
+                  <motion.div 
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full"
+                  />
+                )}
+              </motion.button>
+
+              <div className="relative hidden md:block">
+                <motion.div 
+                  whileTap={{ scale: 0.9 }}
+                  className="cursor-pointer"
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                >
+                  <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-white shadow-sm bg-slate-100">
+                    <img 
+                      src={currentUserProfile?.avatar_url || editProfileData.avatarImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </motion.div>
+
+                <AnimatePresence>
+                  {showProfileMenu && (
+                    <>
+                      <div className="fixed inset-0 z-[60]" onClick={() => setShowProfileMenu(false)}></div>
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                        className="absolute right-0 top-14 w-48 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-100 py-2 z-[70] overflow-hidden"
+                      >
+                        <button 
+                          onClick={() => { setShowProfileMenu(false); setCurrentScreen('profile'); }}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors text-left"
+                        >
+                          <User className="w-4 h-4 text-slate-500" />
+                          <span className="text-sm font-bold text-blue-950">Profil Saya</span>
+                        </button>
+                        <div className="h-px bg-slate-100 my-1 mx-2"></div>
+                        <button 
+                          onClick={() => { 
+                            setShowProfileMenu(false); 
+                            setIsLogged(false);
+                            setCurrentScreen('auth');
+                            if (onLogout) onLogout();
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-rose-50 transition-colors text-left group"
+                        >
+                          <LogOut className="w-4 h-4 text-rose-500 group-hover:text-rose-600" />
+                          <span className="text-sm font-bold text-rose-600 group-hover:text-rose-700">Keluar</span>
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="w-full max-w-5xl mx-auto h-full flex flex-col">
             
             {/* SCREEN 1: LOGIN (AUTH) */}
@@ -600,21 +707,26 @@ export default function MobileAppSimulator({
 
             {/* SCREEN 3: HOME DASHBOARD */}
             {currentScreen === 'home' && (
-              <HomeScreen
-                staffName={staffName}
-                sisaLimit={sisaLimit}
-                limitPercentage={limitPercentage}
-                totalApproved={totalApproved}
-                limitMax={limitMax}
-                handleOpenScanner={handleOpenScanner}
-                handleOpenForm={handleOpenForm}
-                setCurrentScreen={setCurrentScreen}
-                staffTransactions={staffTransactions}
-                handleOpenDetail={handleOpenDetail}
-                avatarUrl={currentUserProfile?.avatar_url}
-                hasNewNotifications={hasNewNotifications}
-                setHasNewNotifications={setHasNewNotifications}
-              />
+              <HomeScreen 
+              staffName={staffName}
+              sisaLimit={sisaLimit}
+              limitPercentage={limitPercentage}
+              totalApproved={totalApproved}
+              limitMax={limitMax}
+              staffTransactions={staffTransactions}
+              setCurrentScreen={setCurrentScreen}
+              handleOpenScanner={handleOpenScanner}
+              handleOpenForm={handleOpenForm}
+              handleOpenDetail={handleOpenDetail}
+              avatarUrl={currentUserProfile?.avatar_url}
+              hasNewNotifications={hasNewNotifications}
+              setHasNewNotifications={setHasNewNotifications}
+              handleLogout={() => {
+                 setIsLogged(false);
+                 setCurrentScreen('auth');
+                 if (onLogout) onLogout();
+              }}
+            />
             )}
 
             {/* SCREEN 4: CAPTURE RECEIPT */}
@@ -790,8 +902,8 @@ export default function MobileAppSimulator({
                     Akun <strong>{employeeEmail}</strong> belum dihubungkan dengan profil perusahaan mana pun.
                   </p>
                 </div>
-                <div className="w-full bg-indigo-50 border border-indigo-100 p-4 rounded-2xl text-left flex items-start gap-3 shadow-sm">
-                  <Info className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+                <div className="w-full bg-blue-50 border border-blue-100 p-4 rounded-2xl text-left flex items-start gap-3 shadow-sm">
+                  <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                   <p className="text-xs font-bold text-indigo-800 leading-relaxed">
                     Silakan hubungi HRD atau Admin Cabang perusahaan Anda untuk mengundang email ini melalui Dashboard Utama.
                   </p>
@@ -810,48 +922,55 @@ export default function MobileAppSimulator({
             )}
 
           {/* BOTTOM NAVIGATION FOR MOBILE */}
-          {isLogged && currentScreen !== 'unassigned' && (
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-2 pb-safe z-40 px-6 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
-              <div className="flex justify-between items-center max-w-sm mx-auto h-14 relative">
+          {isLogged && currentScreen !== 'unassigned' && currentScreen !== 'scanner' && (
+            <div className="md:hidden absolute bottom-6 left-4 right-4 bg-white/95 backdrop-blur-xl border border-white rounded-[2rem] pt-2 pb-2 z-40 px-2 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)]">
+              <div className="flex justify-between items-center max-w-sm mx-auto h-14 relative px-1">
                 
                 <button 
                   onClick={() => setCurrentScreen('home')}
-                  className={`flex flex-col items-center justify-center w-14 transition-colors ${currentScreen === 'home' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`relative flex flex-col items-center justify-center w-12 h-12 transition-colors z-10 ${currentScreen === 'home' ? 'text-blue-700' : 'text-slate-400 hover:text-slate-600'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <CreditCard className={`w-5 h-5 mb-1 ${currentScreen === 'home' ? 'fill-brand/20' : ''}`} />
-                  <span className="text-[9px] font-bold">Home</span>
+                  <CreditCard className={`w-5 h-5 mb-0.5 ${currentScreen === 'home' ? 'text-blue-700' : 'text-slate-400'}`} />
+                  <span className={`text-[9px] ${currentScreen === 'home' ? 'font-black' : 'font-bold'}`}>Home</span>
+                  {currentScreen === 'home' && <motion.div layoutId="bottomnav-active" className="absolute -bottom-1 w-1 h-1 bg-blue-700 rounded-full" />}
                 </button>
 
                 <button 
                   onClick={() => { if(isProfileComplete) setCurrentScreen('companies'); }}
-                  className={`flex flex-col items-center justify-center w-14 transition-colors ${currentScreen === 'companies' || currentScreen === 'company-detail' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`relative flex flex-col items-center justify-center w-12 h-12 transition-colors z-10 ${currentScreen === 'companies' || currentScreen === 'company-detail' ? 'text-blue-700' : 'text-slate-400 hover:text-slate-600'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <Building className={`w-5 h-5 mb-1 ${currentScreen === 'companies' || currentScreen === 'company-detail' ? 'fill-brand/20' : ''}`} />
-                  <span className="text-[9px] font-bold">Perusahaan</span>
+                  <Building className={`w-5 h-5 mb-0.5 ${currentScreen === 'companies' || currentScreen === 'company-detail' ? 'text-blue-700' : 'text-slate-400'}`} />
+                  <span className={`text-[9px] ${currentScreen === 'companies' || currentScreen === 'company-detail' ? 'font-black' : 'font-bold'}`}>Afiliasi</span>
+                  {(currentScreen === 'companies' || currentScreen === 'company-detail') && <motion.div layoutId="bottomnav-active" className="absolute -bottom-1 w-1 h-1 bg-blue-700 rounded-full" />}
                 </button>
 
-                {/* Floating Center Button */}
-                <button 
-                  onClick={() => { if(isProfileComplete) handleOpenScanner('reimburse'); }}
-                  className={`w-14 h-14 bg-brand text-white rounded-full flex items-center justify-center shadow-lg shadow-brand/30 border-4 border-[#f8f9fe] absolute left-1/2 -translate-x-1/2 -top-6 hover:bg-brand/90 hover:scale-105 active:scale-95 transition-all ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <Camera className="w-6 h-6" />
-                </button>
+                {/* Empty Space for Center Button */}
+                <div className="w-14 h-12 opacity-0 pointer-events-none"></div>
 
                 <button 
                   onClick={() => { if(isProfileComplete) setCurrentScreen('history'); }}
-                  className={`flex flex-col items-center justify-center w-14 transition-colors pl-6 ${currentScreen === 'history' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`relative flex flex-col items-center justify-center w-12 h-12 transition-colors z-10 ${currentScreen === 'history' || currentScreen === 'detail' ? 'text-blue-700' : 'text-slate-400 hover:text-slate-600'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <FileText className={`w-5 h-5 mb-1 ${currentScreen === 'history' ? 'fill-brand/20' : ''}`} />
-                  <span className="text-[9px] font-bold">Riwayat</span>
+                  <FileText className={`w-5 h-5 mb-0.5 ${currentScreen === 'history' || currentScreen === 'detail' ? 'text-blue-700' : 'text-slate-400'}`} />
+                  <span className={`text-[9px] ${currentScreen === 'history' || currentScreen === 'detail' ? 'font-black' : 'font-bold'}`}>Riwayat</span>
+                  {(currentScreen === 'history' || currentScreen === 'detail') && <motion.div layoutId="bottomnav-active" className="absolute -bottom-1 w-1 h-1 bg-blue-700 rounded-full" />}
                 </button>
 
                 <button 
-                  onClick={() => setCurrentScreen('profile')}
-                  className={`flex flex-col items-center justify-center w-14 transition-colors ${currentScreen === 'profile' || currentScreen === 'edit-profile' ? 'text-brand' : 'text-slate-400 hover:text-slate-600'}`}
+                  onClick={() => { if(isProfileComplete) setCurrentScreen('profile'); }}
+                  className={`relative flex flex-col items-center justify-center w-12 h-12 transition-colors z-10 ${currentScreen === 'profile' || currentScreen === 'edit-profile' ? 'text-blue-700' : 'text-slate-400 hover:text-slate-600'} ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <User className={`w-5 h-5 mb-1 ${currentScreen === 'profile' || currentScreen === 'edit-profile' ? 'fill-brand/20' : ''}`} />
-                  <span className="text-[9px] font-bold">Profil</span>
+                  <User className={`w-5 h-5 mb-0.5 ${currentScreen === 'profile' || currentScreen === 'edit-profile' ? 'text-blue-700' : 'text-slate-400'}`} />
+                  <span className={`text-[9px] ${currentScreen === 'profile' || currentScreen === 'edit-profile' ? 'font-black' : 'font-bold'}`}>Profil</span>
+                  {(currentScreen === 'profile' || currentScreen === 'edit-profile') && <motion.div layoutId="bottomnav-active" className="absolute -bottom-1 w-1 h-1 bg-blue-700 rounded-full" />}
+                </button>
+
+                {/* Floating Center Button (Absolute) */}
+                <button 
+                  onClick={() => { if(isProfileComplete) handleOpenScanner('reimburse'); }}
+                  className={`w-14 h-14 bg-blue-950 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-950/30 border-4 border-white absolute left-1/2 -translate-x-1/2 -top-6 hover:bg-blue-900 hover:scale-105 active:scale-95 transition-all ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <Camera className="w-6 h-6" />
                 </button>
               </div>
             </div>
@@ -870,7 +989,7 @@ export default function MobileAppSimulator({
               </div>
 
               <div className="space-y-4 my-auto text-center">
-                <div className="inline-flex p-4 bg-indigo-600/20 text-indigo-400 rounded-3xl animate-pulse">
+                <div className="inline-flex p-4 bg-blue-700/20 text-blue-500 rounded-3xl animate-pulse">
                   <Sparkles className="w-12 h-12" />
                 </div>
                 <h3 className="text-xl font-black tracking-tight font-display text-white">Upgrade ke Jago Finance Pro</h3>
@@ -878,7 +997,7 @@ export default function MobileAppSimulator({
                   Klaim pengeluaran instan dengan <strong>Hermes AI OCR Scanner</strong>. Foto struk belanjamu, AI akan mengisi nominal, merchant, dan kategori otomatis.
                 </p>
 
-                <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-2xl space-y-3 text-left text-sm max-w-sm mx-auto">
+                <div className="bg-blue-950/60 border border-slate-800 p-4 rounded-2xl space-y-3 text-left text-sm max-w-sm mx-auto">
                   <div className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>1,000 scans AI receipt per bulan</span>
@@ -922,7 +1041,7 @@ export default function MobileAppSimulator({
                       alert("Gagal melakukan upgrade.");
                     }
                   }}
-                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
+                  className="w-full py-4 bg-blue-700 hover:bg-blue-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-700/30 transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
                 >
                   <span>Upgrade ke Pro (Simulasi)</span>
                   <ArrowRight className="w-4 h-4" />

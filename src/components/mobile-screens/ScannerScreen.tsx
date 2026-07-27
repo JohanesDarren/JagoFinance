@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ArrowLeft, Camera, Image, RefreshCcw, ScanLine } from 'lucide-react';
+import { ArrowLeft, Camera, Image, RefreshCcw, ScanLine, X } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ScannerScreenProps {
@@ -91,66 +91,66 @@ export default function ScannerScreen({
       <canvas ref={canvasRef} className="hidden" />
 
       {/* Header back */}
-      <div className="p-4 pt-8 flex justify-between items-center text-white z-20">
+      <div className="p-5 pt-8 flex justify-between items-center text-white z-20">
         <motion.button 
           whileTap={{ scale: 0.9 }}
           onClick={() => setCurrentScreen('home')}
-          className="p-2.5 bg-black/50 backdrop-blur-xl border border-white/10 rounded-2xl text-white shadow-lg"
+          className="w-12 h-12 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <X className="w-6 h-6" />
         </motion.button>
         <motion.div 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="flex items-center gap-2 bg-black/50 backdrop-blur-xl border border-indigo-500/30 px-4 py-2 rounded-full shadow-lg shadow-indigo-500/20"
+          className="flex items-center gap-2 bg-[#517493] px-4 py-1.5 rounded-full shadow-lg"
         >
-          <ScanLine className="w-4 h-4 text-indigo-400" />
-          <span className="font-bold text-xs text-white tracking-wide">Scanner AI Aktif</span>
+          <ScanLine className="w-4 h-4 text-white" />
+          <span className="font-bold text-[11px] text-white tracking-wide uppercase">AI Scanner</span>
         </motion.div>
-        <div className="w-10"></div>
+        <div className="w-12 h-12"></div> {/* Spacer for balance */}
       </div>
 
       {/* Animated guidline overlay panel */}
       <div className="flex-1 flex flex-col justify-center items-center p-6 relative">
         
-        {/* Guide text overlay */}
-        <motion.span 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5, type: "spring" }}
-          className="absolute top-8 text-[11px] bg-indigo-600/90 shadow-lg shadow-indigo-600/50 backdrop-blur-sm text-white px-5 py-2 rounded-full text-center tracking-widest font-black z-20 uppercase"
-        >
-          Posisikan struk dalam area
-        </motion.span>
-
         {/* Rectangle Scanner Sight Guides */}
-        <div className="w-[280px] h-[380px] sm:w-[320px] sm:h-[420px] rounded-[2rem] relative flex items-center justify-center p-3 overflow-hidden bg-black/20 backdrop-blur-[2px] z-10 shadow-[0_0_0_9999px_rgba(0,0,0,0.65)]">
+        <div className="w-[300px] h-[400px] sm:w-[340px] sm:h-[460px] relative flex items-center justify-center p-3 z-10 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
 
           {/* Laser line effect scan */}
           <motion.div 
-            animate={{ top: ['0%', '98%', '0%'] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent shadow-[0_0_20px_rgba(99,102,241,0.8)] w-full z-20 opacity-80"
+            animate={{ top: ['0%', '100%', '0%'] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute left-0 right-0 h-0.5 bg-[#517493] shadow-[0_0_10px_#517493] w-full z-20"
           />
           
-          {/* Corner decorators overlay (Modern Reticle) */}
-          <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-indigo-500 rounded-tl-[2rem] z-20 opacity-80 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
-          <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-indigo-500 rounded-tr-[2rem] z-20 opacity-80 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
-          <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-indigo-500 rounded-bl-[2rem] z-20 opacity-80 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
-          <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-indigo-500 rounded-br-[2rem] z-20 opacity-80 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
+          {/* Corner decorators overlay (Minimalist Reticle) */}
+          <div className="absolute top-0 left-0 w-8 h-8 border-t-[3px] border-l-[3px] border-[#517493] z-20"></div>
+          <div className="absolute top-0 right-0 w-8 h-8 border-t-[3px] border-r-[3px] border-[#517493] z-20"></div>
+          <div className="absolute bottom-0 left-0 w-8 h-8 border-b-[3px] border-l-[3px] border-[#517493] z-20"></div>
+          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-[3px] border-r-[3px] border-[#517493] z-20"></div>
 
           {/* Guidelines hint icon (only show if stream is not ready) */}
           {!stream && (
             <motion.div 
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 1.5, repeat: Infinity }}
-              className="text-center text-indigo-200 space-y-3 z-10 p-4"
+              className="text-center text-white/50 space-y-3 z-10 p-4"
             >
-              <Camera className="w-12 h-12 mx-auto text-indigo-500" />
-              <p className="text-[10px] font-bold tracking-widest uppercase">Memuat Lensa...</p>
+              <Camera className="w-10 h-10 mx-auto" />
+              <p className="text-[10px] font-bold tracking-widest uppercase">Memuat Kamera...</p>
             </motion.div>
           )}
         </div>
+        
+        {/* Guide text overlay */}
+        <motion.span 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, type: "spring" }}
+          className="mt-8 text-[12px] text-white font-medium tracking-wide text-center z-20"
+        >
+          Posisikan struk dalam area
+        </motion.span>
       </div>
 
       {/* Camera Controller buttons */}
@@ -158,7 +158,7 @@ export default function ScannerScreen({
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 260, damping: 20 }}
-        className="p-8 pt-6 bg-gradient-to-t from-black via-black/80 to-transparent z-20 text-white pb-12"
+        className="p-8 pt-6 bg-black z-20 text-white pb-12"
       >
         <div className="flex items-center justify-between max-w-sm mx-auto px-4">
           
@@ -167,10 +167,10 @@ export default function ScannerScreen({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => fileInputRef.current?.click()}
-            className="w-14 h-14 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-full flex items-center justify-center transition-all shadow-xl backdrop-blur-xl"
+            className="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all"
             title="Unggah dari Galeri"
           >
-            <Image className="w-6 h-6" />
+            <Image className="w-5 h-5 text-white" />
           </motion.button>
           
           <input 
@@ -181,15 +181,14 @@ export default function ScannerScreen({
             onChange={handleFileUpload}
           />
 
-          {/* Shutter Button */}
+          {/* Shutter Button (iOS Style) */}
           <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.9 }}
+            whileTap={{ scale: 0.9, opacity: 0.8 }}
             onClick={handleCapture}
-            className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center p-2 border-[6px] border-white/30 hover:border-indigo-400 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+            className="w-20 h-20 rounded-full bg-transparent flex items-center justify-center p-1 border-4 border-white transition-all"
             title="Jepret Foto"
           >
-            <div className="w-full h-full bg-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.8)]">
+            <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
             </div>
           </motion.button>
 
@@ -199,10 +198,10 @@ export default function ScannerScreen({
             whileTap={{ scale: 0.9 }}
             transition={{ duration: 0.3 }}
             onClick={toggleCamera}
-            className="w-14 h-14 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-full flex items-center justify-center transition-all shadow-xl backdrop-blur-xl"
+            className="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all"
             title="Putar Kamera"
           >
-            <RefreshCcw className="w-6 h-6" />
+            <RefreshCcw className="w-5 h-5 text-white" />
           </motion.button>
         </div>
       </motion.div>

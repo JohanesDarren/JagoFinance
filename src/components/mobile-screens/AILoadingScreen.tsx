@@ -8,17 +8,17 @@ export default function AILoadingScreen() {
         
         {/* Circle loading system or logo */}
         <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full border-4 border-slate-800 border-t-indigo-500 animate-spin"></div>
-          <Sparkles className="w-8 h-8 text-indigo-400 animate-pulse" />
+          <div className="absolute inset-0 rounded-full border-4 border-slate-800 border-t-blue-600 animate-spin"></div>
+          <Sparkles className="w-8 h-8 text-blue-500 animate-pulse" />
         </div>
 
         <div className="space-y-2">
-          <h4 className="text-sm font-bold font-display uppercase tracking-widest text-indigo-300">jagoAI OCR Engine</h4>
+          <h4 className="text-sm font-bold font-display uppercase tracking-widest text-blue-400">jagoAI OCR Engine</h4>
           <p className="text-[10px] text-slate-400 font-medium animate-pulse">AI sedang mengekstrak data struk...</p>
         </div>
 
         {/* Skeleton/Shimmer blocks representing extracted field names */}
-        <div className="w-[200px] mx-auto bg-slate-900/60 p-3 rounded-2xl border border-slate-800/80 space-y-2.5 text-left">
+        <div className="w-[200px] mx-auto bg-blue-950/60 p-3 rounded-2xl border border-slate-800/80 space-y-2.5 text-left">
           <div className="flex justify-between items-center">
             <div className="h-2 bg-slate-800 w-16 rounded-full shimmer-brand-active"></div>
             <div className="h-2 bg-slate-800 w-20 rounded-full shimmer-active"></div>

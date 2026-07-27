@@ -42,139 +42,129 @@ export default function ProfileScreen({
   companyName
 }: ProfileScreenProps) {
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-white relative overflow-hidden font-sans">
       
-      {/* Animated Abstract Background */}
-      <div className="absolute top-0 left-0 right-0 h-80 bg-gradient-to-b from-indigo-100 to-transparent pointer-events-none z-0 overflow-hidden">
-        <motion.div 
-          animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-300/40 rounded-[4rem] blur-3xl rotate-45"
-        />
-        <motion.div 
-          animate={{ scale: [1, 1.5, 1], rotate: [0, -90, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear", delay: 2 }}
-          className="absolute top-20 -left-20 w-72 h-72 bg-emerald-200/40 rounded-full blur-3xl"
-        />
-      </div>
-
-      <div className="p-4 pt-6 flex justify-center items-center relative z-10">
-        <span className="text-sm font-black font-display text-slate-800 tracking-wider uppercase">Akun & Payroll</span>
+      {/* Clean Header Area */}
+      <div className="px-5 pt-8 pb-4 flex justify-between items-center relative z-10 sticky top-0 bg-white/90 backdrop-blur-xl">
+        <h1 className="text-2xl font-black text-blue-950 tracking-tight">Profil Saya</h1>
+        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-blue-950 shadow-sm border border-slate-200">
+          <UserCircle className="w-5 h-5" />
+        </div>
       </div>
 
       <motion.div 
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="flex-1 p-4 pb-24 overflow-y-auto space-y-4 relative z-10"
+        className="flex-1 p-5 pb-28 overflow-y-auto space-y-5 relative z-10 custom-scrollbar"
       >
-        {/* Profile Card (Glassmorphism) */}
+        {/* Profile Bento Card */}
         <motion.div 
           variants={fadeUp}
-          className="bg-white/70 backdrop-blur-xl p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-white flex flex-col justify-center items-center text-center relative overflow-hidden"
+          className="bg-slate-50 p-6 rounded-[2.5rem] flex flex-col justify-center items-center text-center relative overflow-hidden"
         >
-          {/* Top colored banner inside card */}
-          <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-indigo-500/10 to-transparent"></div>
-          
           <motion.div 
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.2 }}
-            className="relative z-10 pt-2"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.1 }}
+            className="relative z-10"
           >
-            <div className="w-24 h-24 rounded-[2rem] bg-white p-1 shadow-lg shadow-indigo-100/50">
+            <div className="w-24 h-24 rounded-full bg-white p-1.5 shadow-sm">
               <img 
                 src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"} 
                 alt="Avatar profile large" 
-                className="w-full h-full rounded-[1.75rem] object-cover"
+                className="w-full h-full rounded-full object-cover"
               />
             </div>
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-[3px] border-white flex items-center justify-center shadow-sm">
+            <div className="absolute bottom-0 right-0 w-8 h-8 bg-black rounded-full border-4 border-slate-50 flex items-center justify-center">
               <CheckCircle2 className="w-4 h-4 text-white" />
             </div>
           </motion.div>
 
           <div className="relative z-10 mt-5">
-            <h5 className="font-black text-xl text-slate-800 leading-tight">{staffName}</h5>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-bold mt-2 border border-indigo-100">
-              <Building className="w-3 h-3" />
+            <h5 className="font-black text-2xl text-blue-950 tracking-tight leading-none">{staffName}</h5>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-600 rounded-full text-[11px] font-bold mt-3 shadow-sm">
+              <Building className="w-3.5 h-3.5" />
               <span>Operations Division</span>
             </div>
           </div>
-
-          <div className="w-full bg-slate-50/80 rounded-[1.5rem] p-4 text-left space-y-3 mt-6 relative z-10 border border-slate-100/50 shadow-inner">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 font-medium flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-slate-400" /> Email Kantor</span>
-              <span className="font-bold text-slate-700">{employeeEmail}</span>
-            </div>
-            <div className="h-px w-full bg-slate-200/50"></div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 font-medium flex items-center gap-1.5"><Wallet className="w-3.5 h-3.5 text-slate-400" /> Rekening Pribadi</span>
-              <span className="font-bold text-slate-800 flex items-center gap-2">
-                {bankName || '-'} 
-                <span className="font-mono text-indigo-700 bg-white shadow-sm px-2 py-1 rounded-md text-[10px]">{bankAccount || '-'}</span>
-              </span>
-            </div>
-          </div>
-          
-          <motion.button 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setCurrentScreen('edit-profile')}
-            className="w-full py-3.5 bg-white border border-slate-200 text-slate-700 font-bold text-[11px] uppercase tracking-wider rounded-[1.25rem] hover:bg-slate-50 transition-colors relative z-10 shadow-sm mt-4 flex items-center justify-center gap-2"
-          >
-            <UserCircle className="w-4 h-4" /> Edit Profil
-          </motion.button>
         </motion.div>
 
+        {/* Info Grid (Bento style) */}
+        <motion.div variants={fadeUp} className="grid grid-cols-2 gap-4">
+          <div className="bg-slate-50 p-5 rounded-[2rem] flex flex-col gap-2">
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-400 mb-2 shadow-sm">
+              <Mail className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email</span>
+            <span className="font-bold text-blue-950 text-[13px] truncate">{employeeEmail}</span>
+          </div>
+
+          <div className="bg-slate-50 p-5 rounded-[2rem] flex flex-col gap-2">
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-400 mb-2 shadow-sm">
+              <Wallet className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rekening</span>
+            <span className="font-bold text-blue-950 text-[13px] truncate">{bankName} - {bankAccount}</span>
+          </div>
+        </motion.div>
+
+        {/* Edit Profile Button */}
+        <motion.button 
+          variants={fadeUp}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setCurrentScreen('edit-profile')}
+          className="w-full py-4 bg-blue-950 text-white font-bold text-[12px] uppercase tracking-widest rounded-[1.5rem] hover:bg-black transition-colors flex items-center justify-center gap-2"
+        >
+          <UserCircle className="w-5 h-5" /> Pengaturan Profil
+        </motion.button>
+
         {/* Action List Section */}
-        <div className="space-y-3 mt-6">
-          <motion.span variants={fadeUp} className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-2">Navigasi Utama</motion.span>
+        <div className="space-y-4 mt-8 pt-4 border-t border-slate-100">
+          <motion.span variants={fadeUp} className="text-[11px] font-black text-slate-400 uppercase tracking-widest pl-2">Navigasi Utama</motion.span>
           
           {/* History Navigation Button */}
           <motion.button 
             variants={fadeUp}
-            whileHover={{ scale: 1.02, x: 4 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => {
               setCurrentScreen('history');
               setSelectedTx(null);
             }}
-            className="w-full bg-white/80 backdrop-blur-md p-4 rounded-[1.5rem] border border-white shadow-md shadow-slate-200/40 flex items-center justify-between text-left group"
+            className="w-full bg-white p-4 rounded-[2rem] border-2 border-slate-50 flex items-center justify-between text-left group hover:border-slate-100 transition-colors"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
-                <FileText className="w-6 h-6" />
+              <div className="w-12 h-12 bg-slate-50 text-blue-950 rounded-full flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors duration-300">
+                <FileText className="w-5 h-5" />
               </div>
               <div>
-                <h6 className="font-bold text-[15px] text-slate-800 group-hover:text-indigo-700 transition-colors">Riwayat Pengajuan</h6>
-                <p className="text-[11px] font-medium text-slate-500 mt-0.5">Pantau status transaksi & klaim</p>
+                <h6 className="font-black text-[15px] text-blue-950">Riwayat Pengajuan</h6>
+                <p className="text-[11px] font-bold text-slate-400 mt-0.5">Status transaksi & klaim</p>
               </div>
             </div>
-            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600" />
+            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-slate-100 group-hover:text-blue-950 transition-colors">
+              <ChevronRight className="w-4 h-4" />
             </div>
           </motion.button>
 
           {/* Payslip History Button */}
           <motion.button 
             variants={fadeUp}
-            whileHover={{ scale: 1.02, x: 4 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setCurrentScreen('payslip-history')}
-            className="w-full bg-white/80 backdrop-blur-md p-4 rounded-[1.5rem] border border-white shadow-md shadow-slate-200/40 flex items-center justify-between text-left group"
+            className="w-full bg-white p-4 rounded-[2rem] border-2 border-slate-50 flex items-center justify-between text-left group hover:border-slate-100 transition-colors"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300">
-                <Download className="w-6 h-6" />
+              <div className="w-12 h-12 bg-slate-50 text-blue-950 rounded-full flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors duration-300">
+                <Download className="w-5 h-5" />
               </div>
               <div>
-                <h6 className="font-bold text-[15px] text-slate-800 group-hover:text-emerald-700 transition-colors">Riwayat Slip Gaji</h6>
-                <p className="text-[11px] font-medium text-slate-500 mt-0.5">Unduh slip gaji bulanan (PDF)</p>
+                <h6 className="font-black text-[15px] text-blue-950">Riwayat Slip Gaji</h6>
+                <p className="text-[11px] font-bold text-slate-400 mt-0.5">Unduh dokumen PDF</p>
               </div>
             </div>
-            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600" />
+            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-slate-100 group-hover:text-blue-950 transition-colors">
+              <ChevronRight className="w-4 h-4" />
             </div>
           </motion.button>
         </div>
@@ -182,16 +172,15 @@ export default function ProfileScreen({
         {/* Logout Button */}
         <motion.button 
           variants={fadeUp}
-          whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => {
             if (onLogout) onLogout();
             else setIsLogged(false);
           }}
-          className="w-full bg-rose-50 text-rose-600 p-4 rounded-[1.5rem] border border-rose-100 shadow-sm flex items-center justify-center gap-2 font-bold text-[13px] mt-8 hover:bg-rose-100 hover:border-rose-200 transition-colors"
+          className="w-full bg-rose-50 text-rose-600 p-4 rounded-[1.5rem] flex items-center justify-center gap-2 font-black text-[13px] mt-8 hover:bg-rose-100 transition-colors"
         >
-          <LogOut className="w-4 h-4" />
-          Keluar dari Akun Karyawan
+          <LogOut className="w-5 h-5" />
+          Keluar
         </motion.button>
 
       </motion.div>

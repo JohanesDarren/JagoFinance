@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, TrendingDown, DollarSign, Calendar, Sparkles, 
   Eye, CheckCircle, SlidersHorizontal, ArrowUpRight
@@ -14,6 +14,29 @@ export default function OverviewScreen(props: WebScreenProps) {
 
   const [hoveredCategory, setHoveredCategory] = useState<{name: string, value: number, color: string} | null>(null);
   const [mousePos, setMousePos] = useState<{x: number, y: number}>({ x: 0, y: 0 });
+
+  const [reimburseLimit, setReimburseLimit] = useState<string>('15000000');
+  const [isSavingLimit, setIsSavingLimit] = useState(false);
+
+  useEffect(() => {
+    try {
+      const companyId = props.userProfile?.company_id || 'default';
+      const stored = localStorage.getItem(`company_limit_${companyId}`);
+      if (stored) setReimburseLimit(stored);
+    } catch(e) {}
+  }, [props.userProfile]);
+
+  const handleSaveLimit = () => {
+    setIsSavingLimit(true);
+    setTimeout(() => {
+      try {
+        const companyId = props.userProfile?.company_id || 'default';
+        localStorage.setItem(`company_limit_${companyId}`, reimburseLimit.replace(/[^0-9]/g, ''));
+        alert('Batas maksimal reimburse berhasil diperbarui!');
+      } catch(e) {}
+      setIsSavingLimit(false);
+    }, 600);
+  };
 
   let accumulatedAngle = 0;
 
@@ -74,7 +97,7 @@ export default function OverviewScreen(props: WebScreenProps) {
             </span>
             Sistem Aktif
           </div>
-          <h2 className="text-4xl lg:text-5xl font-black font-display text-slate-900 tracking-tight">Executive Cockpit</h2>
+          <h2 className="text-4xl lg:text-5xl font-black font-display text-blue-950 tracking-tight">Executive Cockpit</h2>
           <p className="text-base text-slate-500 mt-2 font-medium max-w-xl">Status finansial real-time perusahaan Anda. Pantau metrik kunci, runway, dan profitabilitas dalam satu pandangan.</p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
@@ -95,10 +118,10 @@ export default function OverviewScreen(props: WebScreenProps) {
         
         {/* Card 1 */}
         <div className="bg-white p-7 rounded-[2.5rem] border border-slate-100/50 shadow-xl shadow-indigo-900/5 hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-900/10 transition-all duration-500 relative group overflow-hidden">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-indigo-500/10 via-transparent to-transparent rounded-bl-full -mr-10 -mt-10 transition-transform duration-700 group-hover:scale-125"></div>
+          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-blue-600/10 via-transparent to-transparent rounded-bl-full -mr-10 -mt-10 transition-transform duration-700 group-hover:scale-125"></div>
           
           <div className="flex justify-between items-start relative z-10">
-            <div className="p-4 bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 text-indigo-600 rounded-3xl w-14 h-14 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform duration-500">
+            <div className="p-4 bg-gradient-to-br from-blue-50 to-white border border-blue-100 text-blue-700 rounded-3xl w-14 h-14 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform duration-500">
               <DollarSign className="w-7 h-7" />
             </div>
             <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50/80 px-3 py-1.5 rounded-2xl border border-emerald-100">
@@ -108,9 +131,9 @@ export default function OverviewScreen(props: WebScreenProps) {
           
           <div className="mt-6 relative z-10">
             <span className="text-[11px] text-slate-400 uppercase font-extrabold tracking-[0.25em]">Saldo Kas Aktif</span>
-            <h3 className="text-3xl font-black font-mono tracking-tight mt-2 text-slate-900">
+            <h3 className="text-3xl font-black font-mono tracking-tight mt-2 text-blue-950">
               <span className="text-slate-400 text-2xl mr-1">Rp</span> 
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-indigo-900">{cashBalance.toLocaleString('id-ID')}</span>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-950 to-indigo-900">{cashBalance.toLocaleString('id-ID')}</span>
             </h3>
           </div>
         </div>
@@ -130,9 +153,9 @@ export default function OverviewScreen(props: WebScreenProps) {
           
           <div className="mt-6 relative z-10">
             <span className="text-[11px] text-slate-400 uppercase font-extrabold tracking-[0.25em]">Pemasukan Bulan Ini</span>
-            <h3 className="text-3xl font-black font-mono tracking-tight mt-2 text-slate-900">
+            <h3 className="text-3xl font-black font-mono tracking-tight mt-2 text-blue-950">
               <span className="text-slate-400 text-2xl mr-1">Rp</span> 
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-emerald-800">{totalInflowThisMonth.toLocaleString('id-ID')}</span>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-950 to-emerald-800">{totalInflowThisMonth.toLocaleString('id-ID')}</span>
             </h3>
           </div>
         </div>
@@ -152,9 +175,9 @@ export default function OverviewScreen(props: WebScreenProps) {
           
           <div className="mt-6 relative z-10">
             <span className="text-[11px] text-slate-400 uppercase font-extrabold tracking-[0.25em]">Pengeluaran Total</span>
-            <h3 className="text-3xl font-black font-mono tracking-tight mt-2 text-slate-900">
+            <h3 className="text-3xl font-black font-mono tracking-tight mt-2 text-blue-950">
               <span className="text-slate-400 text-2xl mr-1">Rp</span> 
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-rose-800">{totalOutflowThisMonth.toLocaleString('id-ID')}</span>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-950 to-rose-800">{totalOutflowThisMonth.toLocaleString('id-ID')}</span>
             </h3>
           </div>
         </div>
@@ -174,8 +197,8 @@ export default function OverviewScreen(props: WebScreenProps) {
           
           <div className="mt-6 relative z-10">
             <span className="text-[11px] text-slate-400 uppercase font-extrabold tracking-[0.25em]">Estimasi Runway</span>
-            <h3 className="text-3xl font-black font-mono tracking-tight mt-2 text-slate-900">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-amber-700">{runwayMonths} Bulan</span>
+            <h3 className="text-3xl font-black font-mono tracking-tight mt-2 text-blue-950">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-950 to-amber-700">{runwayMonths} Bulan</span>
             </h3>
           </div>
         </div>
@@ -189,12 +212,12 @@ export default function OverviewScreen(props: WebScreenProps) {
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 xl:col-span-2 space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h4 className="text-2xl font-black text-slate-900 font-display tracking-tight">Grafik Profit & Loss 2026</h4>
+              <h4 className="text-2xl font-black text-blue-950 font-display tracking-tight">Grafik Profit & Loss 2026</h4>
               <p className="text-sm text-slate-500 mt-1.5 font-medium">Histori Pemasukan (Bar) vs Pengeluaran (Line).</p>
             </div>
             <div className="flex items-center gap-5 text-sm font-bold text-slate-600 bg-slate-50 px-5 py-3 rounded-2xl border border-slate-100">
               <span className="flex items-center gap-2.5">
-                <span className="w-4 h-4 bg-gradient-to-b from-brand to-indigo-600 rounded-lg shadow-sm"></span> Pemasukan
+                <span className="w-4 h-4 bg-gradient-to-b from-brand to-blue-700 rounded-lg shadow-sm"></span> Pemasukan
               </span>
               <span className="flex items-center gap-2.5">
                 <span className="w-5 h-1.5 bg-gradient-to-r from-rose-400 to-pink-500 rounded-full inline-block shadow-sm"></span> Pengeluaran
@@ -260,9 +283,9 @@ export default function OverviewScreen(props: WebScreenProps) {
 
         {/* Expense Breakdown SVG Pie Donut Chart */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 space-y-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -mr-20 -mt-20"></div>
           <div className="relative z-10">
-            <h4 className="text-2xl font-black text-slate-900 font-display tracking-tight">Alokasi Biaya</h4>
+            <h4 className="text-2xl font-black text-blue-950 font-display tracking-tight">Alokasi Biaya</h4>
             <p className="text-sm text-slate-500 mt-1.5 font-medium">Distribusi pengeluaran riil.</p>
           </div>
 
@@ -304,7 +327,7 @@ export default function OverviewScreen(props: WebScreenProps) {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 pointer-events-none">
                 <span className="text-[10px] text-slate-400 uppercase tracking-widest font-black mb-0.5">TOTAL</span>
-                <span className="text-[10px] font-black font-mono text-slate-900 leading-tight">
+                <span className="text-[10px] font-black font-mono text-blue-950 leading-tight">
                   Rp {totalOutflowThisMonth.toLocaleString('id-ID')}
                 </span>
               </div>
@@ -315,20 +338,51 @@ export default function OverviewScreen(props: WebScreenProps) {
                 <div className="text-center text-slate-500 italic text-xs">Belum ada pengeluaran.</div>
               ) : (
                 categoryEntries.slice(0, 3).map(([cat, val], idx) => {
-                  const colors = ['bg-indigo-500', 'bg-blue-500', 'bg-rose-500', 'bg-purple-500', 'bg-amber-500'];
+                  const colors = ['bg-blue-600', 'bg-blue-500', 'bg-rose-500', 'bg-purple-500', 'bg-amber-500'];
                   return (
                     <div key={cat} className="flex justify-between items-center text-slate-600 bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-sm transition-all">
                       <div className="flex items-center gap-3 font-bold">
                         <span className={`w-4 h-4 rounded-full shadow-md ${colors[idx % colors.length]}`}></span>
                         <span className="text-slate-800">{cat}</span>
                       </div>
-                      <span className="font-black font-mono text-slate-900">Rp {val.toLocaleString('id-ID')}</span>
+                      <span className="font-black font-mono text-blue-950">Rp {val.toLocaleString('id-ID')}</span>
                     </div>
                   );
                 })
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Admin Settings Widget */}
+      <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <h4 className="text-xl font-black text-blue-950 font-display tracking-tight flex items-center gap-2">
+            <SlidersHorizontal className="w-5 h-5 text-brand" />
+            Pengaturan Batas Reimburse
+          </h4>
+          <p className="text-sm text-slate-500 mt-1 font-medium max-w-lg">
+            Tentukan batas maksimal akumulasi pencairan per karyawan di perusahaan Anda. Sistem akan menolak otomatis jika melebihi batas ini.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">Rp</span>
+            <input 
+              type="text" 
+              value={Number(reimburseLimit.replace(/[^0-9]/g, '')).toLocaleString('id-ID')}
+              onChange={(e) => setReimburseLimit(e.target.value)}
+              className="w-full md:w-48 pl-10 pr-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-black text-blue-950 outline-none focus:border-brand focus:bg-white transition-all text-right"
+            />
+          </div>
+          <button 
+            onClick={handleSaveLimit}
+            disabled={isSavingLimit}
+            className="px-6 py-3 bg-blue-950 text-white font-black text-sm rounded-xl hover:bg-blue-900 transition-all shadow-md active:scale-95 disabled:opacity-70 whitespace-nowrap"
+          >
+            {isSavingLimit ? 'Menyimpan...' : 'Simpan Batas'}
+          </button>
         </div>
       </div>
 
@@ -339,7 +393,7 @@ export default function OverviewScreen(props: WebScreenProps) {
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 xl:col-span-2 space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h4 className="text-2xl font-black text-slate-900 font-display tracking-tight">Verifikasi Klaim Tertunda</h4>
+              <h4 className="text-2xl font-black text-blue-950 font-display tracking-tight">Verifikasi Klaim Tertunda</h4>
               <p className="text-sm text-slate-500 mt-1.5 font-medium">Pengajuan staf yang butuh tinjauan mendesak.</p>
             </div>
             <div className="text-xs font-black bg-amber-50 text-amber-600 px-4 py-2.5 rounded-2xl border border-amber-200 shadow-sm flex items-center gap-2">
@@ -378,11 +432,11 @@ export default function OverviewScreen(props: WebScreenProps) {
                     <tr key={tx.id} className="bg-slate-50 hover:bg-white hover:shadow-lg hover:shadow-indigo-900/5 transition-all group rounded-2xl border border-transparent hover:border-slate-200">
                       <td className="p-4 pl-6 rounded-l-2xl">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand to-indigo-500 text-white flex items-center justify-center font-bold text-sm shadow-md">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand to-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-md">
                             {(employees.find(e => e.id === tx.employeeId)?.name || "U")[0]}
                           </div>
                           <div className="leading-tight">
-                            <span className="font-black text-slate-900 block text-[14px] group-hover:text-brand transition-colors">{employees.find(e => e.id === tx.employeeId)?.name || "Unknown"}</span>
+                            <span className="font-black text-blue-950 block text-[14px] group-hover:text-brand transition-colors">{employees.find(e => e.id === tx.employeeId)?.name || "Unknown"}</span>
                             <span className="text-[11px] text-slate-400 font-mono block mt-0.5">{tx.employeeId}</span>
                           </div>
                         </div>
@@ -391,11 +445,11 @@ export default function OverviewScreen(props: WebScreenProps) {
                       <td className="p-4">
                         <span className="text-[11px] bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full shadow-sm">{tx.category}</span>
                       </td>
-                      <td className="p-4 font-mono font-black text-slate-900 text-[14px]">Rp {tx.amount.toLocaleString('id-ID')}</td>
+                      <td className="p-4 font-mono font-black text-blue-950 text-[14px]">Rp {tx.amount.toLocaleString('id-ID')}</td>
                       <td className="p-4 pr-6 text-right rounded-r-2xl">
                         <button 
                           onClick={() => setSplitViewTx(tx)}
-                          className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-black rounded-xl hover:bg-slate-900 hover:text-white inline-flex items-center gap-2 transition-all shadow-sm"
+                          className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-black rounded-xl hover:bg-blue-950 hover:text-white inline-flex items-center gap-2 transition-all shadow-sm"
                         >
                           <Eye className="w-4 h-4" />
                           <span>Review</span>
@@ -412,7 +466,7 @@ export default function OverviewScreen(props: WebScreenProps) {
         {/* Revenue Leaderboard Widget */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 space-y-6">
           <div>
-            <h4 className="text-2xl font-black text-slate-900 font-display tracking-tight">Leaderboard App</h4>
+            <h4 className="text-2xl font-black text-blue-950 font-display tracking-tight">Leaderboard App</h4>
             <p className="text-sm text-slate-500 mt-1.5 font-medium">Kontribusi revenue tertinggi.</p>
           </div>
 
@@ -426,13 +480,13 @@ export default function OverviewScreen(props: WebScreenProps) {
                       {rankings[idx] || '🔹'}
                     </div>
                     <div>
-                      <h6 className="font-black text-[15px] text-slate-900 leading-tight group-hover:text-brand transition-colors">{app.name}</h6>
+                      <h6 className="font-black text-[15px] text-blue-950 leading-tight group-hover:text-brand transition-colors">{app.name}</h6>
                       <span className={`text-[9px] font-black px-2.5 py-1 rounded-full inline-block mt-2 uppercase tracking-widest ${
                         app.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
                       }`}>{app.status === 'active' ? 'AKTIF' : 'NON-AKTIF'}</span>
                     </div>
                   </div>
-                  <span className="font-mono text-[15px] font-black text-slate-900">Rp {(app.monthlyRevenue/1000000).toFixed(1)}M</span>
+                  <span className="font-mono text-[15px] font-black text-blue-950">Rp {(app.monthlyRevenue/1000000).toFixed(1)}M</span>
                 </div>
               );
             })}
@@ -451,7 +505,7 @@ export default function OverviewScreen(props: WebScreenProps) {
             <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: hoveredCategory.color }}></span>
             <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">{hoveredCategory.name}</span>
           </div>
-          <div className="font-mono font-black text-sm text-slate-900">
+          <div className="font-mono font-black text-sm text-blue-950">
             Rp {hoveredCategory.value.toLocaleString('id-ID')}
           </div>
           <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-t-[8px] border-t-white border-r-[6px] border-r-transparent drop-shadow-sm"></div>

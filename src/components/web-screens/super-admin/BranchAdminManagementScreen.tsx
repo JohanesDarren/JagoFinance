@@ -78,13 +78,13 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                   
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 rounded-[3rem] p-10 text-white shadow-2xl shadow-indigo-900/30 relative overflow-hidden flex flex-col md:flex-row justify-between md:items-center gap-8 group">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none group-hover:scale-110 transition-transform duration-1000"></div>
+      <div className="bg-gradient-to-r from-blue-950 via-slate-800 to-indigo-950 rounded-[3rem] p-10 text-white shadow-2xl shadow-indigo-900/30 relative overflow-hidden flex flex-col md:flex-row justify-between md:items-center gap-8 group">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none group-hover:scale-110 transition-transform duration-1000"></div>
         <div className="absolute bottom-0 left-20 w-48 h-48 bg-brand/30 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-1000"></div>
         
         <div className="relative z-10 flex items-center gap-6">
           <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-[1.5rem] border border-white/20 flex items-center justify-center shrink-0 shadow-inner group-hover:rotate-12 transition-transform duration-500">
-            <Shield className="w-8 h-8 text-indigo-300" strokeWidth="2.5" />
+            <Shield className="w-8 h-8 text-blue-400" strokeWidth="2.5" />
           </div>
           <div>
             <h2 className="text-4xl lg:text-5xl font-black font-display tracking-tight text-white">Kelola Admin Perusahaan</h2>
@@ -95,7 +95,7 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
         <div className="relative z-10 shrink-0">
           <button 
             onClick={() => setShowInviteModal(true)}
-            className="bg-indigo-500 hover:bg-indigo-400 text-white px-6 py-4 rounded-[1.5rem] flex items-center gap-4 shadow-lg shadow-indigo-500/30 transition-all active:scale-95 font-bold"
+            className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-4 rounded-[1.5rem] flex items-center gap-4 shadow-lg shadow-blue-600/30 transition-all active:scale-95 font-bold"
           >
             <UserPlus className="w-6 h-6" strokeWidth="2.5" />
             <span>Tambah Admin Baru</span>
@@ -119,11 +119,11 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
                 <tr key={admin.id} className="bg-white hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group">
                   <td className="p-5 pl-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-[1.25rem] bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-600 flex items-center justify-center font-black text-lg shadow-sm border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300 shrink-0">
+                      <div className="w-12 h-12 rounded-[1.25rem] bg-gradient-to-br from-blue-100 to-blue-50 text-blue-700 flex items-center justify-center font-black text-lg shadow-sm border border-blue-100 group-hover:bg-blue-700 group-hover:text-white transition-colors duration-300 shrink-0">
                         {admin.name.charAt(0)}
                       </div>
                       <div>
-                        <span className="font-black text-slate-900 block text-base group-hover:text-indigo-600 transition-colors">{admin.name}</span>
+                        <span className="font-black text-blue-950 block text-base group-hover:text-blue-700 transition-colors">{admin.name}</span>
                         <span className="text-[11px] text-slate-400 font-mono font-bold block mt-1 flex items-center gap-1">
                           <Mail className="w-3 h-3" /> {admin.email}
                         </span>
@@ -146,7 +146,7 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
                     <div className="flex items-center justify-end gap-2">
                       <button 
                         onClick={() => setEditingAdmin(admin)}
-                        className="p-2.5 bg-slate-100 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl transition-all shadow-sm"
+                        className="p-2.5 bg-slate-100 text-blue-700 hover:bg-blue-700 hover:text-white rounded-xl transition-all shadow-sm"
                         title="Edit Admin"
                       >
                         <Edit2 className="w-5 h-5" />
@@ -192,11 +192,11 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
       {showInviteModal && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
             
             <div className="p-8 border-b border-slate-100 flex justify-between items-center relative z-10">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100">
                   <UserPlus className="w-6 h-6" />
                 </div>
                 <div>
@@ -218,7 +218,7 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
                 <select
                   value={inviteCompanyId}
                   onChange={(e) => setInviteCompanyId(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all appearance-none cursor-pointer"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all appearance-none cursor-pointer"
                 >
                   <option value="">-- Pilih Perusahaan --</option>
                   {companies?.map(c => (
@@ -234,7 +234,7 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
                   placeholder="Contoh: Budi Santoso"
                   value={inviteName}
                   onChange={(e) => setInviteName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
                 />
               </div>
 
@@ -246,7 +246,7 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   autoComplete="off"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
                 />
               </div>
 
@@ -259,7 +259,7 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
                     value={invitePassword}
                     onChange={(e) => setInvitePassword(e.target.value)}
                     autoComplete="new-password"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all pr-12"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all pr-12"
                   />
                   <button 
                     type="button"
@@ -304,7 +304,7 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
                         ? passwordsMatch 
                           ? 'border-emerald-200 focus:ring-emerald-500' 
                           : 'border-rose-200 focus:ring-rose-500'
-                        : 'border-slate-200 focus:ring-indigo-500'
+                        : 'border-slate-200 focus:ring-blue-600'
                     }`}
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -370,7 +370,7 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
                     setIsSubmitting(false);
                   }
                 }}
-                className="px-8 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/20 transition-all text-sm disabled:opacity-50"
+                className="px-8 py-3 rounded-xl font-bold text-white bg-blue-700 hover:bg-blue-600 shadow-md shadow-blue-700/20 transition-all text-sm disabled:opacity-50"
               >
                 {isSubmitting ? 'Menyimpan...' : 'Tambah Admin Perusahaan'}
               </button>
@@ -383,11 +383,11 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
       {editingAdmin && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
             
             <div className="p-8 border-b border-slate-100 flex justify-between items-center relative z-10">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100">
                   <Briefcase className="w-6 h-6" />
                 </div>
                 <div>
@@ -427,7 +427,7 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
               <div>
                 <label className="block text-xs font-black text-slate-700 uppercase tracking-widest mb-2">Status Akses</label>
                 <select 
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all appearance-none cursor-pointer"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all appearance-none cursor-pointer"
                   defaultValue="active"
                 >
                   <option value="active">Aktif (Diberi Akses)</option>
@@ -450,7 +450,7 @@ export default function BranchAdminManagementScreen(props: WebScreenProps & { on
                   setEditingAdmin(null);
                   setTimeout(() => setToastMessage(null), 3000);
                 }}
-                className="px-8 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/20 transition-all text-sm"
+                className="px-8 py-3 rounded-xl font-bold text-white bg-blue-700 hover:bg-blue-600 shadow-md shadow-blue-700/20 transition-all text-sm"
               >
                 Simpan Perubahan
               </button>

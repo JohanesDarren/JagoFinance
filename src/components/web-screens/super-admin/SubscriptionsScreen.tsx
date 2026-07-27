@@ -30,11 +30,11 @@ export default function SubscriptionsScreen(props: WebScreenProps) {
 
       {/* Active listings cards */}
       <div className="bg-white/90 backdrop-blur-xl rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden pb-6 p-6">
-        <div className="p-8 bg-gradient-to-r from-purple-50/50 to-transparent border-b border-purple-100/50 flex flex-col md:flex-row justify-between md:items-center gap-6 text-sm relative">
-          <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-purple-100/30 to-transparent pointer-events-none"></div>
+        <div className="p-8 bg-gradient-to-r from-purple-50/50 to-transparent border-b border-blue-100/50 flex flex-col md:flex-row justify-between md:items-center gap-6 text-sm relative">
+          <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-blue-100/30 to-transparent pointer-events-none"></div>
 
           <span className="font-black text-purple-900 font-display text-2xl flex items-center gap-4 relative z-10 tracking-tight">
-            <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-[1.25rem] flex items-center justify-center shadow-inner border border-purple-200/50">
+            <div className="w-12 h-12 bg-blue-100 text-purple-600 rounded-[1.25rem] flex items-center justify-center shadow-inner border border-purple-200/50">
               <CheckCircle className="w-6 h-6" strokeWidth="2.5" />
             </div>
             Daftar Langganan Aktif ({subscriptions.length})
@@ -65,7 +65,7 @@ export default function SubscriptionsScreen(props: WebScreenProps) {
                 <tr key={sub.id} className="bg-white hover:bg-slate-50/50 transition-all shadow-sm hover:shadow-xl hover:shadow-purple-900/5 border border-slate-100 group rounded-[2rem] overflow-hidden">
                   <td className="p-5 pl-8 rounded-l-[2rem]">
                     <div className="leading-tight">
-                      <span className="font-black text-slate-900 block text-base group-hover:text-purple-600 transition-colors">{sub.name}</span>
+                      <span className="font-black text-blue-950 block text-base group-hover:text-purple-600 transition-colors">{sub.name}</span>
                       <span className="text-xs text-slate-400 font-mono block mt-1 font-semibold">ID: {sub.id}</span>
                     </div>
                   </td>

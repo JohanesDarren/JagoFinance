@@ -942,8 +942,8 @@ export default function App() {
           />
         </div>
       ) : (
-        /* Render Web App for Karyawan (formerly Mobile Simulator) */
-        <div className="w-full h-[100dvh] lg:h-auto lg:w-[400px] lg:h-[800px] lg:rounded-[3rem] lg:border-8 border-slate-800 bg-white shadow-2xl relative overflow-hidden flex flex-col shrink-0">
+        /* Render Responsive Web App for Karyawan */
+        <div className="w-full h-[100dvh] bg-white relative overflow-hidden flex flex-col">
           <MobileAppSimulator 
             transactions={transactions} 
             cashBalance={cashBalance} 

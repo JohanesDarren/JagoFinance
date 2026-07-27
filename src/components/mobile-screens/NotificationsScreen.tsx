@@ -1,10 +1,24 @@
 import React from 'react';
-import { ArrowLeft, Sparkles, CheckCircle, Info, XCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Info, XCircle, AlertCircle, Bell } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface NotificationsScreenProps {
   setCurrentScreen: (screen: any) => void;
   notifications?: any[];
 }
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const fadeRight = {
+  hidden: { opacity: 0, x: -20 },
+  show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+};
 
 export default function NotificationsScreen({
   setCurrentScreen,
@@ -13,21 +27,21 @@ export default function NotificationsScreen({
   
   const getIcon = (type: string) => {
     switch (type) {
-      case 'success': return <CheckCircle className="w-4 h-4" />;
-      case 'error': return <XCircle className="w-4 h-4" />;
-      case 'warning': return <AlertCircle className="w-4 h-4" />;
+      case 'success': return <CheckCircle className="w-5 h-5" />;
+      case 'error': return <XCircle className="w-5 h-5" />;
+      case 'warning': return <AlertCircle className="w-5 h-5" />;
       case 'info':
-      default: return <Info className="w-4 h-4" />;
+      default: return <Info className="w-5 h-5" />;
     }
   };
 
   const getStyle = (type: string) => {
     switch (type) {
-      case 'success': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-      case 'error': return 'bg-rose-50 text-rose-600 border-rose-100';
-      case 'warning': return 'bg-amber-50 text-amber-600 border-amber-100';
+      case 'success': return 'bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100';
+      case 'error': return 'bg-rose-50 text-rose-600 shadow-sm border border-rose-100';
+      case 'warning': return 'bg-amber-50 text-amber-600 shadow-sm border border-amber-100';
       case 'info':
-      default: return 'bg-indigo-50 text-indigo-600 border-indigo-100';
+      default: return 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100';
     }
   };
 
@@ -40,34 +54,75 @@ export default function NotificationsScreen({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden">
-      <div className="p-4 bg-white border-b border-slate-100 flex items-center gap-3">
-        <button onClick={() => setCurrentScreen('home')} className="p-1.5 bg-slate-50 text-slate-600 rounded-lg shadow-2xs">
-          <ArrowLeft className="w-4 h-4" />
-        </button>
-        <span className="font-bold text-xs text-slate-800">Notifikasi</span>
-      </div>
-      <div className="flex-1 p-4 overflow-y-auto space-y-3 pb-24">
-        {notifications.length === 0 ? (
-          <div className="text-center p-8 text-slate-400">
-            <Info className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-[10px] font-bold">Belum ada notifikasi baru.</p>
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 1.05 }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden font-sans"
+    >
+      <div className="p-5 pt-8 pb-28 flex-1 flex flex-col relative z-10 overflow-y-auto custom-scrollbar h-full space-y-6">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between text-blue-950 shrink-0">
+          <motion.button 
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setCurrentScreen('home')}
+            className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </motion.button>
+          <span className="text-[13px] font-black font-display tracking-widest uppercase">Notifikasi</span>
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200 text-blue-950 relative">
+            <Bell className="w-4 h-4" />
+            {notifications.length > 0 && (
+              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
+            )}
           </div>
-        ) : (
-          notifications.map(notif => (
-            <div key={notif.id} className="bg-white p-3 rounded-2xl shadow-3xs border border-slate-50 flex gap-3">
-              <div className={`p-2 rounded-xl h-fit border ${getStyle(notif.type)}`}>
-                {getIcon(notif.type)}
-              </div>
-              <div>
-                <h5 className="font-bold text-[11px] text-slate-800">{notif.title}</h5>
-                <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">{notif.message}</p>
-                <span className="text-[8px] font-bold text-slate-400 mt-1 block">{formatTime(notif.timestamp)}</span>
-              </div>
+        </div>
+
+        {notifications.length === 0 ? (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white p-8 rounded-[1.5rem] border border-slate-200 shadow-sm text-center space-y-4 mt-6"
+          >
+            <div className="w-16 h-16 bg-slate-100 rounded-[1.25rem] flex items-center justify-center mx-auto">
+              <Bell className="w-8 h-8 text-slate-400" />
             </div>
-          ))
+            <p className="text-sm font-bold text-slate-600">Belum ada notifikasi baru.</p>
+          </motion.div>
+        ) : (
+          <motion.div 
+            variants={staggerContainer}
+            initial="hidden"
+            animate="show"
+            className="space-y-4"
+          >
+            <AnimatePresence>
+              {notifications.map(notif => (
+                <motion.div 
+                  key={notif.id} 
+                  variants={fadeRight}
+                  whileTap={{ scale: 0.98 }}
+                  className={`bg-white p-5 rounded-[1.5rem] border border-slate-200 shadow-sm flex gap-4 cursor-pointer group transition-colors hover:border-slate-300`}
+                >
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${getStyle(notif.type)}`}>
+                    {getIcon(notif.type)}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start gap-2 mb-1">
+                      <h5 className="font-black text-[14px] text-blue-950 leading-tight">{notif.title}</h5>
+                      <span className="text-[10px] font-bold text-slate-400 shrink-0 whitespace-nowrap mt-0.5">{formatTime(notif.timestamp)}</span>
+                    </div>
+                    <p className="text-[12px] font-bold text-slate-500 leading-relaxed">{notif.message}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

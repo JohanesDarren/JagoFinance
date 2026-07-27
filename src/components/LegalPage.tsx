@@ -38,13 +38,13 @@ export default function LegalPage({ type, onBack }: LegalPageProps) {
       transition={{ delay, duration: 0.5, ease: "easeOut" }}
       className="bg-white/80 backdrop-blur-md border border-white rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_30px_rgba(31,38,135,0.04)] mb-6 hover:shadow-[0_8px_30px_rgba(79,70,229,0.08)] transition-shadow duration-300 relative overflow-hidden group"
     >
-      <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-110"></div>
+      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-110"></div>
       <div className="flex items-start gap-5">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-50 to-blue-50 flex items-center justify-center shrink-0 border border-indigo-100/50 shadow-sm group-hover:rotate-3 transition-transform">
-          <Icon className="w-6 h-6 text-indigo-600" />
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-50 to-blue-50 flex items-center justify-center shrink-0 border border-blue-100/50 shadow-sm group-hover:rotate-3 transition-transform">
+          <Icon className="w-6 h-6 text-blue-700" />
         </div>
         <div>
-          <h3 className="text-xl font-bold text-slate-900 mb-3 font-outfit">{title}</h3>
+          <h3 className="text-xl font-bold text-blue-950 mb-3 font-outfit">{title}</h3>
           <div className="text-slate-600 font-jakarta leading-relaxed text-[15px]">
             {children}
           </div>
@@ -54,12 +54,12 @@ export default function LegalPage({ type, onBack }: LegalPageProps) {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#eff6ff] via-white to-[#f0fdfa] flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#eff6ff] via-white to-[#f0fdfa] flex flex-col font-sans selection:bg-blue-100 selection:text-indigo-900 relative overflow-hidden">
       
       {/* Animated Light Orbs */}
       <div className="fixed top-[-10%] left-[-5%] w-[60%] h-[60%] rounded-full bg-blue-300/20 blur-[100px] pointer-events-none animate-pulse duration-[6s] -z-0"></div>
       <div className="fixed bottom-[-10%] right-[-5%] w-[60%] h-[60%] rounded-full bg-teal-300/20 blur-[100px] pointer-events-none animate-pulse duration-[8s] delay-700 -z-0"></div>
-      <div className="fixed top-[40%] right-[10%] w-[30%] h-[40%] rounded-full bg-indigo-300/10 blur-[80px] pointer-events-none animate-pulse duration-[10s] delay-500 -z-0"></div>
+      <div className="fixed top-[40%] right-[10%] w-[30%] h-[40%] rounded-full bg-blue-400/10 blur-[80px] pointer-events-none animate-pulse duration-[10s] delay-500 -z-0"></div>
 
       {/* Floating Abstract Texture */}
       <div className="fixed inset-0 opacity-[0.03] pointer-events-none -z-0" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
@@ -68,13 +68,13 @@ export default function LegalPage({ type, onBack }: LegalPageProps) {
       <header className={`fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-300 w-[92%] max-w-4xl rounded-full flex items-center justify-between ${scrolled ? 'top-4 bg-white/80 backdrop-blur-xl border border-slate-200 py-3 px-4 sm:px-6 shadow-[0_8px_30px_rgba(0,0,0,0.08)]' : 'top-6 bg-transparent border-transparent py-3 px-2 sm:px-4'}`}>
         <button 
           onClick={onBack}
-          className="group flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-slate-50 border border-slate-100 shadow-sm text-slate-600 hover:text-slate-900 rounded-full text-sm font-bold transition-all"
+          className="group flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-slate-50 border border-slate-100 shadow-sm text-slate-600 hover:text-blue-950 rounded-full text-sm font-bold transition-all"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span>Kembali</span>
         </button>
         <div className="flex items-center gap-3 bg-white/80 px-4 py-2 rounded-full border border-slate-100 shadow-sm">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center shadow-md">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-700 to-cyan-500 text-white flex items-center justify-center shadow-md">
             {isPrivacy ? <ShieldCheck className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
           </div>
           <span className="font-bold text-slate-800 tracking-tight pr-2 hidden sm:block">{title}</span>
@@ -91,12 +91,12 @@ export default function LegalPage({ type, onBack }: LegalPageProps) {
           className="text-center mb-12"
         >
           <div className="inline-flex items-center justify-center p-4 rounded-[2rem] bg-white border border-white shadow-sm mb-6 relative group">
-            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-100 to-cyan-50 opacity-0 group-hover:opacity-100 rounded-[2rem] transition-opacity duration-500"></div>
-            <div className="relative z-10 w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-100 to-cyan-50 opacity-0 group-hover:opacity-100 rounded-[2rem] transition-opacity duration-500"></div>
+            <div className="relative z-10 w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-700 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-blue-200">
               {isPrivacy ? <ShieldCheck className="w-8 h-8" /> : <FileText className="w-8 h-8" />}
             </div>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-4 font-outfit">
+          <h1 className="text-4xl sm:text-5xl font-black text-blue-950 tracking-tight mb-4 font-outfit">
             {title}
           </h1>
           <p className="text-lg text-slate-500 font-jakarta max-w-2xl mx-auto">
@@ -115,9 +115,9 @@ export default function LegalPage({ type, onBack }: LegalPageProps) {
               <SectionCard icon={Database} title="Informasi yang Kami Kumpulkan" delay={0.2}>
                 <p>Untuk memberikan pengalaman layanan yang optimal, kami dapat mengumpulkan berbagai data pribadi Anda, yang meliputi namun tidak terbatas pada:</p>
                 <ul className="mt-3 space-y-2">
-                  <li className="flex items-start gap-2"><span className="text-indigo-400 mt-1">•</span> Profil identitas (Nama lengkap, alamat email, dan nomor telepon).</li>
-                  <li className="flex items-start gap-2"><span className="text-indigo-400 mt-1">•</span> Informasi pekerjaan (Perusahaan, divisi, jabatan, dan struktur pelaporan).</li>
-                  <li className="flex items-start gap-2"><span className="text-indigo-400 mt-1">•</span> Data finansial operasional terkait klaim atau penggajian.</li>
+                  <li className="flex items-start gap-2"><span className="text-blue-500 mt-1">•</span> Profil identitas (Nama lengkap, alamat email, dan nomor telepon).</li>
+                  <li className="flex items-start gap-2"><span className="text-blue-500 mt-1">•</span> Informasi pekerjaan (Perusahaan, divisi, jabatan, dan struktur pelaporan).</li>
+                  <li className="flex items-start gap-2"><span className="text-blue-500 mt-1">•</span> Data finansial operasional terkait klaim atau penggajian.</li>
                 </ul>
               </SectionCard>
               
@@ -160,9 +160,9 @@ export default function LegalPage({ type, onBack }: LegalPageProps) {
               <SectionCard icon={Activity} title="Penggunaan Layanan" delay={0.2}>
                 <p>Ekosistem JagoFinance dirancang khusus untuk memfasilitasi otomasi dan manajemen operasional keuangan internal perusahaan (seperti sistem reimburse dan penggajian terintegrasi). Anda berjanji untuk:</p>
                 <ul className="mt-3 space-y-2">
-                  <li className="flex items-start gap-2"><span className="text-indigo-400 mt-1">✓</span> Menggunakan layanan hanya untuk kepentingan bisnis dan tujuan yang sah.</li>
-                  <li className="flex items-start gap-2"><span className="text-indigo-400 mt-1">✓</span> Tidak menyalahgunakan celah keamanan untuk merugikan sistem atau pihak lain.</li>
-                  <li className="flex items-start gap-2"><span className="text-indigo-400 mt-1">✓</span> Mematuhi regulasi keuangan hukum yang berlaku di yurisdiksi Anda.</li>
+                  <li className="flex items-start gap-2"><span className="text-blue-500 mt-1">✓</span> Menggunakan layanan hanya untuk kepentingan bisnis dan tujuan yang sah.</li>
+                  <li className="flex items-start gap-2"><span className="text-blue-500 mt-1">✓</span> Tidak menyalahgunakan celah keamanan untuk merugikan sistem atau pihak lain.</li>
+                  <li className="flex items-start gap-2"><span className="text-blue-500 mt-1">✓</span> Mematuhi regulasi keuangan hukum yang berlaku di yurisdiksi Anda.</li>
                 </ul>
               </SectionCard>
 
