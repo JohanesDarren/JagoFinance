@@ -18,7 +18,8 @@ export default function EditProfileScreen({
   showAvatarPicker,
   setShowAvatarPicker,
   setCurrentScreen,
-  isSaving
+  isSaving,
+  handleSaveProfile
 }: EditProfileScreenProps) {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const passbookInputRef = useRef<HTMLInputElement>(null);
@@ -61,7 +62,7 @@ export default function EditProfileScreen({
         <div className="w-10 h-10"></div> {/* Spacer for perfect centering */}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 pb-32 custom-scrollbar space-y-6">
+      <div className="flex-1 overflow-y-auto px-5 pb-10 custom-scrollbar space-y-6">
         
         {/* Avatar Section */}
         <div className="flex flex-col items-center pt-2">
@@ -234,31 +235,30 @@ export default function EditProfileScreen({
                   </button>
                 </div>
               </div>
-            </div>
           </div>
         </div>
-      </div>
 
-      {/* Fixed Bottom Button */}
-      <div className="absolute bottom-0 left-0 right-0 p-5 bg-white border-t border-slate-100 z-30 pb-safe">
-        <button 
-          onClick={() => {
-            if (handleSaveProfile) {
-              handleSaveProfile();
-            } else {
-              setCurrentScreen('profile');
-            }
-          }}
-          disabled={isSaving}
-          className={`w-full h-14 ${isSaving ? 'bg-slate-300' : 'bg-blue-950 hover:bg-blue-900'} text-white font-black text-[15px] rounded-[1.25rem] shadow-[0_8px_20px_rgb(0,0,0,0.1)] flex justify-center items-center gap-2 active:scale-95 transition-all`}
-        >
-          {isSaving ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <CheckCircle className="w-5 h-5" />
-          )}
-          {isSaving ? 'Menyimpan Perubahan...' : 'Simpan Perubahan'}
-        </button>
+        {/* Action Button */}
+        <div className="pt-2 pb-6">
+          <button 
+            onClick={() => {
+              if (handleSaveProfile) {
+                handleSaveProfile();
+              } else {
+                setCurrentScreen('profile');
+              }
+            }}
+            disabled={isSaving}
+            className={`w-full h-14 ${isSaving ? 'bg-slate-300' : 'bg-blue-950 hover:bg-blue-900'} text-white font-black text-[15px] rounded-[1.25rem] shadow-[0_8px_20px_rgb(0,0,0,0.1)] flex justify-center items-center gap-2 active:scale-95 transition-all`}
+          >
+            {isSaving ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <CheckCircle className="w-5 h-5" />
+            )}
+            {isSaving ? 'Menyimpan Perubahan...' : 'Simpan Perubahan'}
+          </button>
+        </div>
       </div>
 
       {/* Modern Avatar Picker Bottom Sheet */}
