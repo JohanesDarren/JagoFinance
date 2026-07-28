@@ -235,6 +235,7 @@ export default function EditProfileScreen({
                   </button>
                 </div>
               </div>
+            </div>
           </div>
         </div>
 
