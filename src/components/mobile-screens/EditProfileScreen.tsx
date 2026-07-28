@@ -215,7 +215,7 @@ export default function EditProfileScreen({
                       </div>
                     ) : (
                       <div className="w-10 h-10 rounded-xl bg-slate-200/50 flex items-center justify-center text-slate-400">
-                        <ImageIcon className="w-5 h-5" />
+                        <Image className="w-5 h-5" />
                       </div>
                     )}
                     <div>
