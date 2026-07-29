@@ -606,12 +606,9 @@ export default function MobileAppSimulator({
                 </div>
               ) : currentScreen === 'history' ? (
                 <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => setCurrentScreen('home')}
-                    className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-950 shadow-sm border border-slate-200 active:scale-95 transition-transform md:hidden"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </button>
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-950 shadow-sm border border-slate-200">
+                    <FileText className="w-5 h-5" />
+                  </div>
                   <h2 className="text-[17px] font-black text-blue-950 tracking-tight leading-none">
                     Riwayat Pengajuan
                   </h2>
