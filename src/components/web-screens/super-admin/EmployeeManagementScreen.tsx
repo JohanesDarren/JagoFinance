@@ -258,10 +258,10 @@ export default function EmployeeManagementScreen(props: WebScreenProps) {
       {/* Detail Modal */}
       {selectedEmployee && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden relative">
+          <div className="bg-white w-full max-w-md max-h-[90vh] flex flex-col rounded-[2rem] shadow-2xl overflow-hidden relative">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
             
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center relative z-10">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center relative z-10 shrink-0">
               <h3 className="font-black text-xl text-slate-800 font-display">Informasi Karyawan</h3>
               <button 
                 onClick={() => setSelectedEmployee(null)}
@@ -271,7 +271,7 @@ export default function EmployeeManagementScreen(props: WebScreenProps) {
               </button>
             </div>
             
-            <div className="p-8 space-y-6 relative z-10">
+            <div className="p-6 md:p-8 space-y-6 relative z-10 overflow-y-auto custom-scrollbar flex-1">
               <div className="flex flex-col items-center mb-4">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-blue-50 shadow-md mb-4">
                   <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(selectedEmployee.name)}&background=e0e7ff&color=4f46e5&size=200`} alt="Profile" className="w-full h-full object-cover" />
@@ -364,8 +364,7 @@ export default function EmployeeManagementScreen(props: WebScreenProps) {
                 </div>
               </div>
             </div>
-            
-            <div className="p-6 bg-slate-50 border-t border-slate-100">
+            <div className="p-6 bg-slate-50 border-t border-slate-100 shrink-0">
               <button 
                 onClick={() => setSelectedEmployee(null)}
                 className="w-full py-3.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors"
@@ -380,9 +379,10 @@ export default function EmployeeManagementScreen(props: WebScreenProps) {
       {/* Reject Bank Validation Modal */}
       {showRejectBankModal && selectedEmployee && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-6 relative">
-            <h3 className="font-black text-lg text-slate-800 mb-2">Tolak Validasi Rekening</h3>
-            <p className="text-sm text-slate-500 mb-4">Masukkan alasan penolakan agar karyawan dapat memperbaikinya.</p>
+          <div className="bg-white w-full max-w-sm max-h-[90vh] flex flex-col rounded-[2rem] shadow-2xl relative overflow-hidden">
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+              <h3 className="font-black text-lg text-slate-800 mb-2">Tolak Validasi Rekening</h3>
+              <p className="text-sm text-slate-500 mb-4">Masukkan alasan penolakan agar karyawan dapat memperbaikinya.</p>
             
             <textarea
               value={rejectBankReason}
@@ -391,20 +391,21 @@ export default function EmployeeManagementScreen(props: WebScreenProps) {
               className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-rose-400 focus:bg-white transition-all min-h-[100px] resize-none"
             ></textarea>
 
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowRejectBankModal(false)}
-                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-colors text-sm"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleRejectBank}
-                disabled={!rejectBankReason.trim() || isValidating}
-                className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-white font-bold rounded-xl transition-colors flex justify-center items-center gap-2 text-sm"
-              >
-                {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Kirim Penolakan'}
-              </button>
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowRejectBankModal(false)}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-colors text-sm"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleRejectBank}
+                  disabled={!rejectBankReason.trim() || isValidating}
+                  className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-white font-bold rounded-xl transition-colors flex justify-center items-center gap-2 text-sm"
+                >
+                  {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Kirim Penolakan'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -413,10 +414,10 @@ export default function EmployeeManagementScreen(props: WebScreenProps) {
       {/* Invite Employee Modal */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden relative">
+          <div className="bg-white w-full max-w-md max-h-[90vh] flex flex-col rounded-[2.5rem] shadow-2xl overflow-hidden relative">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
             
-            <div className="p-8 border-b border-slate-100 flex justify-between items-center relative z-10">
+            <div className="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center relative z-10 shrink-0">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-50 text-blue-700 rounded-[1.25rem] flex items-center justify-center shadow-inner">
                   <UserPlus className="w-6 h-6" strokeWidth="2.5" />
@@ -438,7 +439,7 @@ export default function EmployeeManagementScreen(props: WebScreenProps) {
               </button>
             </div>
             
-            <div className="p-8 relative z-10">
+            <div className="p-6 md:p-8 relative z-10 overflow-y-auto custom-scrollbar flex-1">
               <form 
                 onSubmit={async (e) => {
                   e.preventDefault();
