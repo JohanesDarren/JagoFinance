@@ -66,6 +66,7 @@ export default function MobileAppSimulator({
 
   const isProfileComplete = currentUserProfile && currentUserProfile.full_name && currentUserProfile.bank_account && currentUserProfile.phone;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [showActionSheet, setShowActionSheet] = useState(false);
 
   useEffect(() => {
     if (currentUserProfile) {
@@ -294,7 +295,24 @@ export default function MobileAppSimulator({
     setFormDate(new Date().toISOString().split('T')[0]);
     setFormNotes('');
     setFormItems([]);
+    setFormError('');
     setCurrentScreen('scanner');
+  };
+
+  const handleOpenManualForm = (typeOption: 'reimburse' | 'cash_advance') => {
+    setFormType(typeOption);
+    setScanImage(null);
+    setScanImageName('');
+    setScannedData(null);
+    setEditingTx(null);
+    setFormMerchant('');
+    setFormAmount(0);
+    setFormCategory('Infrastruktur & Cloud');
+    setFormDate(new Date().toISOString().split('T')[0]);
+    setFormNotes('');
+    setFormItems([]);
+    setFormError('');
+    setCurrentScreen('form');
   };
 
   const handleOpenForm = (type: 'reimburse' | 'cash_advance' = 'reimburse', imageBase64?: string, imageName?: string, specificCompanyId?: string) => {
@@ -954,7 +972,7 @@ export default function MobileAppSimulator({
 
                 {/* Floating Center Button (Absolute) */}
                 <button 
-                  onClick={() => { if(isProfileComplete) handleOpenScanner('reimburse'); }}
+                  onClick={() => { if(isProfileComplete) setShowActionSheet(true); }}
                   className={`w-14 h-14 bg-blue-950 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-950/30 border-4 border-white absolute left-1/2 -translate-x-1/2 -top-6 hover:bg-blue-900 hover:scale-105 active:scale-95 transition-all ${!isProfileComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <Camera className="w-6 h-6" />
@@ -962,6 +980,71 @@ export default function MobileAppSimulator({
               </div>
             </div>
           )}
+
+          {/* FAB Action Sheet */}
+          <AnimatePresence>
+            {showActionSheet && (
+              <>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-slate-950/60 z-[100] backdrop-blur-sm"
+                  onClick={() => setShowActionSheet(false)}
+                />
+                <motion.div 
+                  initial={{ y: 300, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 300, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[2rem] p-6 pb-12 z-[101] shadow-2xl"
+                >
+                  <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
+                  <h3 className="font-black text-blue-950 text-lg mb-4">Buat Pengajuan Baru</h3>
+                  <div className="space-y-3">
+                    <button 
+                      onClick={() => { setShowActionSheet(false); handleOpenScanner('reimburse'); }}
+                      className="w-full flex items-center gap-4 p-4 rounded-[1.5rem] bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all font-bold text-left"
+                    >
+                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0">
+                        <ScanLine className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="block text-[15px]">Scan Reimburse (AI)</span>
+                        <span className="text-[11px] font-medium text-blue-500">Otomatis baca struk belanja</span>
+                      </div>
+                    </button>
+                    
+                    <button 
+                      onClick={() => { setShowActionSheet(false); handleOpenManualForm('reimburse'); }}
+                      className="w-full flex items-center gap-4 p-4 rounded-[1.5rem] bg-slate-50 text-slate-700 hover:bg-slate-100 transition-all font-bold text-left"
+                    >
+                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0 border border-slate-100">
+                        <Receipt className="w-6 h-6 text-slate-400" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="block text-[15px]">Reimburse Manual</span>
+                        <span className="text-[11px] font-medium text-slate-500">Isi form tanpa scan nota</span>
+                      </div>
+                    </button>
+
+                    <button 
+                      onClick={() => { setShowActionSheet(false); handleOpenManualForm('cash_advance'); }}
+                      className="w-full flex items-center gap-4 p-4 rounded-[1.5rem] bg-slate-50 text-slate-700 hover:bg-slate-100 transition-all font-bold text-left"
+                    >
+                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0 border border-slate-100">
+                        <Wallet className="w-6 h-6 text-slate-400" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="block text-[15px]">Pengajuan Kasbon</span>
+                        <span className="text-[11px] font-medium text-slate-500">Minta dana di awal / DP</span>
+                      </div>
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
 
           {showPaywall && (
             <div className="absolute inset-0 bg-slate-950 z-50 flex flex-col justify-between p-6 text-white select-none">
