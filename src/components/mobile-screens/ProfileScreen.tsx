@@ -44,13 +44,7 @@ export default function ProfileScreen({
   return (
     <div className="flex-1 flex flex-col h-full bg-white relative overflow-hidden font-sans">
       
-      {/* Clean Header Area */}
-      <div className="px-5 pt-8 pb-4 flex justify-between items-center relative z-10 sticky top-0 bg-white/90 backdrop-blur-xl">
-        <h1 className="text-2xl font-black text-blue-950 tracking-tight">Profil Saya</h1>
-        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-blue-950 shadow-sm border border-slate-200">
-          <UserCircle className="w-5 h-5" />
-        </div>
-      </div>
+
 
       <motion.div 
         variants={staggerContainer}

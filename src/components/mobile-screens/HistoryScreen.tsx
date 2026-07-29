@@ -90,18 +90,7 @@ export default function HistoryScreen({
     <div className="flex-1 flex flex-col h-full bg-[#F8FAFC] relative overflow-hidden font-sans">
       
       {/* Modern Header - Sticky */}
-      <div className="px-5 pt-8 pb-4 sticky top-0 bg-[#F8FAFC]/90 backdrop-blur-xl z-20 border-b border-slate-100">
-        <div className="flex items-center justify-between mb-4">
-          <button 
-            onClick={() => setCurrentScreen('home')}
-            className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-950 shadow-sm border border-slate-200 active:scale-95 transition-transform"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-[17px] font-black text-blue-950 tracking-tight">Riwayat Pengajuan</h1>
-          <div className="w-10 h-10"></div> {/* Spacer for perfect centering */}
-        </div>
-
+      <div className="px-5 pt-4 pb-4 sticky top-0 bg-[#F8FAFC]/90 backdrop-blur-xl z-20 border-b border-slate-100">
         {/* Floating Tab Controls */}
         <div className="bg-slate-100 p-1.5 rounded-2xl flex gap-1 font-bold relative shadow-inner overflow-x-auto hide-scrollbar">
           {(['Semua', 'Pending', 'Selesai', 'Ditolak'] as const).map((tab) => {
