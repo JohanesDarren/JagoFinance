@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, AlertCircle, Filter, FileText, CheckCircle2, Clock, X, CalendarDays, Search } from 'lucide-react';
-import { Transaction } from '../../types';
+import { ArrowLeft, AlertCircle, Filter, FileText, CheckCircle2, Clock, X, CalendarDays, Search, Building2 } from 'lucide-react';
+import { Transaction, Company } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface HistoryScreenProps {
@@ -8,6 +8,7 @@ interface HistoryScreenProps {
   historyTab: 'Semua' | 'Pending' | 'Selesai' | 'Ditolak';
   setHistoryTab: (tab: 'Semua' | 'Pending' | 'Selesai' | 'Ditolak') => void;
   staffTransactions: Transaction[];
+  companies?: Company[];
   handleOpenDetail: (tx: Transaction) => void;
 }
 
@@ -29,10 +30,12 @@ export default function HistoryScreen({
   historyTab,
   setHistoryTab,
   staffTransactions,
+  companies = [],
   handleOpenDetail
 }: HistoryScreenProps) {
   const [selectedDateRange, setSelectedDateRange] = useState<string>('Semua');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<string>('Semua');
 
   // Helper for date calculations
   const getStartOfTime = (range: string) => {
@@ -70,21 +73,26 @@ export default function HistoryScreen({
       }
       if (!searchMatch) return false;
 
-      if (selectedDateRange === 'Semua') return true;
-      
-      let txDate = new Date();
-      if (t.date) {
-        if (t.date.includes('-')) txDate = new Date(t.date);
-        else if (t.date.includes('/')) {
-          const parts = t.date.split('/');
-          if (parts.length === 3) txDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      if (selectedDateRange !== 'Semua') {
+        let txDate = new Date();
+        if (t.date) {
+          if (t.date.includes('-')) txDate = new Date(t.date);
+          else if (t.date.includes('/')) {
+            const parts = t.date.split('/');
+            if (parts.length === 3) txDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+          }
         }
+        const startOfTime = getStartOfTime(selectedDateRange);
+        if (txDate < startOfTime) return false;
       }
-      
-      const startOfTime = getStartOfTime(selectedDateRange);
-      return txDate >= startOfTime;
+
+      if (selectedCompanyFilter !== 'Semua') {
+        if (t.companyId !== selectedCompanyFilter) return false;
+      }
+
+      return true;
     });
-  }, [staffTransactions, historyTab, selectedDateRange, searchQuery]);
+  }, [staffTransactions, historyTab, selectedDateRange, searchQuery, selectedCompanyFilter]);
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#F8FAFC] relative overflow-hidden font-sans">
@@ -121,41 +129,62 @@ export default function HistoryScreen({
       <div className="flex-1 overflow-y-auto px-5 pb-32 pt-4 custom-scrollbar flex flex-col space-y-6">
         
         {/* Filters & Search */}
-        <div className="flex gap-3">
-          <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="w-4 h-4 text-slate-400" />
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-3 h-12">
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="w-4 h-4 text-slate-400" />
+              </div>
+              <input 
+                type="text" 
+                placeholder="Cari transaksi..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-full bg-white border border-slate-200 text-blue-950 text-[13px] font-bold py-3 pl-10 pr-4 rounded-[1.25rem] outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 shadow-sm transition-all"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  <X className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                </button>
+              )}
             </div>
-            <input 
-              type="text" 
-              placeholder="Cari transaksi..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-slate-200 text-blue-950 text-[13px] font-bold py-3 pl-10 pr-4 rounded-[1.25rem] outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 shadow-sm transition-all"
-            />
-            {searchQuery && (
-              <button 
-                onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+            <div className="relative shrink-0">
+              <select 
+                value={selectedDateRange}
+                onChange={(e) => setSelectedDateRange(e.target.value)}
+                className="appearance-none bg-white border border-slate-200 text-blue-950 text-[13px] font-bold py-3 pl-10 pr-10 rounded-[1.25rem] outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 shadow-sm transition-all h-full"
               >
-                <X className="w-4 h-4 text-slate-400 hover:text-slate-600" />
-              </button>
-            )}
+                <option value="Semua">Semua Waktu</option>
+                <option value="Minggu Ini">Minggu Ini</option>
+                <option value="Bulan Ini">Bulan Ini</option>
+                <option value="Tahun Ini">Tahun Ini</option>
+              </select>
+              <CalendarDays className="w-4 h-4 text-blue-950 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Filter className="w-3.5 h-3.5 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
           </div>
-          <div className="relative shrink-0">
-            <select 
-              value={selectedDateRange}
-              onChange={(e) => setSelectedDateRange(e.target.value)}
-              className="appearance-none bg-white border border-slate-200 text-blue-950 text-[13px] font-bold py-3 pl-10 pr-10 rounded-[1.25rem] outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 shadow-sm transition-all h-full"
-            >
-              <option value="Semua">Semua Waktu</option>
-              <option value="Minggu Ini">Minggu Ini</option>
-              <option value="Bulan Ini">Bulan Ini</option>
-              <option value="Tahun Ini">Tahun Ini</option>
-            </select>
-            <CalendarDays className="w-4 h-4 text-blue-950 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <Filter className="w-3.5 h-3.5 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
+          
+          {companies.length > 0 && (
+            <div className="relative w-full h-12">
+              <select 
+                value={selectedCompanyFilter}
+                onChange={(e) => setSelectedCompanyFilter(e.target.value)}
+                className="appearance-none w-full h-full bg-white border border-slate-200 text-blue-950 text-[13px] font-bold py-3 pl-10 pr-10 rounded-[1.25rem] outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 shadow-sm transition-all"
+              >
+                <option value="Semua">Semua Perusahaan</option>
+                {companies.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <Building2 className="w-4 h-4 text-blue-950 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] border-transparent border-t-slate-400"></div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Transaction List */}

@@ -828,6 +828,7 @@ export default function MobileAppSimulator({
                 historyTab={historyTab}
                 setHistoryTab={setHistoryTab}
                 staffTransactions={staffTransactions}
+                companies={currentUserProfile?.companies || []}
                 handleOpenDetail={handleOpenDetail}
               />
             )}
