@@ -3,7 +3,7 @@ import {
   Bell, Building, Lock, CreditCard, Camera, User, FileText, 
   Settings, LogOut, ArrowRight, ArrowLeft, Clock, Search, 
   MapPin, Check, Plus, AlertCircle, ScanLine, Wallet, Image, X,
-  Trash2, ShieldAlert, Sparkles, Building2, Info, Menu
+  Trash2, ShieldAlert, Sparkles, Building2, Info, Menu, UserCircle, Receipt
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Transaction } from '../types';
@@ -629,6 +629,18 @@ export default function MobileAppSimulator({
                   </div>
                   <h2 className="text-[17px] font-black text-blue-950 tracking-tight leading-none">
                     Profil Saya
+                  </h2>
+                </div>
+              ) : currentScreen === 'notifications' ? (
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setCurrentScreen('home')}
+                    className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-950 shadow-sm border border-slate-200 active:scale-95 transition-transform"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <h2 className="text-[17px] font-black text-blue-950 tracking-tight leading-none">
+                    Notifikasi
                   </h2>
                 </div>
               ) : (

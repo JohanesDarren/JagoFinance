@@ -62,24 +62,6 @@ export default function NotificationsScreen({
       className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden font-sans"
     >
       <div className="p-5 pt-8 pb-28 flex-1 flex flex-col relative z-10 overflow-y-auto custom-scrollbar h-full space-y-6">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between text-blue-950 shrink-0">
-          <motion.button 
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setCurrentScreen('home')}
-            className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </motion.button>
-          <span className="text-[13px] font-black font-display tracking-widest uppercase">Notifikasi</span>
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200 text-blue-950 relative">
-            <Bell className="w-4 h-4" />
-            {notifications.length > 0 && (
-              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
-            )}
-          </div>
-        </div>
 
         {notifications.length === 0 ? (
           <motion.div 
