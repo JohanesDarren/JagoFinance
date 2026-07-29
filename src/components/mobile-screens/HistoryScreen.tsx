@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from 'motion/react';
 
 interface HistoryScreenProps {
   setCurrentScreen: (screen: any) => void;
-  historyTab: 'Semua' | 'Pending' | 'Selesai';
-  setHistoryTab: (tab: 'Semua' | 'Pending' | 'Selesai') => void;
+  historyTab: 'Semua' | 'Pending' | 'Selesai' | 'Ditolak';
+  setHistoryTab: (tab: 'Semua' | 'Pending' | 'Selesai' | 'Ditolak') => void;
   staffTransactions: Transaction[];
   handleOpenDetail: (tx: Transaction) => void;
 }
@@ -31,33 +31,24 @@ export default function HistoryScreen({
   staffTransactions,
   handleOpenDetail
 }: HistoryScreenProps) {
-  const [selectedMonth, setSelectedMonth] = useState<string>('Semua');
+  const [selectedDateRange, setSelectedDateRange] = useState<string>('Semua');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Extract unique months from transactions
-  const availableMonths = useMemo(() => {
-    const months = new Set<string>();
-    staffTransactions.forEach(t => {
-      if (t.date) {
-        let yearMonth = '';
-        if (t.date.includes('-')) {
-          yearMonth = t.date.substring(0, 7); // YYYY-MM
-        } else if (t.date.includes('/')) {
-          const parts = t.date.split('/');
-          if (parts.length === 3) {
-            yearMonth = `${parts[2]}-${parts[0].padStart(2, '0')}`; // YYYY-MM
-          }
-        }
-        if (yearMonth) months.add(yearMonth);
-      }
-    });
-    return Array.from(months).sort().reverse(); // Newest first
-  }, [staffTransactions]);
-
-  const formatMonth = (ym: string) => {
-    const [y, m] = ym.split('-');
-    const date = new Date(parseInt(y), parseInt(m) - 1);
-    return date.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+  // Helper for date calculations
+  const getStartOfTime = (range: string) => {
+    const now = new Date();
+    if (range === 'Minggu Ini') {
+      const day = now.getDay() || 7; // Get current day number, handling Sunday as 7
+      if (day !== 1) now.setHours(-24 * (day - 1)); // Set to Monday
+      now.setHours(0, 0, 0, 0);
+    } else if (range === 'Bulan Ini') {
+      now.setDate(1);
+      now.setHours(0, 0, 0, 0);
+    } else if (range === 'Tahun Ini') {
+      now.setMonth(0, 1);
+      now.setHours(0, 0, 0, 0);
+    }
+    return now;
   };
 
   const filteredTransactions = useMemo(() => {
@@ -65,7 +56,8 @@ export default function HistoryScreen({
       let statusMatch = false;
       if (historyTab === 'Semua') statusMatch = true;
       else if (historyTab === 'Pending') statusMatch = t.status === 'Pending';
-      else statusMatch = t.status === 'Approved' || t.status === 'Rejected';
+      else if (historyTab === 'Selesai') statusMatch = t.status === 'Approved';
+      else if (historyTab === 'Ditolak') statusMatch = t.status === 'Rejected';
 
       if (!statusMatch) return false;
 
@@ -78,18 +70,21 @@ export default function HistoryScreen({
       }
       if (!searchMatch) return false;
 
-      if (selectedMonth === 'Semua') return true;
+      if (selectedDateRange === 'Semua') return true;
       
-      let yearMonth = '';
-      if (t.date.includes('-')) yearMonth = t.date.substring(0, 7);
-      else if (t.date.includes('/')) {
-        const parts = t.date.split('/');
-        if (parts.length === 3) yearMonth = `${parts[2]}-${parts[0].padStart(2, '0')}`;
+      let txDate = new Date();
+      if (t.date) {
+        if (t.date.includes('-')) txDate = new Date(t.date);
+        else if (t.date.includes('/')) {
+          const parts = t.date.split('/');
+          if (parts.length === 3) txDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        }
       }
       
-      return yearMonth === selectedMonth;
+      const startOfTime = getStartOfTime(selectedDateRange);
+      return txDate >= startOfTime;
     });
-  }, [staffTransactions, historyTab, selectedMonth, searchQuery]);
+  }, [staffTransactions, historyTab, selectedDateRange, searchQuery]);
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#F8FAFC] relative overflow-hidden font-sans">
@@ -108,8 +103,8 @@ export default function HistoryScreen({
         </div>
 
         {/* Floating Tab Controls */}
-        <div className="bg-slate-100 p-1.5 rounded-2xl flex gap-1 font-bold relative shadow-inner">
-          {(['Semua', 'Pending', 'Selesai'] as const).map((tab) => {
+        <div className="bg-slate-100 p-1.5 rounded-2xl flex gap-1 font-bold relative shadow-inner overflow-x-auto hide-scrollbar">
+          {(['Semua', 'Pending', 'Selesai', 'Ditolak'] as const).map((tab) => {
             const isActive = historyTab === tab;
             return (
               <button 
@@ -160,14 +155,14 @@ export default function HistoryScreen({
           </div>
           <div className="relative shrink-0">
             <select 
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
+              value={selectedDateRange}
+              onChange={(e) => setSelectedDateRange(e.target.value)}
               className="appearance-none bg-white border border-slate-200 text-blue-950 text-[13px] font-bold py-3 pl-10 pr-10 rounded-[1.25rem] outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 shadow-sm transition-all h-full"
             >
-              <option value="Semua">Bulan Ini</option>
-              {availableMonths.map(ym => (
-                <option key={ym} value={ym}>{formatMonth(ym)}</option>
-              ))}
+              <option value="Semua">Semua Waktu</option>
+              <option value="Minggu Ini">Minggu Ini</option>
+              <option value="Bulan Ini">Bulan Ini</option>
+              <option value="Tahun Ini">Tahun Ini</option>
             </select>
             <CalendarDays className="w-4 h-4 text-blue-950 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <Filter className="w-3.5 h-3.5 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />

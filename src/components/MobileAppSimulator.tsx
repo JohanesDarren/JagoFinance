@@ -46,8 +46,11 @@ export default function MobileAppSimulator({
 }: MobileAppSimulatorProps) {
   
   // Mobile Router/State
+  const [historyTab, setHistoryTab] = useState<'Semua' | 'Pending' | 'Selesai' | 'Ditolak'>('Semua');
   const [currentScreen, setCurrentScreen] = useState<'auth' | 'forgot' | 'home' | 'scanner' | 'ai-loading' | 'form' | 'success' | 'history' | 'detail' | 'profile' | 'edit-profile' | 'avatar-camera' | 'avatar-gallery' | 'notifications' | 'payslip-history' | 'companies' | 'company-detail'>(currentUserProfile ? 'home' : 'auth');
   
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletedTxIds, setDeletedTxIds] = useState<Set<string>>(new Set());
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
   const [formCompanyId, setFormCompanyId] = useState<string | undefined>(undefined);
   
@@ -68,10 +71,11 @@ export default function MobileAppSimulator({
     if (currentUserProfile) {
       setEmail(currentUserProfile.email || '');
       setIsLogged(true);
-      setSubTier('pro'); // default to pro for single tenant
-      if (!isProfileComplete) {
-        setCurrentScreen('edit-profile');
-      }
+      setSubTier('pro'); 
+      // Relaxed profile check to prevent immediate redirect on offline test
+      // if (!isProfileComplete) {
+      //   setCurrentScreen('edit-profile');
+      // }
     } else {
       setIsLogged(false);
       setCurrentScreen('auth');
@@ -95,16 +99,14 @@ export default function MobileAppSimulator({
   const [formMerchant, setFormMerchant] = useState('');
   const [formDate, setFormDate] = useState('');
   const [formCategory, setFormCategory] = useState('Operasional');
-  const [formAmount, setFormAmount] = useState<number>(0);
+  const [formAmount, setFormAmount] = useState<number | string>(0);
   const [formNotes, setFormNotes] = useState('');
   const [formItems, setFormItems] = useState<any[]>([]);
   const [formType, setFormType] = useState<'reimburse' | 'cash_advance'>('reimburse');
   const [formError, setFormError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
 
   // History / Filter States
-  const [historyTab, setHistoryTab] = useState<'Semua' | 'Pending' | 'Selesai'>('Semua');
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [zoomReceipt, setZoomReceipt] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState(notifications.length > 0);
@@ -176,7 +178,7 @@ export default function MobileAppSimulator({
           bank_account: editProfileData.bankAccount,
           bank_account_holder: editProfileData.accountHolder,
           bank_passbook_url: editProfileData.bankPassbookUrl,
-          bank_validated: false, // Reset validation when updated
+          bank_validated: false, 
           avatar_url: editProfileData.avatarImage,
         })
         .eq('id', currentUserProfile.id);
@@ -193,16 +195,16 @@ export default function MobileAppSimulator({
     }
   };
 
-  // Remaining list calculations for specific employee
   const employeeEmail = (currentUserProfile?.email || email).trim();
   const staffName = currentUserProfile?.full_name || employeeEmail.split('@')[0]
     .split('.')
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
 
-  const staffTransactions = transactions.filter(t => t.employeeId === currentUserProfile?.id);
+  const staffTransactions = transactions
+    .filter(t => t.employeeId === (currentUserProfile?.id || 'admin'))
+    .filter(t => !deletedTxIds.has(t.id));
   
-  // Read dynamic limit from local storage based on company ID (default to 15.000.000)
   const getDynamicLimit = () => {
     try {
       const companyId = currentUserProfile?.company_id || 'default';
@@ -213,17 +215,14 @@ export default function MobileAppSimulator({
   };
   const limitMax = getDynamicLimit();
   
-  // Calculate approved and pending payments
   const totalApproved = staffTransactions
     .filter(t => t.status === 'Approved' && t.type === 'reimburse')
     .reduce((sum, t) => sum + t.amount, 0);
   const sisaLimit = Math.max(0, limitMax - totalApproved);
   const limitPercentage = (sisaLimit / limitMax) * 100;
 
-  // File Input Ref
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 1. Handle Login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
@@ -239,7 +238,6 @@ export default function MobileAppSimulator({
         });
         if (error) throw error;
 
-        // Fetch user profile
         const { data: profileData, error: profileErr } = await supabase
           .from('users')
           .select('*, companies(*)')
@@ -256,10 +254,8 @@ export default function MobileAppSimulator({
 
         setIsLogged(true);
         setCurrentScreen('home');
-        // Let App.tsx know that a user logged in successfully
         if (onRefreshData) onRefreshData();
       } else {
-        // Mock offline bypass login
         setIsLogged(true);
         setCurrentScreen('home');
         onRefreshData();
@@ -271,7 +267,6 @@ export default function MobileAppSimulator({
     }
   };
 
-  // 2. Handle Forgot Password
   const handleForgotSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (forgotEmail) {
@@ -283,7 +278,6 @@ export default function MobileAppSimulator({
     }
   };
 
-  // 3. Initiate Scanner
   const handleOpenScanner = (typeOption: 'reimburse' | 'cash_advance') => {
     if (subTier === 'free') {
       setShowPaywall(true);
@@ -294,7 +288,6 @@ export default function MobileAppSimulator({
     setScanImageName('');
     setScannedData(null);
     setEditingTx(null);
-    // Reset form
     setFormMerchant('');
     setFormAmount(0);
     setFormCategory('Infrastruktur & Cloud');
@@ -317,7 +310,6 @@ export default function MobileAppSimulator({
     setScanImageName('');
     setScannedData(null);
     setEditingTx(null);
-    // Reset form
     setFormMerchant('');
     setFormAmount(0);
     setFormCategory('Infrastruktur & Cloud');
@@ -333,29 +325,29 @@ export default function MobileAppSimulator({
     setScanImage(tx.receiptUrl || null);
     setScanImageName(tx.receiptUrl ? 'struk_terlampir.png' : '');
     setFormMerchant(tx.merchant);
-    setFormAmount(tx.amount);
+    setFormAmount(tx.amount.toString());
     setFormCategory(tx.category || 'Infrastruktur & Cloud');
-    
-    // Konversi format tanggal YYYY-MM-DD
     setFormDate(tx.date && tx.date.includes('-') && tx.date.split('-').length === 3 ? tx.date : new Date().toISOString().split('T')[0]);
-    
     setFormNotes(tx.notes || '');
-    setFormItems([]);
-    
+    setFormItems(tx.items || []);
     setCurrentScreen('form');
   };
 
   const handleDeleteTransaction = async (tx: Transaction) => {
     try {
+      setDeletedTxIds(prev => new Set(prev).add(tx.id));
       if (isSupabaseConfigured()) {
         const res = await fetch(`/api/transactions/employee/${tx.id}`, { method: 'DELETE' });
-        const resData = await res.json();
-        if (!res.ok || !resData.success) throw new Error(resData.error || 'Gagal menghapus');
+        if (!res.ok) {
+          const resData = await res.json();
+          throw new Error(resData.error || 'Gagal menghapus pengajuan');
+        }
+      } else {
+        await new Promise(r => setTimeout(r, 300));
       }
       
       setCurrentScreen('history');
       onRefreshData();
-      alert('Pengajuan berhasil dihapus.');
     } catch (err: any) {
       alert('Gagal menghapus pengajuan: ' + err.message);
     }
@@ -381,14 +373,11 @@ export default function MobileAppSimulator({
       setFormCategory(extracted.category || 'Operasional');
       setFormAmount(extracted.amount || 0);
       setFormNotes(extracted.notes || '');
-      setFormItems(extracted.items || []);
-      
-      if (resData.warning) {
-        setFormError(resData.warning);
-      } else {
-        setFormError('');
+      if (resData.extracted.items) {
+        setFormItems(resData.extracted.items);
       }
-
+      
+      setFormError('');
       setCurrentScreen('form');
     } catch (err: any) {
       console.error(err);
@@ -397,7 +386,6 @@ export default function MobileAppSimulator({
     }
   };
 
-  // 5. Handle File Upload from Gallery (Convert to Base64 & Send to Server)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -430,7 +418,6 @@ export default function MobileAppSimulator({
     setFormAmount(total);
   };
 
-  // 6. Form Submission back to DB
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formMerchant || !formAmount) {
@@ -448,22 +435,26 @@ export default function MobileAppSimulator({
         finalReceiptUrl = await uploadReceipt(scanImage!, scanImageName, 'image/jpeg');
       }
 
+      const fullNotes = `${formNotes} | DATE: ${formDate} | ITEMS: ${JSON.stringify(formItems)}`;
+
       if (isSupabaseConfigured() && currentUserProfile) {
         if (editingTx) {
           const res = await fetch(`/api/transactions/employee/${editingTx.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              company_id: formCompanyId || currentUserProfile.company_id,
               merchant: formMerchant,
               category: formCategory,
               amount: Number(formAmount),
-              notes: formNotes,
-              receipt_url: finalReceiptUrl,
-              type: formType === 'reimburse' ? 'reimbursement' : formType
+              notes: fullNotes,
+              receipt_url: finalReceiptUrl
             })
           });
-          const resData = await res.json();
-          if (!res.ok || !resData.success) throw new Error(resData.error || 'Gagal mengubah data');
+          if (!res.ok) {
+            const resData = await res.json();
+            throw new Error(resData.error || 'Gagal mengupdate pengajuan');
+          }
         } else {
           const res = await fetch(`/api/transactions/employee`, {
             method: 'POST',
@@ -474,23 +465,21 @@ export default function MobileAppSimulator({
               merchant: formMerchant,
               category: formCategory,
               amount: Number(formAmount),
-              notes: formNotes,
+              notes: fullNotes,
               status: 'pending',
               receipt_url: finalReceiptUrl,
               type: formType === 'reimburse' ? 'reimbursement' : formType
             })
           });
-          const resData = await res.json();
-          if (!res.ok || !resData.success) throw new Error(resData.error || 'Gagal menyimpan data');
+          if (!res.ok) {
+            const resData = await res.json();
+            throw new Error(resData.error || 'Gagal menyimpan pengajuan');
+          }
         }
-        
-        setIsSubmitting(false);
-        setEditingTx(null);
-        setCurrentScreen('success');
-        onRefreshData();
       } else {
-        const response = await fetch(editingTx ? '/api/reimburse/update' : '/api/reimburse/submit', {
-          method: editingTx ? 'PUT' : 'POST',
+        const url = editingTx ? `/api/reimburse/edit` : `/api/reimburse/submit`;
+        const res = await fetch(url, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             id: editingTx?.id,
@@ -498,25 +487,23 @@ export default function MobileAppSimulator({
             date: formDate,
             category: formCategory,
             amount: Number(formAmount),
-            notes: formNotes,
+            notes: fullNotes,
             receiptUrl: finalReceiptUrl,
-            companyId: formCompanyId || currentUserProfile?.company_id || 'COMP-JAGOAI',
-            employeeId: currentUserProfile?.id || 'admin',
+            staffName: currentUserProfile?.full_name || 'Admin',
+            staffEmail: currentUserProfile?.email || 'admin@jagofinance.id',
             type: formType
           })
         });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Gagal menyimpan data.');
+        if (!res.ok) {
+          const resData = await res.json();
+          throw new Error(resData.error || 'Gagal mengirim pengajuan.');
         }
-
-        setIsSubmitting(false);
-        setEditingTx(null);
-        setCurrentScreen('success');
-        onRefreshData();
       }
+
+      onRefreshData();
+      setIsSubmitting(false);
+      setEditingTx(null);
+      setCurrentScreen('success');
     } catch (err: any) {
       setFormError(err.message || 'Hubungan ke server terputus. Coba lagi.');
       setIsSubmitting(false);

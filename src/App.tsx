@@ -38,16 +38,34 @@ export default function App() {
   const mapTxFromDb = (dbTx: any): Transaction => {
     let finalNotes = dbTx.notes || '';
     let rejectReason = '';
+    let items = [];
+    let invoiceDate = dbTx.created_at ? dbTx.created_at.split('T')[0] : new Date().toISOString().split('T')[0];
     
-    if (finalNotes.includes('REJECT_REASON: ')) {
-       const parts = finalNotes.split('REJECT_REASON: ');
-       finalNotes = parts[0].replace(' | ', '').trim();
-       rejectReason = parts[1].trim();
+    // Parse from notes backward
+    if (finalNotes.includes(' | REJECT_REASON: ')) {
+       const parts = finalNotes.split(' | REJECT_REASON: ');
+       rejectReason = parts[1];
+       finalNotes = parts[0];
+    } else if (finalNotes.startsWith('REJECT_REASON: ')) {
+       rejectReason = finalNotes.replace('REJECT_REASON: ', '');
+       finalNotes = '';
+    }
+
+    if (finalNotes.includes(' | ITEMS: ')) {
+      const parts = finalNotes.split(' | ITEMS: ');
+      try { items = JSON.parse(parts[1]); } catch(e) {}
+      finalNotes = parts[0];
+    }
+    
+    if (finalNotes.includes(' | DATE: ')) {
+      const parts = finalNotes.split(' | DATE: ');
+      invoiceDate = parts[1];
+      finalNotes = parts[0];
     }
 
     return {
       id: dbTx.id,
-      date: dbTx.created_at ? dbTx.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+      date: invoiceDate,
       merchant: dbTx.merchant,
       category: dbTx.category,
       amount: Number(dbTx.amount),
@@ -57,7 +75,8 @@ export default function App() {
       rejectReason: rejectReason,
       type: dbTx.type,
       employeeId: dbTx.created_by || '',
-      createdAt: dbTx.created_at ? dbTx.created_at.replace('T', ' ').substring(0, 16) : ''
+      createdAt: dbTx.created_at ? dbTx.created_at.replace('T', ' ').substring(0, 16) : '',
+      items: items
     };
   };
 
