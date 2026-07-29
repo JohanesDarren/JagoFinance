@@ -123,29 +123,6 @@ export default function ProfileScreen({
         <div className="space-y-4 mt-8 pt-4 border-t border-slate-100">
           <motion.span variants={fadeUp} className="text-[11px] font-black text-slate-400 uppercase tracking-widest pl-2">Navigasi Utama</motion.span>
           
-          {/* History Navigation Button */}
-          <motion.button 
-            variants={fadeUp}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => {
-              setCurrentScreen('history');
-              setSelectedTx(null);
-            }}
-            className="w-full bg-white p-4 rounded-[2rem] border-2 border-slate-50 flex items-center justify-between text-left group hover:border-slate-100 transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-slate-50 text-blue-950 rounded-full flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors duration-300">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div>
-                <h6 className="font-black text-[15px] text-blue-950">Riwayat Pengajuan</h6>
-                <p className="text-[11px] font-bold text-slate-400 mt-0.5">Status transaksi & klaim</p>
-              </div>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-slate-100 group-hover:text-blue-950 transition-colors">
-              <ChevronRight className="w-4 h-4" />
-            </div>
-          </motion.button>
 
           {/* Payslip History Button */}
           <motion.button 

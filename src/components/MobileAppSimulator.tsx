@@ -73,10 +73,9 @@ export default function MobileAppSimulator({
       setEmail(currentUserProfile.email || '');
       setIsLogged(true);
       setSubTier('pro'); 
-      // Relaxed profile check to prevent immediate redirect on offline test
-      // if (!isProfileComplete) {
-      //   setCurrentScreen('edit-profile');
-      // }
+      if (!isProfileComplete) {
+        setCurrentScreen('edit-profile');
+      }
     } else {
       setIsLogged(false);
       setCurrentScreen('auth');
