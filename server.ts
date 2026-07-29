@@ -758,9 +758,9 @@ async function startServer() {
     });
   }
 
-  // Bind to 0.0.0.0 and port 3001 (or env PORT)
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Jago Keuangan Full-Stack Server listening on http://0.0.0.0:${PORT}`);
+  // Bind to localhost and port 3001 (or env PORT)
+  app.listen(PORT, 'localhost', () => {
+    console.log(`Jago Keuangan Full-Stack Server listening on http://localhost:${PORT}`);
   });
 }
 
