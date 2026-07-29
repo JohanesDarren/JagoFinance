@@ -535,7 +535,7 @@ export default function MobileAppSimulator({
   return (
     <div className="flex w-full h-screen bg-slate-50 overflow-hidden text-blue-950 font-sans">
       {/* Desktop Sidebar (Only when logged) */}
-      {isLogged && currentScreen !== 'unassigned' && currentScreen !== 'scanner' && (
+      {isLogged && currentScreen !== 'unassigned' && currentScreen !== 'scanner' && isProfileComplete && (
         <aside className={`hidden md:flex ${isSidebarCollapsed ? 'w-[5.5rem]' : 'w-72'} m-4 h-[calc(100vh-2rem)] bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex-col z-20 shrink-0 transition-all duration-300 relative overflow-hidden border border-slate-100/50`}>
           <div className={`p-6 pb-6 flex items-center ${isSidebarCollapsed ? 'flex-col gap-4 justify-center px-0' : 'justify-between'} transition-all`}>
             <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
@@ -926,7 +926,7 @@ export default function MobileAppSimulator({
             )}
 
           {/* BOTTOM NAVIGATION FOR MOBILE */}
-          {isLogged && currentScreen !== 'unassigned' && currentScreen !== 'scanner' && (
+          {isLogged && currentScreen !== 'unassigned' && currentScreen !== 'scanner' && isProfileComplete && (
             <div className="md:hidden absolute bottom-6 left-4 right-4 bg-white/95 backdrop-blur-xl border border-white rounded-[2rem] pt-2 pb-2 z-40 px-2 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)]">
               <div className="flex justify-between items-center max-w-sm mx-auto h-14 relative px-1">
                 
